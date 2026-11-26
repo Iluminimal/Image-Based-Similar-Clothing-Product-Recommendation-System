@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "title": "Angel: shop by photo",
+    "description": "Upload a photo of something you love and find clothing that looks like it."
+  },
+  "hero": {
+    "label": "Search by photo",
+    "heading": "Find it <g>from a photo.</g>",
+    "sub": "Drop in any outfit. We outline every piece and match it to real products, in a blink.",
+    "try": "Try it now",
+    "newArrivals": "Browse new"
+  },
+  "demo": {
+    "label": "Try photo search",
+    "windowTitle": "Photo search",
+    "drop": "Drop a photo here",
+    "dropHint": "or paste one, or use your camera",
+    "choose": "Choose photo",
+    "camera": "Camera",
+    "samples": "Try a sample",
+    "sample": "Sample {number}",
+    "scanning": "Finding matches…",
+    "found": "Found in {ms} ms",
+    "similar": "Similar items",
+    "itemOf": "Item {number} of {total}",
+    "item": "Item {number}",
+    "detected": "Detected items",
+    "none": "No similar items found. Try another photo.",
+    "seeAll": "See all results",
+    "another": "Try another",
+    "private": "Photos are never stored.",
+    "errors": {
+      "network": "We couldn't reach search. Check your connection and try again.",
+      "rate": "Too many searches in a short time. Please wait a moment.",
+      "unreadable": "We couldn't read that photo. Try a JPEG or PNG.",
+      "retry": "Try again"
+    }
+  },
+  "departments": {
+    "women": "Women",
+    "men": "Men",
+    "kids": "Kids"
+  },
+  "trending": "Trending now",
+  "newArrivals": "New arrivals",
+  "shopAll": "Shop all",
+  "recentlyViewed": "Recently viewed",
+  "seeAll": "See all"
+}

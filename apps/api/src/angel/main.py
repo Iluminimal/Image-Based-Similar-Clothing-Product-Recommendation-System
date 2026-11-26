@@ -1,0 +1,271 @@
+"""Аппыг угсарна: тохиргоо, өгөгдлийн сан, Redis, ML загвар, дэвсгэрийн worker-ууд (lifespan),
+middleware, route-ууд.
+
+`create_app` нь factory учир тест өөрийн хиймэл embedder, төлбөрийн gateway, localizer дамжуулна.
+"""
+
+import asyncio
+import contextlib
+import secrets
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from PIL import Image
+from redis.asyncio import Redis
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from starlette.formparsers import MultiPartParser
+
+from angel.api import health
+from angel.api.v1.router import router as v1_router
+from angel.core.config import Settings, get_settings
+from angel.core.errors import register_exception_handlers
+from angel.core.logging import configure_logging, get_logger
+from angel.core.mail import build_mailer
+from angel.core.request_context import REQUEST_ID_HEADER, RequestContextMiddleware
+from angel.core.security_headers import SecurityHeadersMiddleware
+from angel.core.sms import build_sms_sender
+from angel.core.static import MediaFiles
+from angel.core.uploads import BodySizeLimitMiddleware
+from angel.db.engine import create_engine
+from angel.ml.classifier import (
+    CategoryClassifier,
+    CategoryLabel,
+    LazyCategoryClassifier,
+    ZeroShotCategoryClassifier,
+)
+from angel.ml.embeddings import EmbeddingService
+from angel.ml.fashion_clip import FashionClipEmbedder, select_device
+from angel.ml.localizer import GarmentLocalizer, WholeImageLocalizer
+from angel.ml.yolo import YoloGarmentLocalizer
+from angel.models import Category
+from angel.oauth import build_oauth_provider
+from angel.payments import PaymentGateway, build_gateway
+from angel.repositories.catalog.categories import CategoryRepository
+from angel.repositories.catalog.products import ProductRepository
+from angel.services.cache import SearchCache
+from angel.services.commerce.expiry import OrderExpirer
+from angel.services.system.housekeeping import Housekeeper
+from angel.services.system.outbox import OutboxDispatcher
+from angel.storage import LocalStorage
+
+log = get_logger(__name__)
+
+
+async def _load_embedder(settings: Settings) -> EmbeddingService:
+    if settings.embedder == "fake":
+        from angel.ml.fake import FakeEmbedder
+
+        log.warning("fake_embedder", hint="EMBEDDER=fake: search results are not meaningful")
+        return FakeEmbedder(version="fake@e2e")
+    embedder = FashionClipEmbedder(
+        device=select_device(settings.embedding_device),
+        fp16=settings.embedding_fp16,
+        resize_mode=settings.embedding_resize_mode,
+    )
+    await asyncio.to_thread(embedder.load)
+    return embedder
+
+
+async def _load_localizer(settings: Settings) -> GarmentLocalizer:
+    if settings.localizer == "whole":
+        log.info("localizer_disabled", hint="LOCALIZER=whole: searching the whole image")
+        return WholeImageLocalizer()
+    if settings.localizer == "fake":
+        from angel.ml.fake import FakeLocalizer
+        from angel.ml.localizer import Box
+
+        log.warning("fake_localizer", hint="LOCALIZER=fake: regions are the top and bottom halves")
+        return FakeLocalizer(
+            [Box(0.0, 0.0, 1.0, 0.5), Box(0.0, 0.5, 1.0, 1.0)], ["top, t-shirt, sweatshirt", "shoe"]
+        )
+    localizer = YoloGarmentLocalizer(
+        device=select_device(settings.localizer_device),
+        confidence=settings.yolo_confidence,
+        max_regions=settings.yolo_max_regions,
+        min_area=settings.yolo_min_area,
+        padding=settings.yolo_padding,
+    )
+    await asyncio.to_thread(localizer.load)
+    # Эхний inference-ийн kernel compile-ийг хэрэглэгчийн хүсэлт дээр биш эндээс хийнэ.
+    await localizer.alocate(Image.new("RGB", (64, 64), "white"))
+    return localizer
+
+
+async def _warm_up(embedder: EmbeddingService) -> None:
+    """Эхний inference kernel-ийг compile хийж, buffer хуваарилдаг тул үүнийг эхний хэрэглэгчийн
+    хүсэлт дээр биш, эндээс эхлүүлнэ."""
+    await embedder.aembed_images([Image.new("RGB", (64, 64), "white")])
+    await embedder.aembed_texts(["warm up"])
+
+
+async def _warm_up_database(
+    embedder: EmbeddingService, sessions: async_sessionmaker[AsyncSession]
+) -> None:
+    """Жинхэнэ нэг төстэй хайлт хийж, эхний connection-ийг нээгээд индексийг халаана."""
+    vector = (await embedder.aembed_texts(["warm up"]))[0]
+    async with sessions() as session, session.begin():
+        await ProductRepository(session).search_similar(vector, limit=1)
+
+
+def _classifier_factory(
+    embedder: EmbeddingService, sessions: async_sessionmaker[AsyncSession]
+) -> Callable[[], Awaitable[CategoryClassifier]]:
+    async def build() -> CategoryClassifier:
+        async with sessions() as session, session.begin():
+            categories = await CategoryRepository(session).searchable_article_types()
+        # Article type бүрт нэг label: бараа article type-аар шүүгддэг, мөн ижил текстэй хоёр
+        # prompt магадлалыг хоорондоо хуваачихна.
+        unique: dict[str, Category] = {}
+        for category in categories:  # бараа олонтойг эхэнд нь, ингэснээр үндсэн эх нь үлдэнэ
+            unique.setdefault(category.name, category)
+        labels = [CategoryLabel(c.name, c.path, c.name) for c in unique.values()]
+        return await ZeroShotCategoryClassifier.build(embedder, labels)
+
+    return build
+
+
+def create_app(
+    settings: Settings | None = None,
+    embedder: EmbeddingService | None = None,
+    payment_gateway: PaymentGateway | None = None,
+    localizer: GarmentLocalizer | None = None,
+) -> FastAPI:
+    """`embedder`, `payment_gateway`, `localizer` нь тестэд зориулсан: FashionCLIP, YOLO ачаалах,
+    тохиргооноос gateway үүсгэхийн оронд бэлэн объектоо дамжуулна."""
+    settings = settings or get_settings()
+    configure_logging(settings.log_level, json_logs=settings.log_json)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        app.state.settings = settings
+        app.state.engine = create_engine(settings.database_url)
+        app.state.sessions = async_sessionmaker(app.state.engine, expire_on_commit=False)
+        # Cache, rate-limit дуудлага хурдан алдаа өгнө: Redis унасан үед хайлт удаашрахгүй.
+        app.state.redis = Redis.from_url(
+            settings.redis_url,
+            socket_connect_timeout=settings.redis_op_timeout_seconds,
+            socket_timeout=settings.redis_op_timeout_seconds,
+        )
+        app.state.storage = LocalStorage(settings.media_dir, settings.media_base_url)
+        app.state.mailer = build_mailer(settings)
+        app.state.sms = build_sms_sender(settings)
+        app.state.payment_gateway = payment_gateway or build_gateway(settings)
+        app.state.oauth_provider = build_oauth_provider(settings)
+        if app.state.oauth_provider is None:
+            log.warning(
+                "google_sign_in_disabled",
+                hint="set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET (or OAUTH_MODE=fake)",
+            )
+        if not settings.jwt_secret:
+            # Хөгжүүлэлтэд зүгээр; restart бүр хүн бүрийг гаргана.
+            log.warning(
+                "jwt_secret_generated", hint="set JWT_SECRET to keep sessions across restarts"
+            )
+        app.state.jwt_secret = settings.jwt_secret or secrets.token_urlsafe(48)
+        if app.state.payment_gateway is None:
+            log.warning(
+                "payments_disabled",
+                hint="set QPAY_CLIENT_ID, QPAY_CLIENT_SECRET, QPAY_INVOICE_CODE "
+                "or PAYMENTS_MODE=offline",
+            )
+
+        # Model-ийг эндээс нэг л удаа ачаална; ачаалагдтал /readyz улаан байна. Inference нь
+        # embedder-ийн өөрийн worker thread дээр ажиллана, event loop дээр хэзээ ч биш.
+        model = embedder or await _load_embedder(settings)
+        await _warm_up(model)
+        app.state.embedding_service = model
+        app.state.localizer = detector = localizer or await _load_localizer(settings)
+        app.state.classifier = LazyCategoryClassifier(
+            _classifier_factory(model, app.state.sessions)
+        )
+        app.state.search_cache = SearchCache(
+            app.state.redis,
+            embedding_version=model.version,
+            dimension=model.dimension,
+            text_ttl_seconds=settings.text_embedding_cache_ttl_seconds,
+            similar_ttl_seconds=settings.similar_cache_ttl_seconds,
+            filters_ttl_seconds=settings.catalog_filters_cache_ttl_seconds,
+            timeout_seconds=settings.redis_op_timeout_seconds,
+        )
+        try:
+            await app.state.classifier.get()
+            await _warm_up_database(model, app.state.sessions)
+        except Exception as exc:  # database хараахан асаагүй: эхний хүсэлтүүд хүлээнэ
+            log.warning("database_warm_up_skipped", error=type(exc).__name__)
+        log.info("startup", app_env=settings.app_env, embedding_version=model.version)
+        expirer = OrderExpirer(app.state.sessions, app.state.payment_gateway, settings)
+        outbox = OutboxDispatcher(app.state.sessions, app.state.mailer)
+        background = [
+            asyncio.create_task(expirer.run_forever(), name="order-expiry"),
+            asyncio.create_task(outbox.run_forever(settings.outbox_poll_seconds), name="outbox"),
+            asyncio.create_task(
+                Housekeeper(app.state.sessions, settings).run_forever(), name="housekeeping"
+            ),
+        ]
+        try:
+            yield
+        finally:
+            for task in background:
+                task.cancel()
+            for task in background:
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+            close_gateway = getattr(app.state.payment_gateway, "aclose", None)
+            if payment_gateway is None and callable(close_gateway):
+                await close_gateway()
+            close = getattr(model, "close", None)
+            if embedder is None and callable(close):
+                await asyncio.to_thread(close)
+            close_detector = getattr(detector, "close", None)
+            if localizer is None and callable(close_detector):
+                await asyncio.to_thread(close_detector)
+            await app.state.redis.aclose()
+            await app.state.engine.dispose()
+            log.info("shutdown")
+
+    app = FastAPI(
+        title="Angel API",
+        version="0.1.0",
+        lifespan=lifespan,
+        openapi_url=f"{settings.api_v1_prefix}/openapi.json",
+        docs_url=f"{settings.api_v1_prefix}/docs",
+        redoc_url=None,
+    )
+
+    # Хязгаар доторх upload санах ойд үлдэнэ: үгүй бол Starlette 1 MB-аас том зүйлийг түр файлд
+    # бичнэ, харин хэрэглэгчийн зургийг зөвшөөрөлгүй хаана ч хадгалж болохгүй.
+    MultiPartParser.spool_max_size = settings.max_upload_bytes + 1
+    app.add_middleware(
+        BodySizeLimitMiddleware,
+        max_file_bytes=settings.max_upload_bytes,
+        api_prefix=settings.api_v1_prefix,
+    )
+    # Сүүлд нэмсэн нь хамгийн гаднах: CORS preflight-ийг бусдаас өмнө хараад шууд хариулах ёстой.
+    app.add_middleware(
+        SecurityHeadersMiddleware,
+        hsts=settings.cookie_secure,
+        docs_paths=(
+            f"{settings.api_v1_prefix}/docs",
+            f"{settings.api_v1_prefix}/docs/oauth2-redirect",
+        ),
+    )
+    app.add_middleware(RequestContextMiddleware)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=[REQUEST_ID_HEADER],
+    )
+
+    register_exception_handlers(app)
+    # Барааны thumbnail (dev). Starlette эхний хүсэлт дээр хавтсыг шалгадаг тул ingest хийхээс
+    # өмнө ч байгаа эсэхийг баталгаажуулна.
+    settings.media_dir.mkdir(parents=True, exist_ok=True)
+    app.mount(settings.media_url_path, MediaFiles(directory=settings.media_dir), name="media")
+    app.include_router(health.router)
+    app.include_router(v1_router, prefix=settings.api_v1_prefix)
+    return app

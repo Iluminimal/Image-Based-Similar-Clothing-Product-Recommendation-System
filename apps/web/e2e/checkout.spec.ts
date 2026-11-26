@@ -1,0 +1,123 @@
+import { randomUUID } from "node:crypto";
+import { test, expect } from "./fixtures";
+import { addAddress, addToCart, placePaidOrder, registerAccount } from "./support/api";
+import { API_URL } from "./support/env";
+import { addToCartFromProductPage, cartButton, pickProduct } from "./support/ui";
+import { ENGLISH, withEnglish } from "./support/locale";
+
+test("checkout needs an account", async ({ page, products }, testInfo) => {
+  await addToCartFromProductPage(page, pickProduct(products, testInfo.workerIndex));
+
+  await page.goto("/checkout");
+
+  await expect(page).toHaveURL(/\/login\?next=%2Fcheckout/);
+});
+
+test("an empty cart cannot be checked out", async ({ shopperPage: page }) => {
+  await page.goto("/checkout");
+
+  await expect(page.getByRole("button", { name: /pay now/i })).toHaveCount(0);
+  await expect(page.getByText(/bag is empty/i).first()).toBeVisible();
+});
+
+test("a signed-in shopper pays with the demo card and sees the order afterwards", async ({
+  shopperPage: page,
+  products,
+}, testInfo) => {
+  const product = pickProduct(products, testInfo.workerIndex + 1);
+  await addToCartFromProductPage(page, product);
+  await page.getByRole("dialog").getByRole("link", { name: "Check Out" }).click();
+  await expect(page).toHaveURL(/\/checkout$/);
+
+  // Шинэ хаягийг хадгалаад сонгоно.
+  await page.getByLabel("Full name").fill("Болд Батбаяр");
+  await page.getByLabel("Phone number").fill("99112233");
+  await page.getByLabel("District").selectOption("Баянгол");
+  await page.getByLabel("Street, building, apartment").fill("Энхтайваны өргөн чөлөө 12");
+  await page.getByRole("button", { name: "Use this address" }).click();
+  await expect(page.getByRole("radio", { name: /Болд Батбаяр/ })).toBeChecked();
+  await expect(page.getByText("Test payment", { exact: true })).toBeVisible();
+
+  // Шуурхай хүргэлт илүү үнэтэй.
+  const pay = page.getByRole("button", { name: /pay now/i });
+  const standard = await pay.innerText();
+  await page.locator("label", { hasText: "Express delivery" }).click();
+  await expect.poll(() => pay.innerText()).not.toBe(standard);
+
+  await pay.click();
+
+  await expect(page).toHaveURL(/\/checkout\/confirmation\//);
+  await expect(page.getByRole("heading", { name: "Thank you for your order" })).toBeVisible();
+  const number = /LK-[A-Z0-9]{8}/.exec(await page.locator("main").innerText())?.[0];
+  expect(number).toBeTruthy();
+
+  // Сагс хоосорч, захиалга нь account-д хаяг болон худалдаж авсан мөрөөрөө орно.
+  await page.goto("/account/orders");
+  await page.getByRole("link", { name: new RegExp(number!) }).click();
+  await expect(page.getByRole("heading", { name: `Order ${number}` })).toBeVisible();
+  await expect(page.getByText(/Энхтайваны өргөн чөлөө 12/).first()).toBeVisible();
+  await expect(page.getByText(product.name).first()).toBeVisible();
+  await expect(cartButton(page)).toHaveAttribute("aria-label", "Bag");
+});
+
+test("repeating a checkout request, or the payment, never creates a second order or charge", async ({
+  api,
+  account,
+  products,
+}, testInfo) => {
+  const product = pickProduct(products, testInfo.workerIndex + 2);
+  const headers = { "content-type": "application/json", Authorization: `Bearer ${account.token}` };
+  await addToCart(api, account, product.id);
+  const addressId = await addAddress(api, account);
+  const key = `e2e-${randomUUID()}`;
+  const checkout = () =>
+    api.post(`${API_URL}/api/v1/checkout`, {
+      headers: { ...headers, "Idempotency-Key": key },
+      data: { address_id: addressId, shipping_method: "standard" },
+    });
+
+  const first = (await (await checkout()).json()) as { order: { number: string } };
+  const replay = (await (await checkout()).json()) as { order: { number: string } };
+  expect(replay.order.number).toBe(first.order.number);
+
+  const pay = () => api.post(`${API_URL}/api/v1/checkout/orders/${first.order.number}/simulate-payment`, { headers });
+  expect((await pay()).status()).toBe(200);
+  expect((await pay()).status()).toBe(200);
+
+  const orders = (await (await api.get(`${API_URL}/api/v1/orders`, { headers })).json()) as {
+    total: number;
+    items: { number: string; status: string }[];
+  };
+  expect(orders.total).toBe(1);
+  expect(orders.items[0]).toMatchObject({ number: first.order.number, status: "paid" });
+});
+
+test("another customer cannot see an order, in the app or in the API", async ({
+  api,
+  account,
+  products,
+  browser,
+  playwright,
+}, testInfo) => {
+  const number = await placePaidOrder(api, account, pickProduct(products, testInfo.workerIndex + 3).id);
+  const otherApi = await playwright.request.newContext();
+  const other = await registerAccount(otherApi, "other");
+
+  const direct = await otherApi.get(`${API_URL}/api/v1/orders/${number}`, {
+    headers: { Authorization: `Bearer ${other.token}` },
+  });
+  expect(direct.status()).toBe(404);
+
+  const context = await browser.newContext({ storageState: withEnglish(other.cookies) });
+  const page = await context.newPage();
+  await page.goto(`/account/orders/${number}`);
+  await expect(page.getByText("We couldn't find that order on your account.")).toBeVisible();
+  await context.close();
+  await otherApi.dispose();
+
+  const anonymous = await browser.newContext({ storageState: ENGLISH });
+  const visitor = await anonymous.newPage();
+  await visitor.goto(`/account/orders/${number}`);
+  await expect(visitor).toHaveURL(/\/login\?next=/);
+  await anonymous.close();
+});

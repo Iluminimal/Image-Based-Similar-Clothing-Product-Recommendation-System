@@ -1,0 +1,95 @@
+"""Хэрэглэгчийн хадгалсан хүргэлтийн хаягууд. Хүн зөвхөн өөрийн хаягт хүрнэ."""
+
+from http import HTTPStatus
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from angel.core.errors import ADDRESS_LIMIT_TYPE, ADDRESS_NOT_FOUND_TYPE, ProblemError
+from angel.core.mongolia import check_region_and_district
+from angel.models import Address
+from angel.repositories.accounts.users import AddressRepository
+from angel.schemas.accounts.address import AddressIn, AddressList, AddressOut, AddressUpdate
+
+MAX_ADDRESSES = 10
+# Хэзээ ч хоосон байж болохгүй баганууд (PATCH-ийн null-аар цэвэрлэж болох нэмэлт баганаас
+# ялгаатай).
+_REQUIRED = {"full_name", "line1", "region", "city", "country", "phone"}
+
+
+def _not_found() -> ProblemError:
+    return ProblemError(HTTPStatus.NOT_FOUND, "Хаяг олдсонгүй", type_=ADDRESS_NOT_FOUND_TYPE)
+
+
+class AddressService:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+        self._addresses = AddressRepository(session)
+
+    async def list(self, user_id: int) -> AddressList:
+        async with self._session.begin():
+            rows = await self._addresses.list_for_user(user_id)
+        return AddressList(items=[AddressOut.model_validate(row) for row in rows])
+
+    async def create(self, user_id: int, data: AddressIn) -> AddressOut:
+        async with self._session.begin():
+            existing = await self._addresses.count(user_id)
+            if existing >= MAX_ADDRESSES:
+                raise ProblemError(
+                    HTTPStatus.CONFLICT,
+                    "Хаягийн жагсаалт дүүрсэн",
+                    f"Хамгийн ихдээ {MAX_ADDRESSES} хаяг хадгалах боломжтой.",
+                    type_=ADDRESS_LIMIT_TYPE,
+                )
+            # Эхний хаяг нь default болно; default хүсвэл өмнөхийг нь орлоно.
+            make_default = data.is_default or existing == 0
+            if make_default:
+                await self._addresses.clear_default(user_id)
+            address = Address(user_id=user_id, **{**data.model_dump(), "is_default": make_default})
+            await self._addresses.add(address)
+            return AddressOut.model_validate(address)
+
+    async def update(self, user_id: int, address_id: int, data: AddressUpdate) -> AddressOut:
+        changes = data.model_dump(exclude_unset=True)
+        invalid = [key for key in _REQUIRED if key in changes and changes[key] is None]
+        if invalid:
+            raise ProblemError(
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                "Хаягийн заавал бөглөх талбар хоосон байж болохгүй",
+                ", ".join(sorted(invalid)),
+            )
+        async with self._session.begin():
+            address = await self._addresses.get(user_id, address_id)
+            if address is None:
+                raise _not_found()
+            # Аймаг, дүүргийн хослолыг нэгтгэсэн хаяг дээр шалгана (зөвхөн нэгийг нь өөрчилсөн ч).
+            try:
+                check_region_and_district(
+                    changes.get("region") or address.region or "",
+                    changes.get("city") or address.city,
+                )
+            except ValueError as error:
+                raise ProblemError(
+                    HTTPStatus.UNPROCESSABLE_ENTITY, "Хаяг буруу байна", str(error)
+                ) from error
+            if changes.get("is_default"):
+                await self._addresses.clear_default(user_id)
+            for key, value in changes.items():
+                if key == "is_default" and value is None:
+                    continue
+                if key == "postal_code" and value is None:
+                    value = ""
+                setattr(address, key, value)
+            await self._session.flush()
+            return AddressOut.model_validate(address)
+
+    async def delete(self, user_id: int, address_id: int) -> None:
+        async with self._session.begin():
+            address = await self._addresses.get(user_id, address_id)
+            if address is None:
+                raise _not_found()
+            was_default = address.is_default
+            await self._addresses.delete(address)
+            if was_default:
+                remaining = await self._addresses.list_for_user(user_id)
+                if remaining:  # хаягтай боловч default-гүй худалдан авагч үлдээхгүй
+                    remaining[0].is_default = True

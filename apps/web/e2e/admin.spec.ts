@@ -1,0 +1,181 @@
+import { test, expect } from "./fixtures";
+import { adminSession, placePaidOrder, warehouseSession } from "./support/api";
+import { API_URL, FAKE_LOCALIZER } from "./support/env";
+import { makePng } from "./support/images";
+import type { APIRequestContext } from "@playwright/test";
+import { ENGLISH } from "./support/locale";
+
+/** Энэ зургаар visual search хайхад хамгийн эхэнд гарах барааны id. */
+async function topResult(api: APIRequestContext, png: Buffer): Promise<number> {
+  const response = await api.post(`${API_URL}/api/v1/search/image`, {
+    multipart: { file: { name: "q.png", mimeType: "image/png", buffer: png }, limit: "5" },
+  });
+  expect(response.status()).toBe(200);
+  return (await response.json()).results[0].product.id as number;
+}
+
+/**
+ * Visual search энэ зургийг өгөгдсөн бараатай хэр төстэй гэж үзэхийг буцаана (үр дүнд байхгүй бол
+ * null).
+ */
+async function similarityTo(api: APIRequestContext, png: Buffer, productId: number): Promise<number | null> {
+  const response = await api.post(`${API_URL}/api/v1/search/image`, {
+    multipart: { file: { name: "q.png", mimeType: "image/png", buffer: png }, limit: "60" },
+  });
+  const hit = ((await response.json()).results as { product: { id: number }; similarity: number }[]).find(
+    (result) => result.product.id === productId,
+  );
+  return hit?.similarity ?? null;
+}
+
+const photo = (png: Buffer) => ({ name: "product.png", mimeType: "image/png", buffer: png });
+
+test("customers and visitors cannot use the admin area", async ({ shopperPage: page, browser }) => {
+  const adminCalls: string[] = [];
+  page.on("request", (request) => request.url().includes("/api/v1/admin") && adminCalls.push(request.url()));
+
+  await page.goto("/admin/products");
+
+  await expect(page.getByText("You don't have access to this area")).toBeVisible();
+  expect(adminCalls).toEqual([]);
+
+  const visitor = await (await browser.newContext({ storageState: ENGLISH })).newPage();
+  await visitor.goto("/admin/orders");
+  await expect(visitor).toHaveURL(/\/login\?next=%2Fadmin%2Forders/);
+});
+
+test("the API refuses back-office requests from anyone but staff", async ({ api, account }) => {
+  const anonymous = await api.get(`${API_URL}/api/v1/admin/products`);
+  const customer = await api.get(`${API_URL}/api/v1/admin/products`, { headers: { Authorization: `Bearer ${account.token}` } });
+
+  expect(anonymous.status()).toBe(401);
+  expect(customer.status()).toBe(403);
+  expect((await customer.json()).type).toBe("urn:angel:problem:forbidden");
+});
+
+test("an administrator can look at products but not change them, and a warehouse worker cannot see customers", async ({
+  adminPage: page,
+  api,
+  newProduct,
+}) => {
+  const product = await newProduct({ stock: 7 });
+  const admin = await adminSession(api);
+  const worker = await warehouseSession(api);
+  const auth = (who: { token: string }) => ({ Authorization: `Bearer ${who.token}` });
+
+  // API: админ харна, өөрчилж чадахгүй; агуулахын ажилтан хэрэглэгч, статистик харахгүй.
+  expect((await api.get(`${API_URL}/api/v1/admin/products/${product.id}`, { headers: auth(admin) })).status()).toBe(200);
+  expect(
+    (await api.put(`${API_URL}/api/v1/admin/products/${product.id}/stock`, { headers: auth(admin), data: { on_hand: 1 } })).status(),
+  ).toBe(403);
+  expect((await api.post(`${API_URL}/api/v1/admin/products/${product.id}/deactivate`, { headers: auth(admin) })).status()).toBe(403);
+  expect((await api.get(`${API_URL}/api/v1/admin/customers`, { headers: auth(worker) })).status()).toBe(403);
+  expect((await api.get(`${API_URL}/api/v1/admin/stats`, { headers: auth(worker) })).status()).toBe(403);
+  expect((await api.get(`${API_URL}/api/v1/admin/orders`, { headers: auth(worker) })).status()).toBe(200);
+
+  // UI: админ барааг харна, гэхдээ засах, зарахаа болих, устгах боломжгүй.
+  await page.goto(`/admin/products/${product.id}`);
+  await expect(page.getByRole("heading", { level: 1, name: product.name })).toBeVisible();
+  await expect(page.getByLabel("Name")).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Save changes" })).toHaveCount(0);
+  await expect(page.getByRole("switch")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Delete product" })).toHaveCount(0);
+  await page.goto("/admin/products/new");
+  await expect(page.getByText("This section is not part of your role.")).toBeVisible();
+});
+
+test("a warehouse worker creates a product from a photo, edits it, replaces the photo and stops selling it", async ({
+  warehousePage: page,
+  api,
+}) => {
+  const stamp = Date.now();
+  const name = `E2E linen shirt ${stamp}`;
+  const first = makePng(stamp % 100_000);
+  const second = makePng((stamp + 7) % 100_000);
+
+  // --- зургаас үүсгэх ---
+  await page.goto("/admin/products/new");
+  await page.getByLabel("Photo", { exact: true }).setInputFiles(photo(first));
+  await expect(page.getByAltText("Preview of the chosen photo")).toBeVisible();
+  await page.getByLabel("Name").fill(name);
+  // Handbags (хувцас биш): тест дундаа унавал үлдсэн бараа бусад тестийн хуваалцсан `products`
+  // ("хамгийн шинэ хувцас")-д орж, тэдгээрийг дагуулж унагахгүй.
+  await page.getByLabel("Category").selectOption({ label: "Handbags" });
+  await page.getByLabel("Colour (optional)").fill("Blue");
+  await page.getByLabel("Price (₮)").fill("87900");
+  await page.getByLabel("Stock").fill("7");
+  await page.getByRole("button", { name: "Create product" }).click();
+
+  await expect(page).toHaveURL(/\/admin\/products\/\d+$/);
+  const id = Number(page.url().split("/").pop());
+  await expect(page.getByRole("heading", { name })).toBeVisible();
+
+  // Шууд зарагдаж эхэлнэ: бичсэн үнээр, мөн visual search өөрийнх нь зургаар олно. LOCALIZER=fake
+  // зургийн хагасаар хайдаг тул тэнд бүтэн зураг өөрийгөө олох боломжгүй; доорх хайлтын шалгалтууд
+  // бусад тохиргоонд ажиллана (API-ийн тест `test_admin_products_api.py` үргэлж шалгадаг).
+  const byPhoto = !FAKE_LOCALIZER;
+  const storefront = await (await api.get(`${API_URL}/api/v1/products/${id}`)).json();
+  expect(storefront.price_cents).toBe(8_790_000); // бүтэн төгрөгөөр оруулж, мөнгөөр хадгална
+  expect(storefront.in_stock).toBe(true);
+  if (byPhoto) expect(await topResult(api, first)).toBe(id);
+
+  // --- үнэ засах ---
+  await page.getByLabel("Price (₮)").fill("76500");
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await expect
+    .poll(async () => (await (await api.get(`${API_URL}/api/v1/products/${id}`)).json()).price_cents)
+    .toBe(7_650_000);
+
+  // --- зураг солих: хайлт шинэ зургийг олно ---
+  await page.getByLabel("New photo").setInputFiles(photo(second));
+  await page.getByRole("button", { name: "Replace photo" }).click();
+  await expect(page.getByText("Photo replaced")).toBeVisible();
+  if (byPhoto) {
+    expect(await topResult(api, second)).toBe(id);
+    // Embedding одоо шинэ зургаас гарсан: шинэ зураг яг таарна, хуучин нь таарахаа больсон.
+    expect(await similarityTo(api, second, id)).toBeGreaterThan(0.99);
+    expect((await similarityTo(api, first, id)) ?? 0).toBeLessThan(0.99);
+  }
+
+  // --- зарахаа болих: жагсаалтаас нэр хайж, нэг даралтаар ---
+  await page.goto(`/admin/products?q=${encodeURIComponent(name)}`);
+  const sell = page.getByRole("switch", { name: `Sell ${name}` });
+  await sell.click();
+  await expect(sell).not.toBeChecked();
+  await expect.poll(async () => (await api.get(`${API_URL}/api/v1/products/${id}`)).status()).toBe(404);
+  if (byPhoto) expect(await topResult(api, second)).not.toBe(id);
+
+  // ...мөн буцаан нийтэлж болно.
+  await sell.click();
+  await expect(sell).toBeChecked();
+  await expect.poll(async () => (await api.get(`${API_URL}/api/v1/products/${id}`)).status()).toBe(200);
+
+  // API-ийн боломжоор өөрийнхөө үлдээсэн зүйлийг цэвэрлэнэ: зарахаа больсон төлөвт үлдээнэ.
+  await sell.click();
+  await expect(sell).not.toBeChecked();
+  await expect.poll(async () => (await api.get(`${API_URL}/api/v1/products/${id}`)).status()).toBe(404);
+});
+
+test("a bad photo or bad details do not create a product", async ({ warehousePage: page }) => {
+  await page.goto("/admin/products/new");
+
+  await page.getByRole("button", { name: "Create product" }).click();
+  await expect(page.getByText("Enter a name")).toBeVisible();
+  await expect(page.getByText("Choose a photo of the product.")).toBeVisible();
+
+  await page.getByLabel("Photo", { exact: true }).setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("hi") });
+  await expect(page.getByText("Use a JPEG, PNG or WebP photo.")).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/products\/new$/);
+});
+
+test("an administrator sees a customer's order with its payment", async ({ adminPage: page, api, account, products }, testInfo) => {
+  const number = await placePaidOrder(api, account, products[testInfo.workerIndex % products.length]!.id);
+
+  await page.goto(`/admin/orders?q=${number}`);
+  await page.getByRole("link", { name: number }).click();
+
+  await expect(page.getByRole("heading", { name: `Order ${number}` })).toBeVisible();
+  await expect(page.getByText(account.email).first()).toBeVisible();
+  await expect(page.getByText("succeeded via offline")).toBeVisible();
+  await expect(page.getByText(/Энхтайваны өргөн чөлөө 12/).first()).toBeVisible();
+});

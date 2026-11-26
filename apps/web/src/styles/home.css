@@ -1,0 +1,350 @@
+/*
+ * Нүүр хуудасны Stripe/Linear хэв. Бүх зүйл `.home` wrapper-ийн дотор: токенуудыг энд дахин тодорхойлдог тул
+ * Button, ProductCard, ProductRail нүүр дээр indigo палитр, жижиг радиустай болж, бусад хуудас хуучнаараа үлдэнэ.
+ * Анхдагч нь цайвар; хэрэглэгч Dark/System сонговол `.dark .home` өгнө. Хөдөлгөөн энд байхгүй: бүгд
+ * `styles/effects.css` дотор (`prefers-reduced-motion: no-preference` хамгаалалттай); эндхийн hover зөвхөн хулгана-тай
+ * төхөөрөмж дээр.
+ */
+@layer components {
+  .home {
+    color-scheme: light;
+    --background: #fbfbfe;
+    --foreground: #0a2540;
+    --card: #ffffff;
+    --card-foreground: #0a2540;
+    --popover: #ffffff;
+    --popover-foreground: #0a2540;
+    --primary: #635bff;
+    --primary-foreground: #ffffff;
+    --primary-hover: #5147f0;
+    --primary-active: #4338e0;
+    --secondary: #f1f3fb;
+    --secondary-foreground: #0a2540;
+    --muted: #f1f3fb;
+    --muted-foreground: #5b6b86;
+    --accent: #eceffa;
+    --accent-foreground: #0a2540;
+    --border: #e3e8f2;
+    --input: #d6dcea;
+    --ring: #635bff;
+    --field: #8792a8;
+    --brand: #5147f0;
+    --brand-foreground: #ffffff;
+    --radius: 0.75rem;
+    --radius-tile: 1rem;
+    --home-line: rgb(10 37 64 / 0.045);
+    --home-glass: rgb(255 255 255 / 0.78);
+    --home-shadow: 0 1px 2px rgb(10 37 64 / 0.06), 0 30px 80px -30px rgb(80 70 229 / 0.35);
+    --home-hover: #635bff;
+    --home-pink: #ff80b5;
+    --home-indigo: #635bff;
+    --home-cyan: #00d4ff;
+    --home-violet: #a98bff;
+    --home-accent-from: #d6409f;
+    --home-accent-via: #635bff;
+    --home-accent-to: #0088c7;
+    --home-mesh-a: rgb(255 128 181 / 0.42);
+    --home-mesh-b: rgb(99 91 255 / 0.34);
+    --home-mesh-c: rgb(0 212 255 / 0.3);
+    --home-mesh-d: rgb(169 139 255 / 0.32);
+    --home-purple: #6f42c1;
+    --font-home-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-home-sans);
+  }
+  .dark .home {
+    color-scheme: dark;
+    --background: #08090d;
+    --foreground: #eef0ff;
+    --card: #101218;
+    --card-foreground: #eef0ff;
+    --popover: #101218;
+    --popover-foreground: #eef0ff;
+    --primary: #6a63ff;
+    --primary-hover: #7d77ff;
+    --primary-active: #5a52f0;
+    --secondary: #13151d;
+    --secondary-foreground: #eef0ff;
+    --muted: #13151d;
+    --muted-foreground: #9aa3bd;
+    --accent: #1a1d28;
+    --accent-foreground: #eef0ff;
+    --border: #232634;
+    --input: #2c3040;
+    --ring: #8b93ff;
+    --field: #6b7490;
+    --brand: #8b93ff;
+    --brand-foreground: #08090d;
+    --home-line: rgb(255 255 255 / 0.05);
+    --home-glass: rgb(16 18 24 / 0.72);
+    --home-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 30px 90px -30px rgb(99 91 255 / 0.45);
+    --home-hover: #8b93ff;
+    --home-accent-from: #ff80b5;
+    --home-accent-via: #8b93ff;
+    --home-accent-to: #5ce1ff;
+    --home-mesh-a: rgb(255 128 181 / 0.2);
+    --home-mesh-b: rgb(99 91 255 / 0.3);
+    --home-mesh-c: rgb(0 212 255 / 0.16);
+    --home-mesh-d: rgb(169 139 255 / 0.22);
+    --home-purple: #b18cff;
+  }
+
+  /* Төрлүүд */
+  .home-title {
+    font-size: clamp(2.6rem, 7vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    font-weight: 650;
+    text-wrap: balance;
+  }
+  .home-h2 {
+    font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    font-weight: 650;
+    text-wrap: balance;
+  }
+  .home-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    background: var(--home-glass);
+    color: var(--brand);
+    font-size: 0.8125rem;
+    font-weight: 550;
+    line-height: 1;
+  }
+  .home-link {
+    color: var(--brand);
+    font-weight: 500;
+  }
+  .home-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Hero-ийн дэвсгэр: радиаль градиентуудын mesh (blur, mask байхгүй) ба бүдэг тор. */
+  .home-mesh i {
+    position: absolute;
+    width: 36rem;
+    height: 36rem;
+    border-radius: 9999px;
+    background: radial-gradient(closest-side, var(--m), transparent);
+  }
+  .home-mesh i:nth-child(1) {
+    --m: var(--home-mesh-a);
+    left: -6rem;
+    top: -10rem;
+  }
+  .home-mesh i:nth-child(2) {
+    --m: var(--home-mesh-b);
+    left: 30%;
+    top: -16rem;
+    width: 44rem;
+    height: 44rem;
+  }
+  .home-mesh i:nth-child(3) {
+    --m: var(--home-mesh-c);
+    right: -8rem;
+    top: -8rem;
+  }
+  .home-mesh i:nth-child(4) {
+    --m: var(--home-mesh-d);
+    left: 18%;
+    top: 6rem;
+    width: 28rem;
+    height: 28rem;
+  }
+  .home-grid {
+    background-image:
+      linear-gradient(to bottom, transparent 30%, var(--background) 100%),
+      linear-gradient(var(--home-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--home-line) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      64px 64px,
+      64px 64px;
+  }
+
+  /* Live demo: шилэн (glass) "product window". */
+  .home-window {
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    background: var(--home-glass);
+    box-shadow: var(--home-shadow);
+    backdrop-filter: blur(18px) saturate(1.4);
+    overflow: hidden;
+  }
+  .home-window-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+  }
+  .home-window-bar i {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 9999px;
+    background: var(--border);
+  }
+  .home-window-bar span {
+    margin-left: 0.5rem;
+  }
+  .home-stage {
+    background: var(--secondary);
+    border: 1px solid var(--border);
+  }
+  .home-stage-empty {
+    border-style: dashed;
+    border-color: var(--input);
+  }
+  .home-stage-drag {
+    border-color: var(--home-hover);
+    background: color-mix(in srgb, var(--home-hover) 8%, var(--secondary));
+  }
+  .home-stage-icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.9rem;
+    background: color-mix(in srgb, var(--home-hover) 12%, transparent);
+    color: var(--brand);
+  }
+  .home-scan {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 30%;
+    border-radius: 0.5rem;
+    background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--home-cyan) 55%, transparent), transparent);
+    pointer-events: none;
+  }
+  .home-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    background: var(--card);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+  .home-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: #1fb87a;
+  }
+  .home-sample {
+    display: block;
+    overflow: hidden;
+    width: 3rem;
+    height: 4rem;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    background: #fff;
+  }
+  .home-sample img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  .home-sample:disabled {
+    opacity: 0.5;
+  }
+  .home-frame-badge {
+    position: absolute;
+    top: -0.65rem;
+    left: -0.65rem;
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background: #fff;
+    color: #0a2540;
+    font-size: 0.75rem;
+    font-weight: 650;
+    line-height: 1;
+    box-shadow: 0 1px 6px rgb(0 0 0 / 0.45);
+  }
+  .home-frame-active .home-frame-badge {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  /* Tab */
+  .home-tabs {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    background: var(--secondary);
+  }
+  .home-tab {
+    padding: 0.4rem 1rem;
+    border-radius: 9999px;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    font-weight: 550;
+    line-height: 1.2;
+    outline: none;
+  }
+  .home-tab[data-state="active"] {
+    background: var(--card);
+    color: var(--foreground);
+    box-shadow: 0 1px 3px rgb(10 37 64 / 0.12);
+  }
+  .home-tab:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 50%, transparent);
+  }
+}
+
+/* Utility-ийн дээгүүр (layer-гүй): `tile`, Button, link-ийг энд дарна. */
+.home .tile {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-tile);
+}
+.home [data-variant] {
+  border-radius: 9999px;
+}
+.home [data-variant="bordered"] {
+  border-color: var(--input);
+  background-color: var(--card);
+  color: var(--foreground);
+}
+.home [data-variant="bordered"]:hover {
+  border-color: var(--home-hover);
+  background-color: var(--card);
+  color: var(--brand);
+}
+.home .link-more {
+  color: var(--brand);
+}
+/* Акцент үг: градиент нь үг (`.word`) бүр дээр, `background-clip: text` inline-block хүүхдүүдэд үйлчилдэггүй. */
+.home .text-gradient {
+  background: none;
+  color: inherit;
+}
+.home .text-gradient .word {
+  background-image: linear-gradient(100deg, var(--home-accent-from) 0%, var(--home-accent-via) 50%, var(--home-accent-to) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-bottom: 0.1em;
+}

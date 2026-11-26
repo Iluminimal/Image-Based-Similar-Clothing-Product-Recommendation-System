@@ -1,0 +1,534 @@
+# Frontend (apps/web)
+
+Storefront and visual search UI. Next.js 16 App Router, React 19, Tailwind v4, shadcn/ui, TanStack Query,
+Zustand. `make web` serves it on :3000; it needs `make api` for data.
+
+## Routes
+
+| Route | Rendering | Notes |
+| --- | --- | --- |
+| `/` | per request | apple.com-style tile home page, see "The home page" below |
+| `/products` | per request | URL-synced filters, sort and pagination; everything in the query string; the place for free-text search results |
+| `/c/{department}[/{group}[/{sub}[/{type}]]]` | per request | category pages, e.g. `/c/men/apparel/topwear/tshirts`: breadcrumbs (+ `BreadcrumbList` JSON-LD), drill-down sidebar with counts, the same filters and grid as `/products`; an unknown or empty category is a real 404 |
+| `/products/{id}/{slug}` | per request | gallery, size selector, breadcrumbs, a star rating under the name, **customer reviews** (average, distribution, sort and paging; a form for people who bought it), a delivery line under the price (from the shipping methods), a **Complete the look** rail, the similar-products rail, recently viewed, metadata, JSON-LD (Product with `aggregateRating` once rated, and BreadcrumbList) |
+| `/search` | per request | visual search (client side) |
+| `/login`, `/register` (redirect), `/forgot-password` | per request | `/login` is one flow for signing in and signing up (`SignInFlow`), with a visible "Sign in | Create account" switch (`ModeSwitch`, `?mode=register`; staff accounts are never self-registered, see `docs/admin.md`): one "email or phone number" field, then a code for a phone number, or a password (or a code) for an email; a new account is created by its first code and asked for a name (see `docs/accounts.md`). `/register` redirects to `/login?mode=register`, where an email goes straight to a code instead of asking for a password; `?next=` is honoured for same-site paths only; "Continue with Google" appears when the API has it configured (`GET /auth/providers`), and `/login?error=` shows a message for the few known codes (see `docs/commerce.md`) |
+| `/cart` | static shell | the cart is client data (guest or account), see below |
+| `/checkout`, `/checkout/confirmation/{number}` | static shell | needs a session; demo payment |
+| `/account/profile`, `/account/orders`, `/account/orders/{number}`, `/account/addresses`, `/account/wishlist` | static shell | need a session. The profile page: name, how you sign in (phone, email, Google, password: add / change / verify / remove), your devices, delete account. An order page has a progress stepper, the tracking number, the history and a "Write a review" link per delivered item |
+| `/admin` (the dashboard for an administrator, the warehouse board for a warehouse worker: `StaffHome`), `/admin/orders` (+ `{number}`), `/admin/products` (+ `new`, `{id}`), `/admin/customers` (+ `{id}`), `/admin/reviews`, `/admin/activity` (the staff activity log, administrator) | static shell | staff only (administrator or warehouse worker, each with their own sections); `noindex`; they have their own shell (sidebar, no shop header or footer: `ShopChrome` in the root layout skips the storefront chrome under `/admin`); see `docs/admin.md` |
+| `/sitemap/{n}.xml`, `/robots.txt` | per request | 10,000 products per sitemap file (`GET /catalog/sitemap` gives id, slug and last change); private and low-value paths are disallowed; `robots.txt` still works when the API is down |
+| `/icon`, `/apple-icon`, `/opengraph-image` | static | generated (no binary assets) |
+
+* **One canonical product URL.** The API id is the lookup key; `/products/41885` or a stale slug answer with a 308 to
+  `/products/41885/alma-women-blue-kurta-60000`. (The numeric suffix of the slug is the dataset id, not the API id.)
+* **The URL is the filter state.** `features/catalog/filters.ts` parses untrusted query strings tolerantly (bad values are
+  dropped, never an error, never a 422 from the API) and serializes back to the shortest URL. The sidebar, the
+  mobile sheet, sort, active-filter chips and pagination all read and write that one model. Chips and pagination are plain
+  links, so they work without JavaScript.
+* **Pages that read the API are rendered per request** (`force-dynamic` on `/` and `/search`): there is no API at build
+  time (CI, Docker image builds). The API client's fetch cache (`revalidate`) keeps them cheap.
+* **Images.** The API serves each photo as WebP at 400 and 800 px with a blur placeholder. `src/lib/image-loader.ts`
+  hands `next/image` the matching file for the requested width, so Next's optimizer (which also refuses `localhost`
+  sources) is not involved, and rewrites API photo URLs onto this site's own `/media` route (a rewrite in
+  `next.config.ts`), so photos reuse the page's connection instead of opening one to a second origin. Pass `sizes` for
+  every grid.
+* **Sizes** (`catalog/sizes.ts`) come from the category (clothing, shoes, kids, belts; none for watches, bags, ...) because
+  the catalogue has no size data. The API validates against the same table (`apps/api/src/angel/services/catalog/sizes.py`); keep the
+  two in step.
+
+## Language
+
+The site is **Mongolian first**. `i18n/request.ts` picks the language from the `NEXT_LOCALE` cookie and otherwise uses
+`DEFAULT_LOCALE = "mn"`: the browser's `Accept-Language` is ignored, so an English-language browser still opens in
+Mongolian. English is one click away in the footer switcher (the choice is a one-year cookie); a visitor with no cookie
+whose browser prefers English is offered it by the banner. The currency follows the language until the shopper picks one
+(Mongolian → ₮, English → $).
+
+* Texts live in `messages/{mn,en}/*.json` (one namespace per area, `admin` included); `i18n/messages.test.ts` fails if a key is
+  missing on either side or a placeholder differs. Catalogue words (categories, colours, genders, seasons, usages) are
+  translated by `i18n/vocab-mn.ts`; a value without an entry shows in English, so a new dataset value needs a line there.
+  Product names come from the dataset and stay in English.
+* The API's own texts (error `title`/`detail`, emails, SMS, shipping method names) are Mongolian too. The web app maps each
+  error `type` to its own message in both languages (`lib/api/errors.ts`), so the English UI does not show the Mongolian
+  server text except as a last fallback.
+* The admin area follows the same language (it used to be English only) and has its own macOS-style look (`docs/admin.md`).
+  Everything is priced in togrog (`i18n/currency.ts`): there is no currency switcher and no exchange rate.
+* **One set of form and status primitives** (Apple look: pill buttons, 12px-radius fields, hairlines): `ui/button`, `ui/input`,
+  `ui/native-select` (a real `<select>` with a chevron; `variant="pill"` for toolbars; replaces the old `selectClass` and the
+  admin-only select), `ui/checkbox`, `ui/form-alert` (the one-line error above a form) and `Field`. Do not restyle them with
+  `h-11 rounded-xl`-type overrides; use `size`/`variant`. Text uses the `type-*` scale (`type-body` 17px, `type-caption` 14px,
+  `type-fine` 12px), not `text-sm`/`text-[…rem]`; status colours are tokens (`success`, `warning`, `warning-foreground`, `star`,
+  `destructive-text`) so dark mode needs no per-component overrides. Focus rings are `ring-3 ring-ring/50` everywhere. There is
+  no decorative motion beyond the page transitions (no fly-to-cart, no counting numbers).
+* End-to-end tests read English, so `playwright.config.ts` and every context a spec creates carry an `NEXT_LOCALE=en`
+  cookie (`e2e/support/locale.ts`); `e2e/language.spec.ts` covers the Mongolian default.
+
+## Design language (Apple-style)
+
+* **Colour** (`:root` and `.dark` in `globals.css`): white and `#f5f5f7` bands, ink `#1d1d1f`, secondary text `#6e6e73`,
+  hairlines `#d2d2d7`; dark mode is true black with `#1d1d1f` surfaces. One accent: Apple blue `#0071e3` for the primary
+  button, focus ring and links (`#0066cc` / `#2997ff` as `--brand` for text). Contrast is checked by the axe sweeps: never dim
+  text with `opacity-*` on a grey surface, use `text-muted-foreground`.
+* **Buttons** (`components/ui/button.tsx`) are pills; the main action is the blue one, the rest are outlined or quiet.
+* **Product tiles** are `#f5f5f7` rounded squares. The catalogue photos have white backgrounds, so they are drawn with
+  `mix-blend-multiply` and melt into the tile (in dark mode the tile is white and the photo is drawn normally). Do the same for
+  any new product picture.
+* **Header** (`components/layout/site-header.tsx`): a 44px translucent bar (backdrop blur and saturation), 1024px wide like
+  apple.com's, with the logo, the small department links, search, bag and account **spread evenly across it**
+  (`justify-content: space-between`; the menu's nav and list and the icon group are `display: contents` from md up, so every one
+  is an item of the same row). The links are 12px with 8px either side and as tall as the bar, as apple.com's are, and their focus
+  ring is a small rounded box hugging the text (outline inset 6px), not the whole bar. A hairline fades in under it as the page
+  scrolls (a scroll-driven animation). The theme toggle lives in the footer.
+* **Department menu** (`components/layout/mega-menu.tsx`) follows apple.com's global nav:
+  * the entries in the bar are real links (they work before any script or data arrive);
+  * hovering one opens **one shared flyout** after a short delay (120 ms); moving to another entry swaps the content at
+    once (a crossfade) while the flyout's height animates to fit it (a `ResizeObserver` on the active content). **The flyout is as
+    tall as its content** (about 450px), as apple.com's is, not the height of the screen; its panel colour is `--flyout`
+    (`#fafafc`). Inside: a first column of big 24px links (the popular article types) and a column of small 12px links per
+    group, each under a small grey heading; 36px above and 80px below, as on apple.com;
+  * it closes 200 ms after the pointer leaves the bar and flyout, and at once-ish when the pointer goes to an entry
+    without a flyout ("New");
+  * while open the bar takes the flyout's colour (`data-bar-panel` on `<html>`) so bar and flyout read as one surface, and the
+    page below is veiled and blurred by the curtain (below); the links fade in one after another, 20 ms apart (`--i` on
+    `.mega-item`);
+  * touch: the first tap on an entry opens its flyout, the second follows the link (a click with `detail > 0` after a
+    non-mouse `pointerdown`; Enter on the keyboard is unaffected);
+  * keyboard: ArrowLeft / ArrowRight / Home / End move along the bar (and, with a flyout open, switch it along; an entry
+    without one closes it), ArrowDown opens an entry and moves into it, Escape closes it and returns to the entry, focus
+    leaving the menu closes it. Content that is not shown is `visibility: hidden`, so only the open department is in the tab order
+    and the accessibility tree.
+* **Flyouts under the bar** (from md up; measured on the live apple.com in a real browser): the department menu, the search and
+  the Bag each open as a panel **as tall as its content** under the bar (search about 350px, Bag about 380px, a department about
+  450px), lined up with the bar's logo (`container-nav`), colour `--flyout`. Timings are apple.com's: the panel grows over 240 ms
+  (`cubic-bezier(.4,0,.6,1)`), its lines fade in over 320 ms, 20 ms apart. The bar stays in view and usable. Opening one closes
+  the others (`announceFlyout` / `useCloseOnOtherFlyout` in `components/layout/bar-flyout.ts`: hovering a department replaces
+  the search, the magnifier closes the search and the bag button the Bag, Escape closes either).
+* **The curtain** (`components/layout/bar-curtain.tsx`, `.bar-curtain`): while any flyout is open (`data-bar-panel` on `<html>`,
+  set by `useBarPanel`) the rest of the page is veiled (`--curtain`, a 40% veil) and blurred (20px), fading over 320 ms after
+  80 ms, exactly as apple.com's `.globalnav-curtain`. Pressing it closes the flyout. Phones have full-screen pages instead and
+  no curtain (see Phone navigation).
+* **Search** (`components/layout/header-search.tsx`): the magnifier opens the flyout above with a large field (the
+  `overlay` variant of `SearchBar`), live suggestions, recent searches and quick links. Escape closes it and
+  returns focus to the magnifier, wherever focus is. **Pressing `/` anywhere opens it** with the cursor in the field (not while
+  typing in an input, textarea, select or dialog, not with Ctrl / Cmd / Alt held, and the slash is not typed into the field);
+  the magnifier advertises it (`aria-keyshortcuts="/"`, tooltip "Search (press /)"). The panel is portalled to `<body>` because the header's backdrop blur would otherwise make
+  it the containing block of anything `fixed` inside, and it loads on first click (so the header ships less JavaScript).
+* **Footer**: pale grey, 12px type, a directory of quiet columns. Account links there are `prefetch={false}`:
+  prefetched while signed out they cache the redirect to /login, which then sends a customer back to the login page right after
+  they sign in.
+
+## The home page
+
+apple.com's home: tiles edge to edge, 12px apart, each a centred headline, a line of text, one or two pill buttons and a
+picture, in the sizes measured on the live site (56px headline and 692px on the first tile, 40px and 580px on the others). It
+holds what a shop needs and nothing more. (There is no announcement bar above the header.) Nothing on it is invented: no
+discounts, ratings or "best sellers" (the dataset has none); every product, figure and sentence is real.
+
+| Tile or section | What it is |
+| --- | --- |
+| Hero (`hero.tsx`, a `Tile`) | "Shop by photo.", the "Search with a photo" button (opens the photo picker) and "Shop new arrivals"; under them three real photos (newest in stock footwear, women's and men's apparel). The headline is plain text, never hidden: it is what the page is measured on |
+| Departments (`departments.tsx`) | Women and Men side by side, Kids across the full width: the name, one line, "Shop women" and a photo that bleeds off the bottom (each department's second-newest piece, so the hero's photos are not repeated) |
+| Photo search (`photo-tile.tsx`) | the one black tile: what the shop does differently, and the button to try it |
+| New arrivals (`shelves.tsx`) | the one shelf of products: the newest in stock, with "Shop all" |
+| Recently viewed | per browser, absent on a first visit (below) |
+
+**Motion** (all CSS, transform and opacity only, no script; measured: Lighthouse performance 93 on the home page, CLS 0, TBT 25 ms):
+the tiles' words and pictures settle in as they scroll into view (`.tile-copy`, `.tile-photo`: scroll-driven
+`view()` timelines, which run on the compositor), and the first tile's three photos rise once on load (`.photo-rise`, 900 ms,
+110 ms apart). The first tile's headline is never animated. Browsers without scroll-driven animations, and visitors with
+reduced motion, simply see everything in place.
+
+Removed as unnecessary: the pinned scroll story ("How it works"), the drifting collage, the category pills, the "Under $25"
+and "<type> for <department>" shelves, the drop zone on a dark band (the photo button opens the same picker) and the trust
+strip.
+
+* **Recently viewed** is per browser: product pages record the last 12 products they showed in `localStorage`
+  (`features/catalog/recently-viewed.ts`, `RecordView`); the shelf reads it with `useSyncExternalStore` and is absent on a
+  first visit. Entries keep the price seen at that visit; clicking opens the live page. Blocked storage means no shelf.
+* **Motion is CSS** (scroll-driven animations behind `@supports (animation-timeline: ...)` and
+  `prefers-reduced-motion: no-preference`), so the page costs no animation script.
+* `ProductRail` lives in `features/catalog/product-rail.tsx`, apart from the server-only API module, because the client-side
+  Recently viewed shelf renders it.
+
+## Navigation, categories and motion
+
+**Categories.** `GET /catalog/nav` (`services/catalog/taxonomy.py`) turns the dataset's master > sub > article type tree into what
+shoppers expect: three departments (Women = Women + Unisex, Men = Men + Unisex, Kids = Boys + Girls) with counts per node.
+The 11 article-type names that sit under two parents in the data (a "Tshirts" under Belts, "Dresses" under Topwear) are
+merged into the parent with the most products, so every name has one place and nothing is counted twice. `GET /products`
+takes `department` and `category` (a node `path`); unknown values are a 404 problem. Display names ("Tshirts" -> "T-shirts",
+"Apparel" -> "Clothing") are a small table in the taxonomy module.
+
+* **Desktop menu** (`components/layout/mega-menu.tsx`): the department names are ordinary links (they work before any script or
+  data arrive); a solid panel as tall as the screen under the bar, with the category tree, opens on hover or keyboard focus (ArrowDown
+  enters it, Escape returns to the link; moving onto the empty part below the links closes it). The tree is fetched in the browser (`useCatalogNav`, shared TanStack Query cache) rather than by the layout, so
+  pages that are static stay static and a slow API cannot take the header down.
+* **Phones** (`components/layout/mobile-nav-menu.tsx`): a page that drills down level by level, each step sliding in.
+* **Category pages** (`app/c/...`): the segment layout validates the URL against the nav *before* streaming, so a dead
+  category answers 404 (a `notFound()` inside a page behind `loading.tsx` would already be a 200). Do not put a
+  `loading.tsx` on `/products/[id]`: the page's 308 canonical redirect and 404 need the status line to be unsent.
+* **Search bar** (`components/layout/search-bar.tsx`): the camera button sits inside the field and opens the photo picker
+  (`features/search/photo-search-dialog.tsx`, which reuses the whole `ImageDropzone` pipeline: upload, drop, paste, camera,
+  HEIC). A photo can also be dropped on the bar or pasted into it. Suggestions are grouped: recent searches (localStorage,
+  last five, never required) when empty; matching categories (with counts) above products when typing.
+
+**Motion.** Restrained, and almost all CSS, because the first load budget is tight (see Performance).
+
+| What | How |
+| --- | --- |
+| Scroll reveals of sections, tiles, grid rows below the first row | `Reveal` flips `data-in` through an `IntersectionObserver`; the transition is in `globals.css` |
+| Hero recedes while scrolling | `.scroll-fade`, CSS scroll-driven animation (`animation-timeline: view()`); browsers without it show the hero unchanged |
+| Header gains a shadow after scrolling | `.header-elevate`, CSS scroll-driven animation |
+| Page transitions | React `<ViewTransition>` in `app/template.tsx` (new page fades up, old one fades out); the header is named `site-header` and stays put |
+| Menu panel, suggestions, sticky add-to-cart bar, heart and cart-badge pops | CSS transitions and keyframes |
+| A cart line sliding shut when removed | the only use of the `motion` library (`AnimatePresence`), inside the lazily loaded Bag panel and `/cart` |
+
+Curves and durations are tokens (`--ease-out-expo`, `--ease-in-out-quart`; `components/motion/easing.ts` mirrors `--ease-out-expo` for Motion). Rules
+to keep: never start the largest element of the first screen hidden (it would delay the largest contentful paint: the hero
+headline has no entrance); everything that starts hidden is shown without scripting and with `prefers-reduced-motion`
+(`[data-reveal]` in `globals.css`; Motion alone would still fade opacity); view-transition animations are switched off under
+reduced motion too.
+
+## Motion and design pass (Phase 15)
+
+Calm, Apple-style motion across the storefront; CSS first, off under reduced motion, no new library.
+
+**Tokens** (`globals.css`): `--duration-{fast,base,slow}` (150, 300, 500 ms), `--ease-spring` (a CSS `linear()` spring) next to
+the two existing curves, `.skeleton` (one shimmer class: dozens of repeated utility strings would double in the HTML and the
+RSC payload), `.press-card`, the `shake`, `burst`, `scan`, `draw`, `grow-x`, `highlight` keyframes. Dialogs and sheets use the
+house easing (a panel slides in over the whole screen). **Rules**: every animation sits under the global reduced-motion kill-switch or
+`prefers-reduced-motion: no-preference`; the Vitest setup runs with reduced motion on, so counted totals and the like show their
+final value at once in tests (a test of an animation stubs `matchMedia` itself).
+
+| Where | What |
+| --- | --- |
+| Add to cart (`features/cart`) | the button becomes a check mark (`Added`), a copy of the photo flies to the cart icon (`fly-to-cart.ts`, Web Animations, no library) which bounces, then the Bag opens; a missing size shakes and takes focus |
+| Bag panel and `/cart` | a solid full-height page like apple.com's Bag (`features/cart/bag-panel.tsx`), under the bar from md up (a dialog that is not modal there, so the bar stays usable; modal and full-screen on a phone), closes with the bag button, Escape or, on a phone, the X; with a My profile list under the items, the new line glows, free-shipping progress from `GET /checkout/shipping-methods`, totals and quantities count (`AnimatedNumber`, `AnimatedPrice`), **Undo** (an in-cart bar, not a toast: a toast is outside the open modal and out of reach of screen readers), **Save for later** moves a line to the wishlist |
+| Product page | gallery cross-fades between photos, zooms around the mouse pointer, swipes on touch (ready for several photos); Product details and Delivery are `<details>` that slide (`Disclosure`; Delivery reads the real shipping methods); the card photo grows into the gallery (a named view transition, set by CSS on the hovered or focused card, `.press-card` in `globals.css`) |
+| Cards | press feedback, the wishlist heart bursts when filled |
+| Listing and search | a changed filter keeps the old grid dimmed (no skeleton flash, no `key` on the Suspense boundary), the count counts, the filter and sort bar sticks under the header, the filter sheet closes by swiping its title; a scanning band crosses the photo being searched and results rise in |
+| Checkout | a stepper (checks, a summary beside each finished step, a connector that fills), the card number groups as typed and the card is named, a processing overlay (at least 900 ms, none under reduced motion), an animated confirmation with "What happens next", order progress connectors that fill, a pill that slides between account tabs |
+| Forms | an error fades in and the control shakes once |
+| Edge pages | one designed page for 404 and errors (`LostPage`: a floating mark, a search box, the way back), `global-error.tsx` |
+
+**Phone navigation** (apple.com's, checked against the live site in a real browser): on a phone the header is the same four
+things in apple.com's order: logo on the left, then search, bag and the menu button. The menu, the search and the Bag are
+each a full page that opens under or over the bar, and **while one is open only the X is left in the bar**: the logo, search
+and bag fade out (`.phone-bar-item`, 240 ms, driven by `data-bar-panel` on `<html>`, set by `useBarPanel` in
+`components/layout/bar-panel.ts` for as long as any of the three is open). From md up the bar keeps everything, as before.
+
+* The menu button (`MobileNav`) is two thin lines that turn into an X; pressed, the menu page opens under the bar
+  (`MobileMenuPanel`, `.menu-panel` in `globals.css`): Women, Men, Kids and New in large type, each line fading in after the one
+  above, and nothing else (no search field, no account links: those are the magnifier's and the Bag's pages). Departments
+  drill down level by level inside the page. While it is open the bar turns solid, the page behind cannot scroll and is
+  `inert`, Escape or the X or following a link closes it and focus returns to the button. Portalled to `<body>` and fetched
+  on the first press.
+* The search page (`HeaderSearch`) has the X and, below it, the field with its quick links; no logo.
+* The Bag page (`BagPanel`) has the X (the logo only from md up), the items, and under them **My profile**: the account
+  pages for a signed-in customer, or Sign in. The account is here, as under apple.com's Bag.
+
+There is no bar along the bottom. Sign out, which lives in the desktop account dropdown (the account icon is in the bar from
+md up), is a button on the account page on a phone. A bottom tab bar (Instagram-style) was tried first and removed: it
+repeated what the header already offered.
+
+**Lessons**: a `loading.tsx` above `/products/[id]` makes the product page stream, which turns its canonical-URL `permanentRedirect`
+into a client-side redirect (two session refreshes in a row, the second rejected as a replay); a server component can neither pass
+a function to a client component nor use `dynamic(..., { ssr: false })`; route-specific CSS (`features/home/story.css`,
+`features/catalog/zoom.css`, `components/ui/disclosure.css`) is imported by the component that uses it, so other pages do not
+download it; the product-card link is plain CSS rather than a client component (a client component per card is hydrated and
+serialised once per card).
+
+**Lighthouse after this pass** (production build, medians of 5, real catalogue; end of Phase 12 in brackets): home **89** (91),
+listing 90-92 (92), product 91-92 (91-93), search 90 (91). First-load JS is 218 KB on home (213), 213 KB on the listing, 280 KB
+on the product page (270). Blocking time stays under 60 ms and nothing shifts. The home page sits one point under the 90 gate
+(single runs between 89 and 94): its simulated first paint is one round trip (150 ms) later than before, while the real first
+paint is 0.3 s; the cause was not found by removing the tab bar or the per-card client component, nor by moving the
+home-only CSS out of the global file, so the margin is recorded rather than hidden. `make lighthouse` exits non-zero until it is
+back at 90.
+
+## Apple-style redesign (Phase 16)
+
+Every page is being restyled after apple.com, one step at a time (each step is a commit). Done so far:
+
+* **Header** (step 1): search, account, bag and menu share one cell, `HEADER_CELL` in `components/layout/header-cell.tsx` (44px wide,
+  as tall as the bar: 48px on a phone, 44px from md), no hover background, a fade on hover. Glyphs live in two icon boxes (17x48,
+  14x44); search and bag are apple.com's own outlines, the person is drawn to match.
+* **Tokens** (step 2, `globals.css`): the system font stack (SF Pro on Apple devices; no web font is downloaded any more), body text
+  17px with Apple's tracking, a type scale as utilities (`type-hero`, `type-display`, `type-title`, `type-heading`, `type-intro`,
+  `type-body`, `type-caption`, `type-fine`; sizes step down at 1068px and 734px), `tile` (grey card, 18px corners, 28px from 734px),
+  `link-more` (blue "Learn more >"), `container-nav` (1024px), `--field` (the 1px form border, #86868b), `--primary-hover/-active`.
+* **Controls**: buttons are pills with 15px regular text (`lg` 17px / 44px, `xl` 48px for hero calls to action, `bordered` is
+  Apple's blue outline that fills on hover, no press scale); inputs, textareas and selects are 44px, 12px corners, 17px text on the
+  card colour; the checkbox is 20px with 6px corners.
+* **Footer** (step 3, `site-footer.tsx`): apple.com's global footer: grey, 12px, a directory of three columns
+  (bold heading over a short list), a "More ways to shop" line and the copyright with the theme switch, hairlines between the parts.
+  Columns stay open on a phone (two side by side) instead of collapsing. There is no breadcrumb row: the pages carry their own.
+* **Home** (step 4, `features/home`): the hero is apple.com's: a small eyebrow, `type-hero` headline, the 21px line and a blue pill with
+  "Shop women >" / "Shop men >" links (the old outlined buttons are gone); the photo collage keeps its scroll drift on flat grey tiles.
+  Departments are three grey tiles (title, line, blue link, photo below, multiplied into the grey in light mode, on white in dark);
+  section headings use `type-title` and `link-more`; "How it works" and the black photo-search tile use `type-display`/`type-title`,
+  and the drop zone is a soft grey panel (no dashed border) with Apple buttons.
+* **Listing and search** (step 5): a product card is one grey `tile` (photo on top, name, subtitle, rating and price inside it,
+  price pinned to the bottom so cards in a row line up); the title is `type-display`; the sort select and the phone Filters button
+  are 40px pills; filter groups have 17px semibold titles and more air; the category drill-down and the photo-search results use
+  the same sizes, and empty and error states are grey tiles instead of dashed boxes.
+* **Product page** (step 6): the gallery is a grey `tile`; the name is `type-display`, the price `type-heading`; size options are
+  48px outlined tiles whose chosen one gets a blue 2px outline (not an inverted black chip); one full-width blue **Add to Bag**
+  pill (the label and the sticky phone bar say Bag; the header's accessible name moves with the rest of the Bag wording in step 7)
+  with **Save** under it; "Find more like this with a photo" is a blue `link-more`; Details and Delivery use 17px headings.
+* **Bag, checkout, confirmation** (step 7): the shop says **Bag** like apple.com (header and panel labels, "Add to Bag", "Your Bag is
+  empty", "View Bag", "Review your Bag."; URLs and the API keep `cart`). The Bag page is `type-display` over lines with a grey photo tile,
+  17px names and prices, and a grey `tile` summary with one full-width blue Checkout pill; the panel's buttons are a blue Check Out and a
+  blue-outline View Bag. Checkout keeps its stepper with 24px headings, choice cards outlined 1px (blue 2px when chosen), a grey order
+  summary tile and a 48px Pay now pill; the confirmation title is `type-display` over a grey "What happens next" tile.
+* **Account and sign-in** (step 8): the sign-in, sign-up and forgot-password pages are one centred 26rem column under a `type-title`
+  heading, like the Apple Account page (the dark side panel and its product fetch are gone); the account pages' cards, address
+  cards, order rows and the empty and error states are grey `tile`s instead of outlined boxes; small outlined buttons became the blue
+  `bordered` variant.
+* **Shared pieces** (step 9): dialogs and sheets have 28px corners, a blurred 35% scrim, 24px padding and `type-heading` titles (the
+  footer band is gone, buttons just sit right-aligned); the account dropdown has 12px corners; toasts 18px; the 404 and error page
+  uses `type-display` with grey pill links; skeleton and empty states follow the tile shapes.
+* **Verification** (step 11): the whole Playwright suite passes against a production build, apart from the Google sign-in specs
+  when the stack runs on other ports (the Google callback is configured for :3000); the axe checks caught the blue outline
+  button's contrast on grey (fixed by using `--brand` #0066cc for its text and border) and the department tiles' text fading
+  in at half opacity (the scroll-in effect is now scale only). Lighthouse (mobile, 5 runs, `docs/perf/lighthouse.json`): home **91**,
+  listing 92, filtered 93, category 92, product 93, search 93, cart 96, login 94; accessibility 100 everywhere; first-load JS is
+  217 KB on home. The system font removed the web font download. The images in `docs/screenshots` show the home page, the category menu, a product, the Bag and the phone search.
+
+**Lessons**: an accessible name includes CSS generated content, so a decorative chevron in `::after` must be
+`content: "\203A" / ""` (alt text empty) or `link-more` links get a "›" in their name; text on a tile must never sit under a
+partly transparent animation (axe reads the blended colour); production e2e on another port needs `CORS_ORIGINS`,
+`NEXT_PUBLIC_API_URL` and `API_INTERNAL_URL` set at **build** time (rewrites are baked in).
+
+## Accounts, cart and checkout
+
+How the pieces fit (API side: `docs/commerce.md`):
+
+* **Same origin.** `next.config.ts` rewrites `/api/v1/*` to the API, and the browser only ever calls its own origin. That
+  makes the API's httpOnly refresh cookie first-party. Server components still call the API directly
+  (`API_INTERNAL_URL`); the older search code keeps its cross-origin URL.
+* **Session.** `features/auth`: the access token lives in a Zustand store, in memory only. On load `bootstrapSession`
+  trades the refresh cookie for a token (`lk_session` is a non-secret marker so a signed-out visitor makes no request).
+  `refreshSession` is single-flight: refresh tokens rotate, so two parallel refreshes would look like token theft.
+  `lib/api/browser.ts` is the typed `openapi-fetch` client for authenticated calls; it adds the bearer token and, on a
+  401, refreshes once and repeats the request.
+* **`src/proxy.ts`** redirects `/account/*` and `/checkout/*` to `/login?next=...` without the marker cookie. It is a
+  convenience, not security: the API checks every call.
+* **Cart** (`features/cart`): server-side for guests (cookie) and accounts, so there is one code path; signing in merges the
+  guest cart on the server. TanStack Query holds it; quantity changes and removals are optimistic and roll back with a toast
+  when the API refuses (stock). Rapid taps overlap, so the server's answer is applied only after the last request finishes.
+  The header panels (`next/dynamic`) is only downloaded when opened.
+* **Wishlist** (`features/wishlist`): accounts only. Guests are sent to sign in and come back to the same page; they never
+  trigger a request. Optimistic like the cart.
+* **Checkout** (`features/checkout`): address, shipping, then a card form that is labelled **"Demo payment, no real
+  charge"**; card values are validated for shape but never sent anywhere. "Pay now" creates the order (stock is reserved
+  server side, `Idempotency-Key` per attempt, kept across a dropped connection and renewed after any definite answer) and
+  calls `simulate-payment`, which only exists when the API runs with `PAYMENTS_MODE=offline`. The confirmation page polls
+  until the order is paid. With QPay it shows the QR code and bank-app links and reads the order status from our own API every 3 seconds (paused in a hidden tab), so it moves to the confirmation page by itself once the server has settled the payment; "check my payment" asks QPay once, for when the callback cannot reach the API. No payment keys are in the web app.
+* **Reviews** (`features/reviews`): the product page renders the first page on the server and the browser refetches a current
+  copy at once (`initialDataUpdatedAt: 0`), so a new or hidden review shows without waiting for Next's 60 s cache. A signed-in
+  customer's request carries their token and learns whether they bought it and what their own review is. The star picker is a
+  group of radio buttons (arrow keys, labels), and `RatingStars` is a picture with the rating in words ("4.5 out of 5 stars").
+* **Shared pieces** for orders: `OrderProgress` (stepper), `OrderTimeline` (history; the admin gets the same component with
+  notes and actors), `StatusBadge`; for ratings `RatingStars`; the admin's `AdminPageHeader` gives every admin screen its `h1`.
+* Test helpers: `src/test/api-mock.ts` (`stubApi` routes `fetch` by "METHOD /path"; use `respond(...)` for a route that will be
+  called more than once, because a `Response` can only be read once), `src/test/render.tsx`.
+
+## Visual search
+
+State: the photo, chosen category, refinement text and filters live in a small Zustand store
+(`search/search-store.ts`); the results are a TanStack Query keyed by those values. The photo only ever exists in
+memory (an object URL, revoked on replace/remove) and is never written to storage; it is sent to the API only for the
+search itself.
+
+Ways in (all go through `normalizeImage`, then the store): file picker, drag and drop (anywhere on the page), paste (⌘/Ctrl V),
+the OS camera sheet on touch devices (`<input capture="environment">`), and a `getUserMedia` dialog on desktop
+(stream stopped on close; denied/missing camera is explained).
+
+`normalizeImage` makes every input an upload the API accepts:
+
+* HEIC/HEIF (iPhone) is decoded natively where the browser can (Safari) and otherwise with `heic-to` (a ~3 MB WASM
+  bundle, loaded by dynamic import only when a HEIC file shows up), then encoded as JPEG.
+* Everything is downscaled to a 1600 px long edge (the model sees 224 px) and re-encoded as JPEG, flattening transparency
+  onto white. EXIF orientation is applied by the decoder.
+
+Results: grid with a "NN% match" badge, a "Detected: Shirts" chip (the zero-shot guess is a suggestion; picking a
+category, from the top three or any article type, applies it as `article_type`), quick filter chips plus a sheet for colour,
+price, season and occasion, and a "refine with words" box (adds `query` and `interpret=true`, which switches the request to hybrid search). A line under it lists what the API understood from the words ("Colour: Blue", "Up to ₮ 175,000"; `AppliedFilters`); to change it, edit the text.
+Filter changes are debounced 400 ms and results are cached per (photo, filters, category, text), so going back to an
+earlier combination does not spend one of the API's 20 image searches per minute. Rate-limit, size, type and network
+errors are shown in plain words (`lib/api/errors.ts`).
+
+On a product page, the "You may also like" rail has the same box (`features/catalog/similar-refine.tsx`): the server
+renders the plain rail, and a refinement calls `GET /products/{id}/similar?query=…&interpret=true` and swaps the rail.
+
+Not done: cropping the photo before searching (SPEC §5 mentions "preview with crop").
+
+## Checks
+
+* `npm test`: Vitest + Testing Library, 642 tests (filters, product helpers, JSON-LD and sitemap, error mapping, image
+  normalization, search, cart, checkout, account, orders, admin screens and their payload logic, forms, the access gate).
+* `make e2e`: Playwright, 52 end-to-end tests against a running stack: visual search, cart, checkout with the demo
+  payment, login, admin, plus axe accessibility sweeps and keyboard checks. See `docs/e2e.md`; CI runs it on a seeded
+  stack with a fake model.
+* `make lighthouse`: Lighthouse on the production build (below).
+
+## Accessibility
+
+Target: WCAG 2.1 AA. What is checked automatically, and what is not:
+
+* **axe** (`e2e/a11y.spec.ts`, rules `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `best-practice`) on home, listing (plain,
+  filtered, empty), product, search (empty and with results), sign in, register, cart, 404, the mini-cart, the header
+  suggestions, the phone filter sheet, account, checkout, confirmation and the admin screens, each in light and dark mode at
+  390 px and 1440 px, with reduced motion so nothing is caught mid-animation. Zero violations.
+* **Keyboard** (`e2e/keyboard.spec.ts`): the skip link is the first stop and moves focus into `<main>`; the first 25 tab
+  stops of a page all show focus; the search combobox (arrows, Escape, Enter); dialogs keep focus inside, close on Escape and
+  give focus back; the category toggles work with Enter and Space and announce their state; form errors are tied to their
+  fields; reduced motion switches animations off.
+* **Not covered**: a screen reader (VoiceOver, NVDA) was not used, nor a real phone with switch access or zoom. Automated
+  tools find roughly a third of accessibility problems, so treat "zero axe violations" as a floor.
+
+What the first run found, and the fixes:
+
+| Finding | Fix |
+| --- | --- |
+| `nested-interactive` in the category filter: a checkbox inside a `<summary>` | the expand toggle is its own button (`aria-expanded`, `aria-controls`); the branch opens by itself while something inside is selected |
+| Muted text on muted backgrounds 4.34:1 | `--muted-foreground` oklch(0.556) to oklch(0.5): 5.5:1 on `bg-muted`, 6:1 on white |
+| "Paid" badge 3.75:1, "Withdrawn"/"Cancelled" badge 3.99:1 | `--success` oklch(0.55 0.13 155) to oklch(0.45 0.12 155) (5.5:1); `--destructive` to oklch(0.52 0.22 27) (5.0:1) |
+| Focus ring 2.6:1 against white (and drawn at 50-60% opacity) | `--ring` light oklch(0.4) (9.2:1 solid, 3.1:1 at 60%); dark oklch(0.75) |
+| Escape in the search box left a hidden suggestion highlighted, so Enter opened a product instead of searching (found by the keyboard spec) | Escape only dismisses the list and clears the highlight, and does not let the browser clear the field |
+| `<main>` could not receive the skip link's focus; footer links had no focus style | `tabIndex={-1}` on `<main>`; focus rings on footer links |
+
+The admin and review screens added later were swept the same way and found three more:
+
+| Finding | Fix |
+| --- | --- |
+| The product edit page's section headings were `h3` under the page's `h1` (`heading-order`) | they are `h2` |
+| A "Sign in" link inside a sentence told itself apart from the text by colour alone (`link-in-text-block`) | underlined |
+| The red "Refund order" button: red text on a faint red tint, 3.2:1 in dark mode (the soft destructive badge was the same recipe) | the destructive button is solid (white on the red, 6.0:1; black on the lighter dark-mode red, 7.3:1) and the destructive badge has lighter text in dark mode (6.5:1) |
+
+Contrast ratios were computed from the OKLCH values, not guessed (the colours are CSS variables in `globals.css`).
+
+## Performance
+
+Measured with Lighthouse 13.5 (`scripts/lighthouse.mjs`, `make lighthouse`): mobile preset, simulated slow 4G and 4x CPU,
+production build (`make web-prod`), API and database on the same machine, **median of 5 runs** (the spread was 91 to 93
+for home). "Before" is the same script on the commit before this pass (`docs/perf/lighthouse-before.json`, 3 runs).
+
+  | Page | Before | After | A11y | Best practices | SEO | LCP | First-load JS | Transfer |
+  | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+  | Home | 86 | **91** | 100 | 100 | 100 | 3.5 s | 204 KB | 348 KB |
+  | Listing | 87 | **91** | 100 | 100 | 100 | 3.6 s | 202 KB | 404 KB |
+  | Listing, filtered | 87 | **92** | 100 | 100 | 100 | 3.4 s | 202 KB | 370 KB |
+  | Product | 86 | **97** | 100 | 100 | 100 | 2.6 s | 216 KB | 367 KB |
+  | Search | 91 | **92** | 100 | 100 | 100 | 3.3 s | 292 KB | 379 KB |
+  | Cart | 79 | **95** | 100 | 100 | 63 | 3.0 s | 202 KB | 266 KB |
+  | Sign in | 96 | **96** | 100 | 100 | 63 | 2.8 s | 241 KB | 310 KB |
+
+  Raw numbers: `docs/perf/lighthouse.json`. The SEO score of 63 on cart and sign-in is Lighthouse reporting the
+  deliberate `noindex` ("page is blocked from indexing"). The score moves a few points between machines and runs; the
+  script exits non-zero if home, listing or product fall below 90.
+
+**How the score was reached.** Blocking time is tiny (about 25 ms) and nothing shifts, so the whole gap was the LCP the
+simulation reported (about 4.2 s), although the real LCP in a browser is 60-110 ms. What the investigation showed, in order
+of effect:
+
+1. **`scroll-smooth` on the "new arrivals" carousel.** With `scroll-snap` it starts a smooth-scroll animation while the page
+   loads, and Chrome then reported the page's largest paint about 900 ms late (observed LCP 900 ms to 110 ms once removed;
+   in isolation home went 88 to 92). Bisected by removing sections, then classes. `ScrollRail` now has a comment saying not to add it
+   back; the arrow buttons scroll smoothly themselves (and respect `prefers-reduced-motion`).
+2. **First-load JavaScript 276 KB to 204 KB (home).** `env.ts` imported zod just to check two URLs, and the listing URL
+   parser shared a module with browser code (about 29 KB on every page): both are plain TypeScript or their own module now.
+   Overlays that most visitors never open load on first use instead of with the page: Bag panel, mobile menu, account
+   dropdown (all a plain button first, the real component on the first click, which opens it), phone filter sheet, camera
+   dialog, desktop filter sidebar (phones never fetch it) and the toast renderer. The sort control is a native `<select>`
+   (no Radix Select).
+3. **Fewer early image bytes.** `content-visibility: auto` (`defer-render`) on sections and grid rows below the first screen:
+   a short mobile page otherwise fetches every "lazy" photo up front (12 photos, 102 KB on home became 5, 37 KB). Thumbnails
+   come through this site's origin (no second connection) and the monospace font is not preloaded.
+4. **Cart layout shift 0.21 to 0**: the empty state now has the loading skeleton's height.
+
+**After the home page and account pass** (5 runs, median, real catalogue; `docs/perf/lighthouse.json` is this run): home 91,
+listing 90, filtered listing 91, category page 90, product 97, search 91, cart 91, sign in 94. The margins on home and
+listing are thin (single runs range from 83 to 95). First-load FCP rose by one or two round trips (150 ms each) on most pages:
+the global stylesheet is now 17 KB gzipped and the login HTML 15 KB, both above TCP's first flight of about 14.6 KB, so each
+needs another round trip on the simulated 4G link; a single extra line of markup in the layout can push the login HTML over that line. Next time the
+score drops, shrink the global CSS (move route-specific rules such as the home page's `.story-*` into a route-level CSS file)
+before anything else.
+
+**After the navigation and motion pass** (3 runs, median; `docs/perf/lighthouse.json` is this run): home 96, listing 91,
+filtered listing 92, category page 91, product 94, search 92, cart 91, sign in 98; first-load JS 209 KB on home (+5 KB),
+208 KB on the listing, 224 KB on the product page. A first version with the Motion library in the root layout cost about
+55 KB on every page and pushed the product page from 97 to 91; scroll reveals, the hero and the sticky bar are CSS now and
+Motion loads only with the cart. Cart has 250 KB because `/cart` shows the animated lines inline.
+
+**After the admin panel, ratings and reviews** (3 runs, median, on the 60-product synthetic catalogue of the hermetic e2e
+stack, so the absolute numbers are not comparable with the real-catalogue rows above; `make lighthouse` on your own data is
+the gate): home 93, listing 92, product 92, each with 100 for accessibility, best practices and SEO, CLS 0, TBT under 40 ms;
+first-load JS 212 KB on home, 206 KB on the listing, 270 KB on the product page. The product page carries the reviews section
+(the star picker, the review form and its validation are one client chunk with the page; the section is `defer-render`), which
+is where its extra 50 KB or so comes from. `RatingStars` is plain markup and SVG on cards, so listings did not grow. The admin
+area is a separate set of routes, so none of it is downloaded by shoppers.
+
+Conventions that keep it this way: new overlays (dialog, sheet, dropdown, popover) go behind `next/dynamic` and a plain
+trigger; keep schema libraries out of modules that browser code shares; do not use `scroll-smooth` on snap containers;
+check with `make lighthouse` after touching the header or the home page.
+
+Not done: statically generating the home page (it reads the API at request time, see Routes), and Lighthouse in CI
+(runner variance would make a hard gate flaky; `make lighthouse` is the gate).
+
+
+## The home page: Stripe/Linear look (`styles/home.css`), a live photo search, and its motion (`styles/effects.css`)
+
+Only the home page has this look. Its wrapper is `.home` (`app/page.tsx`): it redefines the colour tokens so `Button`, `ProductCard` and `ProductRail`
+pick them up on this page and nowhere else. Light is the default (`#fbfbfe` canvas, ink `#0a2540`, indigo `#635bff` primary, pink/cyan accents);
+`.dark .home` gives the dark pair (`#08090d` canvas, `#101218` cards, indigo `#6a63ff`), so the page follows the theme. Every colour that is not a standard
+token (mesh blobs, hover glow, accent gradient, glass) is a `--home-*` variable defined in both blocks. Geist Sans (`features/home/fonts.ts`, Cyrillic
+included) is imported only by the home page, so Next.js loads it only for that route. The store's default theme is light: a visitor with no saved choice gets
+light, whatever the OS prefers; "dark" and "system" are used only when picked (`ThemeScript`, `ThemeProvider`).
+
+| Part | What it is |
+| --- | --- |
+| **Hero** (`hero.tsx`) | a pill, the headline whose words rise out of their own mask (`SplitWords`, `translate` only, text always in the DOM) with one gradient phrase, one line, two buttons; behind it a gradient mesh (`.home-mesh`, four radial blobs that drift with `transform`, no blur) and a faint grid. No photos: the demo is the visual, so the LCP is text |
+| **Live photo search** (`demo.tsx` + `live-search.tsx`, client) | the centrepiece: a glass window where the visitor drops, chooses, pastes or photographs a picture, or taps one of three real catalogue samples. `POST /search/garments` runs on the page; every garment gets a numbered dotted frame (click to switch) and its four closest real products appear with match badges and quick add, with the time the API reports. `See all results` hands the photo (and the chosen garment) to `/search` through the search store. The state machine is `live-search-state.ts` (idle, scanning, done, error; a replaced photo aborts the old request). Search code (`search-api`, `normalize-image`, the camera dialog) loads on first use. Photos stay in the browser. The window is one centred column until a photo is chosen; the results column opens only then, so an idle visitor never sees an empty pane |
+| **Trending** (`trending.tsx`, `trending-tabs.tsx`) | Radix Tabs over three server-fetched rails (`popular()`); only the open tab's images load |
+| **Shelves** | new arrivals and recently viewed |
+| **Card tilt, magnet, fly to bag, heart burst** | unchanged: `CardTilt` (one delegated pointer listener in the root layout), `flyToBag` (Web Animations API), `.heart-burst`, `.free-glow`, `.card-in` |
+
+Rules that `src/styles/effects.test.ts` enforces: no animation or transition outside `prefers-reduced-motion: no-preference` (it looks inside nested `@media`
+and `@supports`), no hover outside a hover-capable pointer, scroll-driven effects only under `@supports (animation-timeline: view())`, no layout property
+and no blur in a keyframe. The hero headline and buttons are never hidden (no `opacity`); below-the-fold sections are `defer-render` and their images
+`fetchPriority="low"`.
+
+Home page order: hero -> live photo search -> trending -> new arrivals -> recently viewed. Copy is deliberately short.
+The earlier pinned "photo to bag" scroll story and the department cards were removed: the demo does what the story described.
+
+## Security headers and the CSP
+
+`src/proxy.ts` runs on every page (not `/api`, `/media`, static files or prefetches) and puts a **per-request nonce** into
+`Content-Security-Policy` (`src/lib/security-headers.ts`, pure functions with tests): scripts run only with that nonce
+(`'strict-dynamic'` trusts what they load), styles may be inline, images are this origin, `data:`, `blob:` and https (Google profile
+photos), `connect-src` is this origin plus the API's own origin (a few calls, such as search suggestions and the category tree, go to the
+API directly), frames, objects and other `<base>`s are closed, and violations go to `POST /api/v1/security/csp-report` (logged as
+`csp_violation`, query strings dropped). `CSP_MODE` is `enforce` in production and `report-only` in development (HMR needs `unsafe-eval`,
+allowed there only); `upgrade-insecure-requests` is added only behind https so a local http build still works. The nonce reaches the
+layout's theme script through the request header (`app/layout.tsx` reads it; do not make `ThemeScript` itself async, React then streams it
+out of `<head>` and hydration fails). JSON-LD scripts carry no nonce: they are data, not executed. Zod is put in `jitless` mode
+(`lib/zod-jitless.ts`, imported before any schema in client code) so it never tries `new Function`, which the CSP forbids.
+`next.config.ts` adds the fixed headers: `X-Content-Type-Options`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options:
+DENY`, `Permissions-Policy` (camera for this origin only), `Cross-Origin-Opener-Policy: same-origin` and, in production, HSTS.
+The API adds its own (`core/security_headers.py`): nosniff, no-referrer, `X-Frame-Options`, `Cross-Origin-Resource-Policy: same-site`, a
+closed `Permissions-Policy`, `Content-Security-Policy: default-src 'none'` (not on the Swagger page) and HSTS when `COOKIE_SECURE`.
+
+## Storefront shortcuts (Phase 3)
+
+* **Quick add** (`features/cart/quick-add.tsx`): a "+" over the bottom-right of every in-stock card (on hover or focus with a mouse,
+  always on touch). A product without sizes goes in with one tap; otherwise a small popover asks for the size and adds as soon as
+  one is chosen, then opens the bag like the product page does. Not shown to staff. It sits next to the card's link, not inside it.
+* Cards say **Few left** (`low_stock`); the sort menu has **Best selling** and **Top rated**; an empty result and the cart page
+  show a **Best sellers** rail (`PopularRail`, server component).
+* **Header search** highlights the typed part of each suggestion (`Highlight`, a `<mark>`), and with nothing typed and no recent
+  searches offers four popular products.
+* Not done on purpose: "notify me when back" (no email transport yet), and remembering only searches that had results (the search
+  box cannot know yet when it is submitted). The checkout summary was already sticky.

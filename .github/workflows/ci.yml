@@ -1,0 +1,205 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API (lint, typecheck, migrate, test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: angel
+          POSTGRES_PASSWORD: angel
+          POSTGRES_DB: angel
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U angel -d angel"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+asyncpg://angel:angel@localhost:5432/angel
+      REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - run: uv sync --frozen
+      - run: uv run ruff check . ../../scripts
+      - run: uv run ruff format --check . ../../scripts
+      - run: uv run mypy
+      - name: Migrations apply, roll back and re-apply cleanly
+        run: |
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+      - name: Models and migrations are in sync
+        run: uv run alembic check
+      - run: uv run pytest
+
+  web:
+    name: Web (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: apps/web/.nvmrc
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  e2e:
+    name: End-to-end (Playwright on a seeded stack)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [api, web]
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: angel
+          POSTGRES_PASSWORD: angel
+          POSTGRES_DB: angel
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U angel -d angel"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      # API нь FashionCLIP-ийн тогтмол хиймэл хувилбар (CI-д загвар татахгүй), offline төлбөрийн gateway,
+      # rate limit-гүйгээр ажиллана (тест бүр өөрийн хэрэглэгчийг бүртгэдэг).
+      APP_ENV: test
+      DATABASE_URL: postgresql+asyncpg://angel:angel@localhost:5432/angel
+      REDIS_URL: redis://localhost:6379/0
+      EMBEDDER: fake
+      LOCALIZER: fake
+      PAYMENTS_MODE: offline
+      # Google-гүйгээр Google нэвтрэлт: API-ийн хиймэл хувилбар зөвшөөрлийн дэлгэцээс бусад жинхэнэ урсгалыг ажиллуулна.
+      OAUTH_MODE: fake
+      OTP_DEV_CODE: "000000"
+      # Тестүүд нэг утсаар минутын дотор хоёр удаа нэвтэрдэг.
+      OTP_RESEND_SECONDS: "0"
+      RATE_LIMIT_ENABLED: "false"
+      JWT_SECRET: ci-only-jwt-secret-0123456789-0123456789
+      CORS_ORIGINS: http://localhost:3000
+      MEDIA_DIR: /tmp/angel-media
+      MEDIA_BASE_URL: http://localhost:8000/media
+      E2E_FAKE_MODEL: "1"
+      E2E_FAKE_LOCALIZER: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: apps/web/.nvmrc
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install
+        run: |
+          (cd apps/api && uv sync --frozen)
+          (cd apps/web && npm ci && npx playwright install --with-deps chromium)
+      - name: Migrate and seed a synthetic catalogue
+        working-directory: apps/api
+        run: |
+          uv run alembic upgrade head
+          uv run python ../../scripts/seed_e2e.py --count 60
+      - name: Start the API
+        working-directory: apps/api
+        run: |
+          nohup uv run uvicorn angel.main:create_app --factory --host 127.0.0.1 --port 8000 --no-access-log > "$RUNNER_TEMP/api.log" 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8000/readyz && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/api.log"
+          exit 1
+      - name: Build and start the web app
+        working-directory: apps/web
+        run: |
+          npm run build
+          nohup npm run start > "$RUNNER_TEMP/web.log" 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:3000/ > /dev/null && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/web.log"
+          exit 1
+      - name: Playwright
+        working-directory: apps/web
+        run: npx playwright test
+      - name: Keep the report when something failed
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+            ${{ runner.temp }}/api.log
+            ${{ runner.temp }}/web.log
+          retention-days: 7
+
+  infra:
+    name: Infra (compose files valid, production images build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker compose -f infra/docker-compose.dev.yml config --quiet
+      - name: Production compose is valid and both images build (nothing is pushed)
+        run: |
+          cp .env.prod.example .env.prod
+          docker compose -f infra/docker-compose.prod.yml --env-file .env.prod config --quiet
+          docker compose -f infra/docker-compose.prod.yml --env-file .env.prod build migrate web

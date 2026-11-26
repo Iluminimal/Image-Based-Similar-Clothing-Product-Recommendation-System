@@ -1,0 +1,192 @@
+import { RecordView } from "@/features/catalog/record-view";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import Link from "next/link";
+import { notFound, permanentRedirect } from "next/navigation";
+import { Fragment, Suspense } from "react";
+import { Price } from "@/components/product/price";
+import { getFormat, getVocab } from "@/i18n/server";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Disclosure } from "@/components/ui/disclosure";
+import { CompleteTheLook } from "@/features/catalog/complete-the-look";
+import { DeliveryEstimate } from "@/features/catalog/delivery-estimate";
+import { DeliveryInfo } from "@/features/catalog/delivery-info";
+import { ProductRecentlyViewed } from "@/features/catalog/product-recently-viewed";
+import { getCatalogNav, getProduct, getProductReviews } from "@/features/catalog/api";
+import { breadcrumbTrail, productDescription, productJsonLd } from "@/features/catalog/json-ld";
+import { JsonLdScripts } from "@/features/seo/json-ld-scripts";
+import { productPath } from "@/features/catalog/product";
+import { ProductGallery } from "@/features/catalog/product-gallery";
+import { sizesFor } from "@/features/catalog/sizes";
+import { PurchasePanel } from "@/features/cart/purchase-panel";
+import { RailSkeleton } from "@/features/catalog/product-rail";
+import { SimilarProducts } from "@/features/catalog/similar-products";
+import { ProductReviews } from "@/features/reviews/product-reviews";
+import { RatingStars } from "@/components/product/rating-stars";
+import { Check } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function parseId(raw: string): number | null {
+  return /^\d{1,15}$/.test(raw) ? Number(raw) : null;
+}
+
+export async function generateMetadata({ params }: PageProps<"/products/[id]/[[...slug]]">): Promise<Metadata> {
+  const id = parseId((await params).id);
+  const product = id ? await getProduct(id) : null;
+  if (!product) return { title: (await getTranslations("catalog.product"))("notFound"), robots: { index: false } };
+  const description = productDescription(product, await getVocab());
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical: productPath(product) },
+    openGraph: {
+      type: "website",
+      title: product.name,
+      description,
+      images: [{ url: product.image.thumb_800, width: 800, height: 1067, alt: product.name }],
+    },
+    twitter: { card: "summary_large_image", title: product.name, description, images: [product.image.thumb_800] },
+  };
+}
+
+export default async function ProductPage({ params }: PageProps<"/products/[id]/[[...slug]]">) {
+  const { id: rawId, slug } = await params;
+  const id = parseId(rawId);
+  if (!id) notFound();
+  const product = await getProduct(id);
+  if (!product) notFound();
+
+  // Бараа бүрт нэг canonical URL: slug алга эсвэл хуучирсан бол 308-аар зас.
+  if (slug?.join("/") !== product.slug) permanentRedirect(productPath(product));
+
+  const [reviews, t, tc, format, tu, vocab, nav] = await Promise.all([
+    getProductReviews(product.id),
+    getTranslations("catalog.product"),
+    getTranslations("catalog"),
+    getFormat(),
+    getTranslations("layout.ui"),
+    getVocab(),
+    // Ангиллын мод унасан ч хуудас унахгүй: breadcrumb шүүлтүүртэй жагсаалт руу буцна.
+    getCatalogNav().catch(() => null),
+  ]);
+  const sizes = sizesFor(product);
+  const trail = breadcrumbTrail(product, nav);
+  const details: [string, string | number | null][] = [
+    [t("colour"), product.base_colour && product.base_colour !== "NA" ? vocab.colour(product.base_colour) : null],
+    [t("category"), `${vocab.category(product.master_category)} / ${vocab.category(product.sub_category)}`],
+    [t("type"), vocab.category(product.article_type)],
+    [t("gender"), vocab.gender(product.gender)],
+    [t("season"), product.season ? vocab.season(product.season) : null],
+    [t("occasion"), product.usage && product.usage !== "NA" ? vocab.usage(product.usage) : null],
+    [t("collection"), product.year],
+  ];
+
+  return (
+    <div className="container-page py-6 md:py-10">
+      <JsonLdScripts nodes={productJsonLd(product, { vocab, nav, homeLabel: tc("home") })} />
+      <RecordView product={product} />
+      <Breadcrumb className="mb-6" aria-label={tu("breadcrumb")}>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/">{tc("home")}</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {trail.map((crumb, i) => (
+            <Fragment key={crumb.href}>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href={crumb.href}>{i === 0 ? vocab.gender(crumb.label) : vocab.category(crumb.label)}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+            </Fragment>
+          ))}
+          <BreadcrumbSeparator className="hidden sm:flex" />
+          <BreadcrumbItem className="hidden sm:inline-flex">
+            <BreadcrumbPage className="max-w-60 truncate">{product.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-16">
+        <ProductGallery product={product} />
+
+        <div className="flex flex-col gap-8 lg:sticky lg:top-20 lg:self-start">
+          <header className="space-y-3">
+            <h1 className="type-display text-balance">{product.name}</h1>
+            {product.rating_count > 0 && product.rating_average !== null && (
+              <a href="#reviews" className="type-caption inline-flex items-center gap-2 hover:underline">
+                <RatingStars rating={product.rating_average} />
+                <span className="text-muted-foreground">
+                  {t("ratingSummary", { rating: format.number(Math.round(product.rating_average * 10) / 10), reviews: t("reviews", { count: product.rating_count }) })}
+                </span>
+              </a>
+            )}
+            <p className="flex items-baseline gap-4">
+              <Price cents={product.price_cents} currency={product.currency} className="type-heading" />
+              {product.in_stock ? (
+                <span className="text-success type-caption inline-flex items-center gap-1 font-medium">
+                  <Check className="size-4" /> {t("inStock")}
+                </span>
+              ) : (
+                <span className="text-muted-foreground type-caption font-medium">{t("soldOut")}</span>
+              )}
+            </p>
+            <DeliveryEstimate />
+          </header>
+
+          <PurchasePanel product={product} sizes={sizes} />
+
+          <Link href="/search" className="link-more w-fit">
+            {t("findMore")}
+          </Link>
+
+          <div>
+            <Disclosure title={t("details")} defaultOpen>
+              <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-2.5">
+                {details
+                  .filter(([, v]) => v !== null && v !== "")
+                  .map(([term, value]) => (
+                    <div key={term} className="contents">
+                      <dt className="text-muted-foreground">{term}</dt>
+                      <dd>{value}</dd>
+                    </div>
+                  ))}
+              </dl>
+            </Disclosure>
+            <Disclosure title={t("delivery")} className="border-b">
+              <DeliveryInfo />
+            </Disclosure>
+          </div>
+        </div>
+      </div>
+
+      <ProductReviews productId={product.id} initial={reviews} />
+
+      <Suspense fallback={null}>
+        <CompleteTheLook productId={product.id} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <section className="mt-20" aria-label={tc("similarProducts")}>
+            <Skeleton className="mb-6 h-7 w-44 rounded" />
+            <RailSkeleton />
+          </section>
+        }
+      >
+        <SimilarProducts productId={product.id} />
+      </Suspense>
+
+      <ProductRecentlyViewed excludeId={product.id} />
+    </div>
+  );
+}

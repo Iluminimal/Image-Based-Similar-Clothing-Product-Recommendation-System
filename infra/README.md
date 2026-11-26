@@ -1,0 +1,20 @@
+# infra
+
+`docker-compose.dev.yml` нь хөгжүүлэлтэд хэрэгтэй үйлчилгээг л асаана: pgvector-тэй PostgreSQL 18, Redis, туршилтын имэйл
+хүлээн авах Mailpit. API болон web-ийг Docker-оор биш шууд (`make api`, `make web`) ажиллуулдаг. Ингэснээр PyTorch
+Apple-ийн GPU-г ашиглаж чадна.
+
+```bash
+make infra         # асааж, бэлэн болтол хүлээнэ
+make infra-down    # зогсооно (өгөгдөл angel_postgres-data volume-д хадгалагдана)
+make infra-reset   # зогсоож, өгөгдлийг УСТГАНА
+```
+
+Postgres `127.0.0.1:5433`, Redis `127.0.0.1:6379`, Mailpit `127.0.0.1:1025` (SMTP) порт дээр сонсоно. Илгээсэн имэйлийг
+<http://localhost:8025> дээрээс үзнэ. Нэвтрэх мэдээлэл, өгөгдлийн сангийн нэр `.env`-ээс ирнэ (`make infra` анх удаа
+`.env.example`-ээс хуулж үүсгэнэ).
+
+## Production
+
+`docker-compose.prod.yml` + `Caddyfile` нь deploy-д зориулагдсан бүрэн stack (Caddy HTTPS, web, api, Postgres, Redis); `.env.prod`-оор
+тохируулна. Заавар: [`docs/deploy.md`](../docs/deploy.md).

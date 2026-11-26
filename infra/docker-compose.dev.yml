@@ -1,0 +1,57 @@
+# Зөвхөн хөгжүүлэлтийн үйлчилгээ (Postgres + pgvector, Redis, Mailpit). API болон web-ийг шууд (`make api`, `make web`)
+# ажиллуулдаг тул PyTorch Apple MPS ашиглаж чадна. Бүрэн stack compose нь deploy хийхэд зориулагдсан.
+name: angel
+
+services:
+  postgres:
+    # Олон архитектурын image (linux/amd64 + linux/arm64). hnsw.iterative_scan-д pgvector >= 0.8 хэрэгтэй.
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-angel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-angel}
+      POSTGRES_DB: ${POSTGRES_DB:-angel}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      # Postgres 18+ image нь PGDATA-г /var/lib/postgresql доторх хувилбарын дэд фолдерт хадгалдаг.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    # Зөвхөн cache болон rate limit-ийн өгөгдөл: хөгжүүлэлтэд хадгалах шаардлагагүй.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    # Имэйл баригч (SMTP :1025, Web UI :8025): `MAIL_MODE=smtp` үед API-ийн илгээсэн нэг удаагийн
+    # код, захиалгын имэйлийг жинхэнэ интернет рүү гаргалгүй http://localhost:8025 дээр харна.
+    # Олон архитектурын image (linux/amd64 + linux/arm64).
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: 500
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:

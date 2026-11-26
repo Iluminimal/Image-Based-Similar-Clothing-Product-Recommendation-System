@@ -1,0 +1,823 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "../styles/effects.css";
+@import "../styles/home.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Motion token: Motion мөн ижил out-expo муруйг ашигладаг (components/motion/easing.ts). */
+@theme {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  /* Бага зэрэг хэтэрдэг spring, CSS easing болгон дээжилсэн: газардах зүйлд (panel, badge). */
+  --ease-spring: linear(
+    0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077,
+    1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%,
+    0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1
+  );
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --duration-slow: 500ms;
+  --animate-grow: grow-x 700ms var(--ease-out-expo) both;
+  --animate-draw: draw 650ms var(--ease-out-expo) both;
+  --animate-scan: scan 1.8s var(--ease-in-out-quart) infinite;
+  --animate-highlight: highlight 2.2s var(--ease-out-expo);
+  --animate-pop: pop 420ms var(--ease-out-expo);
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-shake: shake 420ms var(--ease-out-expo);
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20% {
+      transform: translateX(-6px);
+    }
+    40% {
+      transform: translateX(5px);
+    }
+    60% {
+      transform: translateX(-3px);
+    }
+    80% {
+      transform: translateX(2px);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -10px;
+    }
+  }
+  /* Progress холбогч зүүн үзүүрээсээ дүүрнэ. */
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  /* Өөрсдөө зурагддаг шугам (захиалгын баталгаажуулалтын тик). */
+  @keyframes draw {
+    from {
+      stroke-dashoffset: var(--len, 100);
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  /* Зургаар хайж байх үед зөөлөн зурвас зургийн дээгүүр доош сэлгэнэ. */
+  @keyframes scan {
+    0% {
+      transform: translateY(-110%);
+    }
+    100% {
+      transform: translateY(210%);
+    }
+  }
+  /* Дөнгөж нэмсэн мөр нэг удаа гэрэлтэж тогтоно. */
+  @keyframes highlight {
+    0% {
+      background-color: color-mix(in oklab, var(--brand) 16%, transparent);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+  @keyframes pop {
+    0% {
+      transform: scale(0.6);
+    }
+    55% {
+      transform: scale(1.18);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  /*
+   * Системийн фонт: Apple төхөөрөмж дээр SF Pro (optical size нь текстийн хэмжээг дагана), татах
+   * зүйлгүй.
+   */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading: var(--font-sans);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-star: var(--star);
+  --color-destructive-text: var(--destructive-text);
+  --shadow-soft: var(--elevation-soft);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-field: var(--field);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --brand: #0066cc;
+  --brand-foreground: #ffffff;
+  --success: oklch(0.45 0.12 155);
+  /* Статусын өнгө: warning нь цэг, дүүргэлтэд; warning-foreground, destructive-text нь текстэд (контраст). */
+  --warning: oklch(0.75 0.16 75);
+  --warning-foreground: oklch(0.5 0.13 65);
+  --star: oklch(0.78 0.16 75);
+  --destructive-text: oklch(0.52 0.22 27.325);
+  --elevation-soft: 0 1px 2px oklch(0 0 0 / 5%), 0 8px 24px -12px oklch(0 0 0 / 12%);
+  --background: #ffffff;
+  --foreground: #1d1d1f;
+  --card: #ffffff;
+  --card-foreground: #1d1d1f;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d1f;
+  --primary: #0071e3;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
+  --muted: #f5f5f7;
+  --muted-foreground: #6e6e73;
+  --accent: #f5f5f7;
+  --accent-foreground: #1d1d1f;
+  --destructive: oklch(0.52 0.22 27.325);
+  --border: #d2d2d7;
+  --input: #d2d2d7;
+  --ring: #0071e3;
+  --field: #86868b;
+  --primary-hover: #0077ed;
+  --primary-active: #006edb;
+  --radius: 0.75rem;
+  --radius-tile: 1.125rem;
+  /* apple.com-ийн flyout-ууд: bar-ын доорх хуудас, хуудасны үлдсэнийг бүрхэх хөшиг. */
+  --flyout: #fafafc;
+  --curtain: rgb(232 232 237 / 0.4);
+  /* Admin: macOS-ийн grouped хэв. Хуудас саарал, самбар цагаан (харанхуй горимд эсрэгээр). */
+  --admin-canvas: #f5f5f7;
+  --admin-surface: #ffffff;
+  --admin-hairline: oklch(0 0 0 / 7%);
+}
+
+.dark {
+  --brand: #2997ff;
+  --brand-foreground: #000000;
+  --success: oklch(0.75 0.14 155);
+  --warning-foreground: oklch(0.85 0.14 80);
+  --destructive-text: oklch(0.82 0.14 22);
+  --elevation-soft: 0 1px 2px oklch(0 0 0 / 40%), 0 8px 24px -12px oklch(0 0 0 / 60%);
+  --background: #000000;
+  --flyout: #161617;
+  --curtain: rgb(29 29 31 / 0.4);
+  --admin-canvas: #000000;
+  --admin-surface: #1d1d1f;
+  --admin-hairline: oklch(1 0 0 / 9%);
+  --foreground: #f5f5f7;
+  --card: #1d1d1f;
+  --card-foreground: #f5f5f7;
+  --popover: #1d1d1f;
+  --popover-foreground: #f5f5f7;
+  --primary: #0071e3;
+  --primary-foreground: #ffffff;
+  --secondary: #1d1d1f;
+  --secondary-foreground: #f5f5f7;
+  --muted: #1d1d1f;
+  --muted-foreground: #a1a1a6;
+  --accent: #2a2a2d;
+  --accent-foreground: #f5f5f7;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: #424245;
+  --input: #424245;
+  --ring: #2997ff;
+  --field: #6e6e73;
+  --primary-hover: #147ce5;
+  --primary-active: #0066cc;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 1.0625rem;
+    line-height: 1.47059;
+    letter-spacing: -0.022em;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/*
+ * Apple-ийн үсгийн хэмжээний хуваарь (хэмжээ, мөрийн өндөр, tracking-ийг apple.com-оос уншсан),
+ * алхам бүрт нэг utility, ингэснээр хуудсууд string давтахгүй. Хэмжээ apple.com-ийнх шиг 1068px,
+ * 734px дээр багасна. Жинтэй хамт хэрэглэ (гарчиг 600, үндсэн текст 400).
+ */
+@utility type-hero {
+  font-size: 2.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.009em;
+  font-weight: 600;
+  @media (min-width: 734px) {
+    font-size: 3.5rem;
+    line-height: 1.07143;
+    letter-spacing: -0.005em;
+  }
+  @media (min-width: 1068px) {
+    font-size: 5rem;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+  }
+}
+@utility type-display {
+  font-size: 2rem;
+  line-height: 1.125;
+  letter-spacing: 0.004em;
+  font-weight: 600;
+  @media (min-width: 734px) {
+    font-size: 2.5rem;
+    line-height: 1.1;
+    letter-spacing: 0;
+  }
+  @media (min-width: 1068px) {
+    font-size: 3rem;
+    line-height: 1.08349;
+    letter-spacing: -0.003em;
+  }
+}
+@utility type-title {
+  font-size: 1.75rem;
+  line-height: 1.14286;
+  letter-spacing: 0.007em;
+  font-weight: 600;
+  @media (min-width: 1068px) {
+    font-size: 2rem;
+    line-height: 1.125;
+    letter-spacing: 0.004em;
+  }
+}
+@utility type-heading {
+  font-size: 1.3125rem;
+  line-height: 1.19048;
+  letter-spacing: 0.011em;
+  font-weight: 600;
+  @media (min-width: 1068px) {
+    font-size: 1.5rem;
+    line-height: 1.16667;
+    letter-spacing: 0.009em;
+  }
+}
+@utility type-intro {
+  font-size: 1.1875rem;
+  line-height: 1.42105;
+  letter-spacing: 0.012em;
+  @media (min-width: 1068px) {
+    font-size: 1.3125rem;
+    line-height: 1.381;
+    letter-spacing: 0.011em;
+  }
+}
+@utility type-body {
+  font-size: 1.0625rem;
+  line-height: 1.47059;
+  letter-spacing: -0.022em;
+}
+@utility type-caption {
+  font-size: 0.875rem;
+  line-height: 1.42857;
+  letter-spacing: -0.016em;
+}
+@utility type-fine {
+  font-size: 0.75rem;
+  line-height: 1.33337;
+  letter-spacing: -0.01em;
+}
+
+/*
+ * Apple-ийн саарал tile: promo карт, барааны карт, сонголтын хайрцаг. Утсан дээр 18px булан,
+ * 734px-ээс 28px.
+ */
+@utility tile {
+  background-color: var(--secondary);
+  border-radius: var(--radius-tile);
+  overflow: hidden;
+  @media (min-width: 734px) {
+    border-radius: 1.75rem;
+  }
+}
+
+/* Admin-ы хуудас ба самбарын гадаргуу (macOS grouped list): `admin-canvas` дээр `admin-surface` самбар. */
+@utility admin-canvas {
+  background-color: var(--admin-canvas);
+}
+@utility admin-surface {
+  background-color: var(--admin-surface);
+  border-radius: var(--radius-tile);
+  box-shadow: 0 0 0 1px var(--admin-hairline), var(--elevation-soft);
+}
+
+/* Chevron-тэй цэнхэр текст холбоос ("Learn more >", "Shop >"). */
+@utility link-more {
+  color: var(--brand);
+  font-size: 1.0625rem;
+  line-height: 1.17648;
+  letter-spacing: -0.022em;
+  &::after {
+    content: "\203A" / "";
+    display: inline-block;
+    margin-inline-start: 0.35em;
+    transition: transform 200ms var(--ease-out-expo);
+  }
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  &:hover::after {
+    transform: translateX(2px);
+  }
+}
+
+/* apple.com-ийн global bar-ын дотоод өргөн: 1024px, 22px padding. */
+@utility container-nav {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1024px;
+  padding-inline: 1rem;
+  @media (min-width: 734px) {
+    padding-inline: 22px;
+  }
+}
+
+@utility container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1rem;
+  @media (min-width: 40rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 64rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/*
+ * Fold-оос хол доорх агуулга viewport-д ойртох хүртэл layout, paint хийгдэхгүй (lazy зургийн хувьд
+ * татагдахгүй). Үгүй бол богино утасны хуудас "lazy" зураг бүрийг эхнээс нь татаж, эхний ачааллын
+ * byte-ийн ихэнхийг эзэлнэ. Accessibility tree болон find-in-page-д байсаар. `auto` нэг удаа
+ * харагдсаны дараа жинхэнэ өндрийг санадаг тул scrollbar үсрэхгүй.
+ */
+@utility defer-render {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+
+@utility hide-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
+ * Scroll reveal (components/motion/reveal.tsx элемент дэлгэц дээр гарахад `data-in` нэмнэ).
+ * Script-гүй эсвэл бага motion хүссэн хэрэглэгчид агуулга зүгээр л харагдана.
+ */
+[data-reveal] {
+  opacity: 0;
+  translate: 0 var(--reveal-y, 18px);
+  transition:
+    opacity 800ms var(--ease-out-expo) var(--reveal-delay, 0s),
+    translate 800ms var(--ease-out-expo) var(--reveal-delay, 0s);
+}
+[data-reveal][data-in] {
+  opacity: 1;
+  translate: 0 0;
+}
+@media (scripting: none), (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    translate: none;
+    transition: none;
+  }
+}
+
+/*
+ * Нүүр хуудасны motion (features/home): бүгд зөвхөн transform ба opacity тул compositor дээр
+ * ажиллаж layout-ыг хөдөлгөхгүй; script шаардахгүй. Tile-уудын үг, зураг дэлгэцэд орох үед тогтоно
+ * (scroll-driven `view()` timeline, дэмждэг browser-т), эхний tile-ийн зургууд ачаалахад нэг удаа
+ * дээш гарна, юу ч үүнийг хүлээхгүй: дэмжлэггүй эсвэл reduced motion үед бүх зүйл зүгээр л байна.
+ * Эхний tile-ийн гарчгийг хэзээ ч animation хийдэггүй (хуудас үүгээр хэмжигддэг).
+ */
+@keyframes tile-copy-in {
+  from {
+    opacity: 0;
+    translate: 0 1.75rem;
+  }
+}
+@keyframes tile-photo-in {
+  from {
+    translate: 0 3.5rem;
+    scale: 0.94;
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .tile-copy {
+      animation: tile-copy-in linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 55%;
+    }
+    .tile-photo {
+      animation: tile-photo-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 80%;
+    }
+  }
+}
+
+/*
+ * Хуудас дээрээс доош scroll хийхэд header нарийн hairline сүүдэртэй болно. Цэвэр CSS, scroll
+ * байрлалаар удирдагдах тул script шаардахгүй; scroll-driven animation дэмждэггүй browser энгийн
+ * border-ыг хадгална.
+ */
+@supports (animation-timeline: scroll()) {
+  .header-elevate {
+    animation: header-elevate linear both;
+    animation-timeline: scroll();
+    animation-range: 0 48px;
+  }
+  @keyframes header-elevate {
+    to {
+      border-bottom-color: var(--border);
+    }
+  }
+}
+
+/*
+ * Bar-ын доорх flyout-ууд (department цэс, хайлт, Bag), apple.com шиг хугацаатай: агуулгынхаа
+ * өндөртэй panel 240 ms-д томорч, холбоосууд бие биеэсээ 20 ms зайтай нэг нэгээр гарч, хуудасны
+ * үлдсэн хэсгийг curtain (бүдэгрүүлсэн, 40% хөшиг, 320 ms) бүрхэнэ. Department flyout
+ * (components/mega-menu.tsx) нь НЭГ panel бөгөөд өндрийг script тохируулна (харуулж буй
+ * department-ийнх), агуулга нь хурдан crossfade-ээр солигдоно.
+ */
+:root {
+  --flyout-ease: cubic-bezier(0.4, 0, 0.6, 1);
+}
+.mega-flyout {
+  visibility: hidden;
+  transition:
+    height 240ms var(--flyout-ease),
+    visibility 0s linear 240ms;
+}
+.mega-flyout[data-open="true"] {
+  visibility: visible;
+  transition:
+    height 240ms var(--flyout-ease),
+    visibility 0s;
+}
+.mega-content {
+  position: absolute;
+  inset: 0 0 auto 0;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease-out,
+    visibility 0s linear 160ms;
+}
+.mega-content[data-active="true"] {
+  position: relative;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transition:
+    opacity 240ms var(--flyout-ease) 80ms,
+    visibility 0s;
+}
+/*
+ * Flyout-ын нэг мөр: flyout нээгдэх хүртэл нуугдсан, 4px доор; дараа нь дээрхийнхээ дараа бага
+ * зэрэг хойноос тогтоно.
+ */
+.mega-item,
+.flyout-item {
+  opacity: 0;
+  translate: 0 -4px;
+  transition:
+    opacity 160ms var(--flyout-ease),
+    translate 160ms var(--flyout-ease);
+}
+.mega-content[data-active="true"] .mega-item,
+[data-open="true"] .flyout-item,
+[data-state="open"] .flyout-item {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 320ms var(--flyout-ease) calc(80ms + var(--i, 0) * 20ms),
+    translate 320ms var(--flyout-ease) calc(80ms + var(--i, 0) * 20ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mega-item,
+  .flyout-item {
+    opacity: 1;
+    translate: none;
+  }
+}
+
+/*
+ * Хайлтын panel: утсан дээр бүх дэлгэц дээр бүдэг байдлаас гарна; md-ээс дээш bar-аас доош томорно.
+ */
+.search-panel {
+  visibility: hidden;
+  opacity: 0;
+  translate: 0 -0.75rem;
+  transition:
+    opacity 260ms var(--ease-out-expo),
+    translate 260ms var(--ease-out-expo),
+    visibility 0s linear 260ms;
+}
+.search-panel[data-open="true"] {
+  visibility: visible;
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 260ms var(--ease-out-expo),
+    translate 260ms var(--ease-out-expo),
+    visibility 0s;
+}
+@media (min-width: 768px) {
+  .search-panel,
+  .search-panel[data-open="true"] {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .search-panel {
+    clip-path: inset(0 0 100% 0);
+    transition:
+      clip-path 240ms var(--flyout-ease),
+      visibility 0s linear 240ms;
+  }
+  .search-panel[data-open="true"] {
+    clip-path: inset(0);
+    transition:
+      clip-path 240ms var(--flyout-ease),
+      visibility 0s;
+  }
+  /* Bag (Radix dialog) мөн адил томорно. */
+  .bag-flyout[data-state="open"] {
+    animation: flyout-grow 240ms var(--flyout-ease) both;
+  }
+  .bag-flyout[data-state="closed"] {
+    animation: flyout-grow 240ms var(--flyout-ease) reverse both;
+  }
+}
+@keyframes flyout-grow {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+/*
+ * Flyout нээлттэй байхад хуудасны дээрх curtain (apple.com-ийн `.globalnav-curtain`): 40% хөшиг ба
+ * 20px blur. Bar ба flyout-ын доор байх бөгөөд дарахад тэдгээрийг хаана. Утсанд оронд нь бүтэн
+ * дэлгэцийн хуудас байна.
+ */
+.bar-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  visibility: hidden;
+  opacity: 0;
+  background: var(--curtain);
+  backdrop-filter: blur(20px);
+  transition:
+    opacity 320ms var(--flyout-ease) 80ms,
+    visibility 0s linear 400ms;
+}
+html[data-bar-panel] .bar-curtain {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity 320ms var(--flyout-ease) 80ms,
+    visibility 0s;
+}
+@media (max-width: 767px) {
+  .bar-curtain {
+    display: none;
+  }
+}
+
+/*
+ * Хуудасны шилжилт (app/template.tsx дахь React <ViewTransition>): шинэ хуудас дээш гарч, хуучин нь
+ * бүдгэрнэ. Header тогтоогдсон тул зөвхөн агуулга хөдөлж харагдана.
+ */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+::view-transition-old(.page-exit) {
+  animation: 160ms var(--ease-out-expo) both page-fade reverse;
+}
+::view-transition-new(.page-enter) {
+  animation:
+    420ms var(--ease-out-expo) 80ms both page-fade,
+    620ms var(--ease-out-expo) 80ms both page-rise;
+}
+@keyframes page-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes page-rise {
+  from {
+    translate: 0 14px;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/*
+ * Утасны цэс (components/layout/mobile-nav-menu.tsx): header-ийн доор нээгддэг хуудас. Нээгдэхэд
+ * шууд харагдаж, бүдгэрсний дараа л нуугдана, ингэснээр focus нэг frame-д дотор нь орно; цэсний
+ * мөрүүд нэг нэгээр дээш гарна. Нээлттэй үед header тод болж, bar ба хуудас нэг гадаргуу шиг
+ * харагдана.
+ */
+.menu-panel {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 300ms ease-out,
+    visibility 0s linear 300ms;
+}
+.menu-panel[data-open="true"] {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity 300ms ease-out,
+    visibility 0s;
+}
+.menu-panel[data-open="true"] .menu-row {
+  animation: menu-row 600ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 45ms + 60ms);
+}
+@keyframes menu-row {
+  from {
+    opacity: 0;
+    translate: 0 -10px;
+  }
+}
+html:has(#mobile-menu[data-open="true"]) .header-elevate,
+html[data-bar-panel] .header-elevate {
+  background-color: var(--background);
+}
+/*
+ * Md-ээс дээш flyout нээлттэй үед bar flyout-ын өнгийг авч, bar ба flyout нэг гадаргуу шиг
+ * харагдана.
+ */
+@media (min-width: 768px) {
+  html[data-bar-panel] .header-elevate {
+    background-color: var(--flyout);
+  }
+}
+/*
+ * apple.com-ийн утасны bar шиг: цэс, хайлт, Bag хуудас нээлттэй үед (<html> дээр `data-bar-panel`,
+ * components/layout/bar-panel.ts-ыг үз) logo, хайлт, bag бүдгэрч, хаадаг X л үлдэнэ. Md-ээс дээш
+ * bar бүгдээрээ үлдэнэ.
+ */
+@media (max-width: 767px) {
+  html[data-bar-panel] .phone-bar-item {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 240ms cubic-bezier(0.4, 0, 0.6, 1),
+      visibility 0s linear 240ms;
+  }
+}
+
+/*
+ * Ачаалах skeleton: зөөлөн гэрэл дундуур сэлгэнэ (зөвхөн transform, layout, paint шаардахгүй).
+ * Utility биш class, учир нь хуудас HTML-дээ олон арван skeleton агуулдаг. Components layer-д,
+ * ингэснээр элемент дээрх `rounded-2xl` зэрэг ялсаар байна.
+ */
+@layer components {
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--muted);
+  }
+  .skeleton::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(90deg, transparent, color-mix(in oklab, var(--foreground) 6%, transparent), transparent);
+    animation: shimmer 1.8s var(--ease-in-out-quart) infinite;
+  }
+}
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/*
+ * Барааны карт хуруун дор бага зэрэг шахагдана (богино нэр: карт бүр дээр давтагддаг), pointer-ын
+ * доорх (эсвэл focus-тай) карт зургаа page transition-д нэрлэж, зураг барааны хуудасны gallery
+ * болон өргөжнө. Нэг удаад нэг карт hover/focus авна; тэгэхэд хуудасны өөрийн hero (барааны хооронд
+ * шилжих үеийн gallery) нэрээ өгнө: нэг нэртэй хоёр элемент бүх transition-ыг цуцална. Script-гүй
+ * тул карт бүр client component биш.
+ */
+.press-card:is(:hover, :focus-visible) [data-card-photo] {
+  view-transition-name: product-hero;
+}
+@layer components {
+  .press-card {
+    transition: transform var(--duration-base) var(--ease-out-expo);
+  }
+  .press-card:active {
+    transform: scale(0.985);
+  }
+}

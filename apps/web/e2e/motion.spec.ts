@@ -1,0 +1,182 @@
+import { test, expect } from "./fixtures";
+import {
+  addToCartFromProductPage,
+  chooseSize,
+  openProduct,
+  pickProduct,
+} from "./support/ui";
+
+test("adding to the cart confirms on the button and shows the free-shipping progress", async ({
+  page,
+  products,
+}, testInfo) => {
+  const product = pickProduct(products, testInfo.workerIndex);
+  await openProduct(page, product);
+
+  // Хэмжээ сонгоогүй: хэмжээнүүд сэгсэрч, мессеж гулсан орно.
+  await page.getByRole("button", { name: "Add to Bag", exact: true }).click();
+  await expect(page.getByText("Please select a size.")).toBeVisible();
+  await expect(page.locator("fieldset").locator("xpath=..")).toHaveClass(/animate-shake/);
+
+  await chooseSize(page);
+  await page.getByRole("button", { name: "Add to Bag", exact: true }).click();
+
+  await expect(page.getByRole("button", { name: "Added", exact: true })).toBeVisible();
+  const drawer = page.getByRole("dialog");
+  await expect(drawer.getByText(product.name)).toBeVisible();
+  await expect(drawer.getByRole("progressbar", { name: "Progress to free shipping" })).toBeVisible();
+});
+
+test("a removed line can be brought back with Undo", async ({ page, products }, testInfo) => {
+  const product = pickProduct(products, testInfo.workerIndex + 1);
+  await addToCartFromProductPage(page, product);
+  const drawer = page.getByRole("dialog");
+
+  await drawer.getByRole("button", { name: new RegExp(`Remove ${product.name}`) }).click();
+  await expect(drawer.getByText("Your Bag is empty")).toBeVisible();
+  await drawer.getByRole("button", { name: "Undo" }).click();
+
+  await expect(drawer.getByText(product.name)).toBeVisible();
+});
+
+test("the product page has details and delivery that open and close", async ({ page, products }, testInfo) => {
+  await openProduct(page, pickProduct(products, testInfo.workerIndex + 2));
+
+  const delivery = page.getByText("Delivery", { exact: true });
+  await delivery.click();
+  // "Standard delivery" үнийн доорх мөрөнд ч бий тул нээсэн хэсгийн жагсаалтыг шалгана.
+  const options = page.locator("details", { has: delivery }).getByRole("listitem");
+  await expect(options.filter({ hasText: "Standard delivery" })).toBeVisible();
+  await expect(options.filter({ hasText: "Express delivery" })).toBeVisible();
+  await expect(page.getByText("Product details")).toBeVisible();
+});
+
+test("a product photo is replaced by the enlarged view on click", async ({ page, products }, testInfo) => {
+  const product = pickProduct(products, testInfo.workerIndex + 3);
+  await openProduct(page, product);
+
+  await page.getByRole("button", { name: `Enlarge photo of ${product.name}` }).click();
+
+  await expect(page.getByRole("dialog").getByRole("img", { name: product.name })).toBeVisible();
+});
+
+test("checkout shows its steps done as they are chosen, then confirms the order", async ({
+  shopperPage: page,
+  products,
+}, testInfo) => {
+  await addToCartFromProductPage(page, pickProduct(products, testInfo.workerIndex + 4));
+  await page.getByRole("dialog").getByRole("link", { name: "Check Out" }).click();
+  await page.getByLabel("Full name").fill("Болд Батбаяр");
+  await page.getByLabel("Phone number").fill("99112233");
+  await page.getByLabel("District").selectOption("Баянгол");
+  await page.getByLabel("Street, building, apartment").fill("Энхтайваны өргөн чөлөө 12");
+  await page.getByRole("button", { name: "Use this address" }).click();
+
+  await expect(page.getByRole("region", { name: "Delivery address" })).toContainText("Энхтайваны өргөн чөлөө 12");
+  await expect(page.getByRole("region", { name: "Shipping method" })).toContainText("business days");
+
+  await page.getByRole("button", { name: /pay now/i }).click();
+  await expect(page).toHaveURL(/\/checkout\/confirmation\//);
+  await expect(page.getByRole("heading", { name: "Thank you for your order" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "What happens next" })).toBeVisible();
+});
+
+test("a page that does not exist helps you back into the shop", async ({ page }) => {
+  const response = await page.goto("/no/such/page");
+
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole("heading", { level: 1, name: "We couldn't find that page" })).toBeVisible();
+  await page.getByRole("searchbox", { name: "Search the shop" }).fill("kurta");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/products\?q=kurta/);
+});
+
+test.describe("on a phone", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("the header is apple.com's: logo, search, bag and the menu button, with nothing along the bottom", async ({ page }) => {
+    await page.goto("/");
+    const bar = page.getByRole("banner");
+
+    await expect(bar.getByRole("link", { name: "Angel" })).toBeVisible();
+    await expect(bar.getByRole("button", { name: "Search", exact: true })).toBeVisible();
+    await expect(bar.getByRole("button", { name: /^Bag/ })).toBeVisible();
+    await expect(bar.getByRole("button", { name: "Open menu" })).toBeVisible();
+    // Утсан дээр account нь Bag хуудсанд байдаг, bar-д биш.
+    await expect(bar.getByRole("button", { name: /^Account/ })).toBeHidden();
+    await expect(bar.getByRole("link", { name: "Sign in" })).toBeHidden();
+    await expect(page.getByRole("navigation", { name: "Quick navigation" })).toHaveCount(0);
+  });
+
+  test("the menu button becomes an X and opens a full page, which closes again", async ({ page }) => {
+    await page.goto("/");
+    const open = page.getByRole("button", { name: "Open menu" });
+
+    await open.click();
+    const close = page.getByRole("button", { name: "Close menu" });
+    await expect(close).toHaveAttribute("aria-expanded", "true");
+    const menu = page.getByRole("dialog", { name: "Menu" });
+    await expect(menu).toBeVisible();
+    const box = await menu.boundingBox();
+    expect(box!.width).toBeGreaterThanOrEqual(389);
+    expect(box!.y + box!.height).toBeGreaterThanOrEqual(843); // дэлгэцийн доод хүртэл
+    // apple.com шиг: logo, хайлт, bag бүдгэрч, bar-д зөвхөн X үлдэнэ.
+    const bar = page.getByRole("banner");
+    await expect(bar.getByRole("link", { name: "Angel" })).toBeHidden();
+    await expect(bar.getByRole("button", { name: "Search", exact: true })).toBeHidden();
+    await expect(bar.getByRole("button", { name: /^Bag/ })).toBeHidden();
+    await expect(close).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeFocused();
+    await expect(bar.getByRole("link", { name: "Angel" })).toBeVisible();
+    await expect(bar.getByRole("button", { name: /^Bag/ })).toBeVisible();
+  });
+
+  test("the search page has only its X, no logo, and the menu's links lead on", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("banner").getByRole("button", { name: "Search", exact: true }).click();
+    const search = page.getByRole("dialog", { name: "Search" });
+    await expect(page.getByRole("combobox")).toBeVisible();
+    await expect(search.getByRole("link", { name: "Angel" })).toHaveCount(0);
+    await expect(search.getByRole("button", { name: "Close search" }).first()).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: "New" }).click();
+    await expect(page).toHaveURL(/\/products\?sort=newest/);
+    await expect(page.getByRole("dialog", { name: "Menu" })).toBeHidden();
+  });
+
+  test("the bag opens the cart", async ({ page }) => {
+    await page.goto("/");
+
+    await page.getByRole("banner").getByRole("button", { name: /^Bag/ }).click();
+
+    const bag = page.getByRole("dialog", { name: /^Bag/ });
+    await expect(bag).toBeVisible();
+    await expect(bag.getByRole("link", { name: "Angel" })).toHaveCount(0);
+    // Утсан дээр account нь apple.com-ийн Bag-ийн адил энд байна.
+    await expect(bag.getByRole("navigation", { name: "My profile" }).getByRole("link", { name: "Sign in" })).toBeVisible();
+  });
+
+  test("a signed-in customer finds Saved and Sign out on the account page", async ({ shopperPage: page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto("/account/wishlist");
+
+    await expect(page.getByRole("navigation", { name: "Account", exact: true }).getByRole("link", { name: "Wishlist" })).toBeVisible();
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page).toHaveURL("/");
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible();
+  });
+});
+
+test("with reduced motion everything still works", async ({ page, products }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const product = pickProduct(products, testInfo.workerIndex + 5);
+
+  await addToCartFromProductPage(page, product);
+
+  await expect(page.getByRole("dialog").getByText(product.name)).toBeVisible();
+});

@@ -1,0 +1,48 @@
+import { Star } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
+
+const FIVE = [0, 1, 2, 3, 4];
+
+// Мөр таван одны өргөн; дүүргэсэн хэсэг нь мөртэй ижил өргөнтэй, clip хийсэн хуулбар.
+const SIZES = {
+  sm: { row: "h-3 w-[3.75rem]", star: "size-3" },
+  md: { row: "h-4 w-20", star: "size-4" },
+  lg: { row: "h-5 w-[6.25rem]", star: "size-5" },
+} as const;
+
+/** "4.5 out of 5 stars", эсвэл бүхэл тоо бол "4 out of 5 stars". */
+export function ratingLabel(rating: number, t: ReturnType<typeof useTranslations<"reviews">>) {
+  const shown = Number.isInteger(rating) ? String(rating) : rating.toFixed(1);
+  return t("outOf5", { rating: shown });
+}
+
+/**
+ * Үнэлгээгээр дүүрсэн таван од (хагас, дөрөвний нэгийг оруулан). Зураг нь нүдэнд зориулагдсан;
+ * screen reader-т үгс ("4.5 out of 5 stars") очно.
+ */
+export function RatingStars({
+  rating,
+  size = "md",
+  className,
+}: {
+  rating: number;
+  size?: keyof typeof SIZES;
+  className?: string;
+}) {
+  const t = useTranslations("reviews");
+  const clamped = Math.min(Math.max(rating, 0), 5);
+  const { row, star } = SIZES[size];
+  const stars = (filled: boolean) =>
+    FIVE.map((i) => <Star key={i} aria-hidden className={cn("shrink-0", star, filled && "fill-current")} />);
+  return (
+    <span role="img" aria-label={ratingLabel(clamped, t)} className={cn("relative inline-flex text-star", row, className)}>
+      <span aria-hidden className="text-muted-foreground/40 absolute inset-0 flex">
+        {stars(false)}
+      </span>
+      <span aria-hidden className="absolute inset-y-0 left-0 flex overflow-hidden" style={{ width: `${(clamped / 5) * 100}%` }}>
+        <span className={cn("flex shrink-0", row)}>{stars(true)}</span>
+      </span>
+    </span>
+  );
+}

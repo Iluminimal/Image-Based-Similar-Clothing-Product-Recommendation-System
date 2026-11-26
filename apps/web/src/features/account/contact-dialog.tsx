@@ -1,0 +1,354 @@
+"use client";
+
+import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Field, fieldAria } from "@/components/forms/form-field";
+import { PasswordInput } from "@/components/forms/password-input";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import type { SessionUser } from "@/features/auth/auth-store";
+import { OtpInput } from "@/features/auth/otp-input";
+import { DEFAULT_REGION, PhoneInput, toE164, type PhoneValue } from "@/features/auth/phone-input";
+import { useCountdown } from "@/features/auth/use-countdown";
+import { ApiError } from "@/lib/api/errors";
+import { useUserMessage } from "@/lib/api/use-user-message";
+import { ReauthField } from "./reauth-field";
+import {
+  useConfirmEmail,
+  useConfirmEmailVerification,
+  useConfirmPhone,
+  useRemoveEmail,
+  useRemovePhone,
+  useRequestEmail,
+  useRequestEmailVerification,
+  useRequestPhone,
+} from "./use-contact";
+import { FormAlert } from "@/components/ui/form-alert";
+
+export type ContactKind = "phone" | "email" | "verify-email";
+
+const EMAIL = /^\S+@\S+\.\S+$/;
+
+/**
+ * Утасны дугаар эсвэл имэйлийг нэмэх, солих, эсвэл бүртгэлд байгаа имэйлийг баталгаажуулна. Хоёр
+ * алхамтай: кодыг хаашаа явуулахыг хэлж (нууц үг байвал баталж), дараа нь кодыг оруулна.
+ */
+export function ContactDialog({
+  kind,
+  user,
+  open,
+  onOpenChange,
+}: {
+  kind: ContactKind;
+  user: SessionUser;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const t = useTranslations("account.contact");
+  const tr = useTranslations("account.reauth");
+  const userMessage = useUserMessage();
+  const verifying = kind === "verify-email";
+  const current = kind === "phone" ? user.phone : user.email;
+  const requestPhone = useRequestPhone();
+  const confirmPhone = useConfirmPhone();
+  const requestEmail = useRequestEmail();
+  const confirmEmail = useConfirmEmail();
+  const requestVerification = useRequestEmailVerification();
+  const confirmVerification = useConfirmEmailVerification();
+  const countdown = useCountdown();
+  const [step, setStep] = useState<"enter" | "code">(verifying ? "code" : "enter");
+  const [phone, setPhone] = useState<PhoneValue>({ text: "", region: DEFAULT_REGION });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [reauth, setReauth] = useState("");
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  const destination = kind === "phone" ? toE164(phone.text, phone.region) : email.trim().toLowerCase();
+
+  function close(next: boolean) {
+    if (!next) {
+      setStep(verifying ? "code" : "enter");
+      setPhone({ text: "", region: phone.region });
+      setEmail("");
+      setPassword("");
+      setReauth("");
+      setCode("");
+      setProblem(null);
+    }
+    onOpenChange(next);
+  }
+
+  // Одоогийн хаягийг баталгаажуулах үед dialog нээгдмэгц код явна.
+  useEffect(() => {
+    if (!open || !verifying) return;
+    let cancelled = false;
+    requestVerification
+      .mutateAsync()
+      .then(() => !cancelled && countdown.start(60))
+      .catch((error) => {
+        if (cancelled) return;
+        if (error instanceof ApiError && error.retryAfter) countdown.start(error.retryAfter);
+        else setProblem(userMessage(error));
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- нээгдэх бүрд нэг удаа
+  }, [open, verifying]);
+
+  async function send(event?: { preventDefault: () => void }) {
+    event?.preventDefault();
+    setProblem(null);
+    if (kind === "phone" ? !destination : !EMAIL.test(destination ?? "")) {
+      setProblem(kind === "phone" ? t("invalidPhone") : t("invalidEmail"));
+      return;
+    }
+    if (user.has_password && !password) {
+      setProblem(t("passwordRequired"));
+      return;
+    }
+    if (!user.has_password && reauth.length < 6) {
+      setProblem(tr("required"));
+      return;
+    }
+    setBusy(true);
+    try {
+      const body = user.has_password ? { current_password: password } : { reauth_code: reauth };
+      if (kind === "phone") await requestPhone.mutateAsync({ phone: destination!, ...body });
+      else await requestEmail.mutateAsync({ email: destination!, ...body });
+      countdown.start(60);
+      setReauth(""); // нэг удаагийн код зарцуулагдсан
+      setCode("");
+      setStep("code");
+    } catch (error) {
+      if (error instanceof ApiError && error.retryAfter) countdown.start(error.retryAfter);
+      setProblem(error instanceof ApiError && error.is("invalidCredentials") ? t("wrongPassword") : userMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirm(entered: string) {
+    if (busy) return;
+    setProblem(null);
+    setBusy(true);
+    try {
+      if (verifying) await confirmVerification.mutateAsync(entered);
+      else if (kind === "phone") await confirmPhone.mutateAsync({ phone: destination!, code: entered });
+      else await confirmEmail.mutateAsync({ email: destination!, code: entered });
+      toast.success(verifying ? t("emailConfirmed") : kind === "phone" ? t("phoneSaved") : t("emailSaved"));
+      close(false);
+    } catch (error) {
+      setProblem(userMessage(error));
+      setCode("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const title = verifying
+    ? t("confirmEmail")
+    : kind === "phone"
+      ? t(current ? "changePhone" : "addPhone")
+      : t(current ? "changeEmail" : "addEmail");
+  const shown = verifying ? user.email : kind === "phone" ? (destination ?? phone.text) : email.trim();
+
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            {step === "enter"
+              ? t(kind === "phone" ? "sendToPhone" : "sendToEmail")
+              : t("sent", { destination: shown ?? "" })}
+          </DialogDescription>
+        </DialogHeader>
+
+        {step === "enter" ? (
+          <form onSubmit={send} noValidate className="space-y-4" aria-label={t("where")}>
+            {kind === "phone" ? (
+              <Field id="contact-phone" label={t("phone")}>
+                <PhoneInput id="contact-phone" value={phone} onChange={setPhone} autoFocus />
+              </Field>
+            ) : (
+              <Field id="contact-email" label={t("email")}>
+                <Input
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  autoFocus
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  {...fieldAria("contact-email")}
+                />
+              </Field>
+            )}
+            {user.has_password && (
+              <Field id="contact-password" label={t("password")}>
+                <PasswordInput
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  {...fieldAria("contact-password")}
+                />
+              </Field>
+            )}
+            {!user.has_password && <ReauthField id="contact-reauth" user={user} value={reauth} onChange={setReauth} />}
+            {problem && (
+              <FormAlert>
+                {problem}
+              </FormAlert>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => close(false)}>
+                {t("cancel")}
+              </Button>
+              <Button type="submit" disabled={busy} className="rounded-full">
+                {busy && <Loader2 className="animate-spin" />} {t("send")}
+              </Button>
+            </DialogFooter>
+          </form>
+        ) : (
+          <div className="space-y-4">
+            <OtpInput value={code} onChange={setCode} onComplete={confirm} invalid={Boolean(problem)} disabled={busy} autoFocus />
+            {problem && (
+              <p role="alert" className="text-destructive type-caption">
+                {problem}
+              </p>
+            )}
+            <div className="text-muted-foreground flex items-center justify-between type-caption">
+              {verifying ? (
+                <span />
+              ) : (
+                <button type="button" onClick={() => setStep("enter")} className="underline underline-offset-4">
+                  {t(kind === "phone" ? "otherNumber" : "otherAddress")}
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={countdown.remaining > 0 || busy}
+                onClick={() => {
+                  if (verifying) requestVerification.mutate(undefined, { onSuccess: () => countdown.start(60) });
+                  // Нууц үггүй бол дахин илгээхэд шинэ баталгаажуулах код хэрэгтэй тул эхний алхам руу.
+                  else if (!user.has_password) setStep("enter");
+                  else void send();
+                }}
+                className="underline underline-offset-4 disabled:no-underline disabled:opacity-60"
+              >
+                {countdown.remaining > 0 ? t("resendIn", { seconds: countdown.remaining }) : t("resend")}
+              </button>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => close(false)}>
+                {t("cancel")}
+              </Button>
+              <Button type="button" disabled={busy || code.length < 6} onClick={() => void confirm(code)} className="rounded-full">
+                {busy && <Loader2 className="animate-spin" />} {t("confirm")}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Утасны дугаар эсвэл имэйлийг устгана. Нэвтрэх цорын ганц арга бол API татгалзана. */
+export function RemoveContactDialog({
+  kind,
+  user,
+  open,
+  onOpenChange,
+}: {
+  kind: "phone" | "email";
+  user: SessionUser;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const t = useTranslations("account.contact");
+  const userMessage = useUserMessage();
+  const removePhone = useRemovePhone();
+  const removeEmail = useRemoveEmail();
+  const [password, setPassword] = useState("");
+  const [reauth, setReauth] = useState("");
+  const [problem, setProblem] = useState<string | null>(null);
+  const pending = removePhone.isPending || removeEmail.isPending;
+
+  function close(next: boolean) {
+    if (!next) {
+      setPassword("");
+      setReauth("");
+      setProblem(null);
+    }
+    onOpenChange(next);
+  }
+
+  async function remove() {
+    setProblem(null);
+    const body = user.has_password ? { current_password: password } : { reauth_code: reauth };
+    try {
+      if (kind === "phone") await removePhone.mutateAsync(body);
+      else await removeEmail.mutateAsync(body);
+      toast.success(kind === "phone" ? t("phoneRemoved") : t("emailRemoved"));
+      close(false);
+    } catch (error) {
+      setProblem(error instanceof ApiError && error.is("invalidCredentials") ? t("wrongPassword") : userMessage(error));
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t(kind === "phone" ? "removePhoneTitle" : "removeEmailTitle")}</DialogTitle>
+          <DialogDescription>
+            {t("removeDescription", { destination: (kind === "phone" ? user.phone : user.email) ?? "" })}
+            {kind === "email" && user.has_password ? t("removePasswordToo") : ""}
+          </DialogDescription>
+        </DialogHeader>
+        {user.has_password && (
+          <Field id="remove-password" label={t("password")}>
+            <PasswordInput
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              {...fieldAria("remove-password")}
+            />
+          </Field>
+        )}
+        {!user.has_password && <ReauthField id="remove-reauth" user={user} value={reauth} onChange={setReauth} />}
+        {problem && (
+          <FormAlert>
+            {problem}
+          </FormAlert>
+        )}
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => close(false)}>
+            {t("keep")}
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={pending || (user.has_password ? !password : reauth.length < 6)}
+            onClick={() => void remove()}
+            className="rounded-full"
+          >
+            {pending && <Loader2 className="animate-spin" />} {t("remove")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

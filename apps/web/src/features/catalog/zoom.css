@@ -1,0 +1,24 @@
+/* Зөвхөн бүтээгдэхүүний хуудас (product-gallery.tsx import хийнэ). */
+/*
+ * Бүтээгдэхүүний зургийн hover zoom (зөвхөн хулгана): зураг заагчийн орчимд томорно, заагчийн
+ * байрлалыг gallery --zx / --zy-д бичнэ. Touch төхөөрөмж оронд нь томруулах dialog, swipe ашиглана.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .zoom-stage .zoom-image {
+    transition:
+      transform 450ms var(--ease-out-expo),
+      opacity 500ms var(--ease-out-expo);
+    transform-origin: var(--zx, 50%) var(--zy, 50%);
+  }
+  .zoom-stage[data-zoom="true"] .zoom-image[data-active="true"] {
+    transform: scale(1.9);
+  }
+}
+
+/*
+ * Картаас хуудас руу шилжих transition-д нэрлэсэн: картын зураг энэ зураг болж хувирна
+ * (globals.css дахь .press-card-г хар).
+ */
+.zoom-stage {
+  view-transition-name: product-hero;
+}

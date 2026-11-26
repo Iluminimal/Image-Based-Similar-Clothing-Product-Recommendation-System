@@ -1,0 +1,121 @@
+# End-to-end tests (Playwright)
+
+`apps/web/e2e`, run with `make e2e`. They drive a real browser (Chromium) against a running stack: API, web app, Postgres
+and Redis. 175 tests:
+
+| File | Covers |
+| --- | --- |
+| `visual-search.spec.ts` | a photo search shows results, match badges and a detected category; the user can override the category; words refine (hybrid) and filter chips narrow; paste, drop and a fake camera start a search; a non-image is refused; through the API a catalogue photo finds its own product first (skipped with `LOCALIZER=fake`, below) |
+| `cart.spec.ts` | size required, Bag panel and badge, adding while offline says so at once and sends nothing later, quantity stepper stopping at the stock limit, guest cart survives a reload, guest cart merges on sign-in, wishlist asks a guest to sign in |
+| `checkout.spec.ts` | checkout needs an account; an empty cart cannot be paid; address, express shipping, **demo payment to the confirmation page and the order in the account**; a repeated checkout or payment never makes a second order; another customer cannot see an order (app and API) |
+| `login.spec.ts` | a new email gets a code by email, which creates the account and asks for a name; wrong then right password, return to the page that asked for sign-in, `next` cannot leave the site, session survives a reload, sign-out clears the session and the cart |
+| `admin.spec.ts` | customers and visitors are kept out (UI and API); create a product from a photo, edit, replace the photo, stop selling and sell again; order with its payment record |
+| `admin-panel.spec.ts` | an administrator who signs in through the form lands on `/admin` (a customer on the home page, an administrator headed for `/cart` still goes there); the admin shell has no shop header or footer and a way back to the store, and works on a phone; every new admin endpoint refuses visitors and customers; **an order goes paid → shipped → delivered while the customer sees tracking and the timeline, then reviews it, a visitor sees the review, an administrator hides and republishes it, the author edits it**; only buyers can review (and only once the order is delivered); a rating shows on the card, the page and in the JSON-LD; **refunding puts the stock back** and an unpaid order can be cancelled; notes stay admin-only; the dashboard's figures, links and period; suspending and reinstating a customer (login and a live token are refused); setting stock from the inventory page |
+| `navigation.spec.ts` | the department menu (hover, one shared flyout with instant switching, solid bar, closing on New or on leaving, keyboard, phone drill-down); on a computer the bar stays, the links, logo and icons are spread evenly, the search, Bag and menu are as tall as their content under it with the page veiled and blurred, one at a time leads to category pages with breadcrumb and counts; the sidebar drills down; an unknown category is a real 404; the camera button inside the search bar starts a photo search; the search box suggests categories and remembers searches |
+| `google.spec.ts` | sign in with Google (the API's `OAUTH_MODE=fake` stand-in): a new customer lands on the page they asked for, the guest cart comes along, an existing password account is linked and its password stops working, cancelling and unverified emails end on the login page with a message, hostile `?error=` and `?next=` are harmless. Skips when the API has no Google configured |
+| `home.spec.ts` | the headline and its two ways in, the hero's photo button, the department tiles, the photo-search tile, the New arrivals shelf and the delivery lines, tiles edge to edge and 12px apart with nothing else on the page, Recently viewed appearing after a product visit |
+| `motion.spec.ts` | add to cart shows the check mark, the free-shipping progress and no leftover flying photo; Undo brings a removed line back; Delivery opens; the enlarged photo; checkout steps, card grouping and the processing overlay, then "What happens next"; the 404 page helps back into the shop; on a phone the header is logo, search, bag and menu with nothing along the bottom, the menu button becomes an X, the logo, search and bag fade out of the bar and a full page opens that closes with Escape, the search page has no logo, the menu's links lead on, the bag opens the cart with My profile under it, Saved and Sign out are on the account page; with reduced motion everything works without the flight |
+| `phone.spec.ts` | a new phone number signs up with a code and is asked for a name; the same number signs in again; a wrong code is refused; an impossible number is caught early; a phone customer adds an email, changes the number and signs out the other devices; a forgotten password is replaced with a code. **Needs the API to run with `OTP_DEV_CODE=000000 OTP_RESEND_SECONDS=0`** |
+| `profile.spec.ts` | the profile page; rename shows in the header and survives a reload; change password (wrong current refused, old password stops working); a Google account sees "Connected" and adds a password; delete account (wrong password refused, then signed out for good); the account menu leads to the profile |
+| `auth-pages.spec.ts` | the one "email or phone number" field (country picker only for a phone number, then Google), an email goes on to the password and Edit comes back, the hint after a wrong password, `/register` redirects to `/login` keeping `?next=` |
+| `a11y.spec.ts` | axe (WCAG 2.1 A/AA + best practices) on every kind of screen (including category pages, the open department menu, the photo dialog and the profile page with its dialogs, **and the whole admin area: dashboard, orders, order page, inventory, customers, a customer, reviews, and the ship and refund dialogs with their errors showing; on the storefront a delivered order page and a product page with reviews as a visitor, as the buyer with the form, and with their own review**), in light and dark, at 390 and 1440 px |
+| `order-requests.spec.ts` | a cancellation request holds the order until an administrator approves it (refund, stock back); a return is approved, received at the warehouse and refunded, with the stock returned once; a shopper stays signed in when the answer to a session refresh is lost, and when a product address without its slug redirects |
+| `order-integrity.spec.ts` | a price that changes during checkout is shown and must be accepted before paying; a pickup order is made ready without a carrier and collected, and the shelf count follows |
+| `mobile.spec.ts` | at 390 px, in English and Mongolian, no page of the shop, the account, checkout or the back office is wider than the screen; the pay button is wholly on it; a nine-digit total and very long names stay inside the dashboard (the test puts them into the API's answer). This measures width in a desktop browser; it does not replace a real phone |
+| `product-management.spec.ts` | the warehouse stops selling with one tap (the row stays in a filtered tab, the counts follow, Undo and the Space key work, a refused change is put back); price and shelf count from the list; deleting a product nobody ordered, and the explanation and "stop selling" for an ordered one; on the product page the status keeps unsaved typing and delete returns to the same filtered list; the empty photo field reads in full in both languages |
+| `dates.spec.ts` | in Mongolian, review and order dates stay Mongolian once the page runs in the browser, and no hydration error is raised (Chrome has no Mongolian date data, which jsdom and Node do not show) |
+| `keyboard.spec.ts` | skip link, visible focus, the search panel (combobox, `/` opens it, a slash typed in a field is just a slash, Escape returns focus to the magnifier), arrow keys along the nav bar, dialog focus, category toggles, form errors, reduced motion |
+
+## Against your development stack
+
+The tests register their own customers, so the API must not rate limit registration, and checkout needs the offline
+payment gateway. Production-like web output is also needed (the dev server is slow and adds an overlay).
+
+```bash
+make infra migrate                                            # Postgres + Redis
+RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline OAUTH_MODE=fake OTP_DEV_CODE=000000 OTP_RESEND_SECONDS=0 make api   # terminal 1 (environment beats .env)
+make web-prod                                                 # terminal 2: build + serve on :3000
+make e2e                                                      # terminal 3 (ARGS="e2e/cart.spec.ts" for one file)
+make e2e-clean                                                # afterwards: remove what the tests created
+```
+
+**Warning:** on your development stack `global-setup.ts` **resets the password** of `admin@example.com` and
+`warehouse@example.com` to the e2e ones. If you use those addresses yourself, set `E2E_ADMIN_EMAIL` and
+`E2E_WAREHOUSE_EMAIL` to something else, or use the separate database below.
+
+This is the real catalogue and the real FashionCLIP model. `global-setup.ts` creates the e2e administrator
+(`admin@example.com`) and a warehouse worker (`warehouse@example.com`), passwords in `e2e/support/env.ts`, with the same CLI an operator uses (`make create-admin`, `make create-warehouse`). Specs use the `warehousePage` fixture (and `warehouseSession`) for products, stock and shipping, and `adminPage` for refunds, cancels, customers, the dashboard, the activity log and the CSV downloads; the warehouse board is exercised by setting a stock from it and finding the change in the log. `make e2e-clean` deletes
+`e2e-*@example.com` customers and the phone customers in `+1415555xxxx` with their orders, and the products named `E2E ...` with their photos (tests only stop
+selling most of their products; the ones in orders cannot be deleted through the API). It refuses to run when `APP_ENV=prod`.
+
+## Hermetic (what CI does)
+
+CI has no dataset and no model download, so the job (`.github/workflows/ci.yml`, `e2e`) seeds 60 synthetic products and
+runs the API with `EMBEDDER=fake LOCALIZER=fake`:
+
+```bash
+# an empty database with pgvector (point DATABASE_URL at it, never at your own data), and in every terminal:
+export EMBEDDER=fake LOCALIZER=fake PAYMENTS_MODE=offline OAUTH_MODE=fake OTP_DEV_CODE=000000 OTP_RESEND_SECONDS=0 RATE_LIMIT_ENABLED=false
+make migrate
+make seed-e2e ARGS="--count 60"       # drawn garments, thumbnails, embeddings from the served thumbnails
+# start the API and `make web-prod`, then
+E2E_FAKE_MODEL=1 E2E_FAKE_LOCALIZER=1 make e2e
+```
+
+`FakeEmbedder` (`angel.ml.fake`) makes a vector from the pixels: identical images match perfectly, different ones are
+unrelated. So search "works" but means nothing, and the browser re-encodes every upload (JPEG, 1600 px) which a pixel hash
+cannot survive. Hence `E2E_FAKE_MODEL=1` skips only the UI assertion that a re-encoded photo finds its product first; the
+API test with the original bytes still runs. `APP_ENV=prod` refuses `EMBEDDER=fake` and `LOCALIZER=fake`, and the
+seeder refuses to run in prod. The failure artifacts (HTML report, traces, API and web logs) are uploaded for 7 days.
+
+`FakeLocalizer` "finds" the top and bottom half of every photo and searches the top one, so a product's whole photo can
+never be matched to itself. `E2E_FAKE_LOCALIZER=1` therefore skips the test that sends a catalogue photo through the API
+(one skipped test) and the photo-search assertions at the end of the product test in `admin.spec.ts`. The API tests
+`test_a_products_own_photo_finds_it_at_rank_one` and `test_a_product_created_from_a_photo_is_found_by_visual_search`
+cover both. To run them in the browser, run the API with `LOCALIZER=whole` and leave the variable unset.
+
+To run the same thing locally without touching your data, use a second database and Redis db, the fake model and other
+ports. That is how the job was validated (last: 166 passed and 1 skipped, twice in a row on a fresh database, November
+2026). The recipe, which leaves a running `make api` and `make web` alone:
+
+```bash
+docker exec angel-postgres-1 psql -U angel -d postgres -c "CREATE DATABASE angel_e2e"
+export APP_ENV=test DATABASE_URL=postgresql+asyncpg://angel:angel@localhost:5433/angel_e2e \
+  REDIS_URL=redis://localhost:6379/1 EMBEDDER=fake LOCALIZER=fake E2E_FAKE_LOCALIZER=1 PAYMENTS_MODE=offline OAUTH_MODE=fake OTP_DEV_CODE=000000 OTP_RESEND_SECONDS=0 RATE_LIMIT_ENABLED=false \
+  JWT_SECRET=e2e-only-jwt-secret-0123456789-0123456789 MEDIA_DIR=/tmp/e2e-media MEDIA_BASE_URL=http://localhost:8001/media \
+  CORS_ORIGINS=http://localhost:3001 WEB_BASE_URL=http://localhost:3001 \
+  GOOGLE_REDIRECT_URI=http://localhost:3001/api/v1/auth/google/callback \
+  E2E_API_URL=http://localhost:8001 E2E_BASE_URL=http://localhost:3001 E2E_FAKE_MODEL=1
+(cd apps/api && uv run alembic upgrade head && uv run python ../../scripts/seed_e2e.py --count 60 \
+  && uvicorn angel.main:create_app --factory --port 8001 --no-access-log &)       # uv run uvicorn ...
+# a copy of apps/web (so `next build` does not overwrite your dev server's .next), built against :8001:
+NEXT_PUBLIC_API_URL=http://localhost:8001 API_INTERNAL_URL=http://localhost:8001 npm run build
+NEXT_PUBLIC_API_URL=http://localhost:8001 API_INTERNAL_URL=http://localhost:8001 PORT=3001 npm run start &
+(cd apps/web && npx playwright test)
+```
+
+`GOOGLE_REDIRECT_URI` (and `WEB_BASE_URL`) must name the web origin you test against: the default points at `:3000`, and the
+Google specs then end on `/login?error=google_failed`. The tests only ever add data (customers, products named `E2E ...`),
+so start from a fresh database when you want a clean run. With a fresh database also **delete the web copy's `.next`** before
+building: Next's data cache would otherwise answer with the previous database's products (an old slug, then a redirect), and
+some specs (the activity log) find the rows of the earlier run.
+
+## Writing specs
+
+* `fixtures.ts`: `account` (a customer made through the API), `shopperPage` / `adminPage` (a page already signed in, by
+  moving the session cookies into the browser: no slow UI sign-up), `products` (in-stock apparel), `api`.
+* `newProduct`: a product made through the admin API for this one test; it stops selling when the test ends. Use it whenever a test
+  changes stock, buys something it must be able to count, or reviews. It is filed under **Handbags**, not apparel, so that
+  the shared `products` fixture ("the newest in-stock apparel") never picks it up; the fake embedder cannot match a
+  re-encoded thumbnail to a photo it did not make the vector from, so such a product at the top of the list breaks the
+  visual-search spec.
+* Pick products with `pickProduct` so parallel tests rarely buy the last unit of the same one. Sizes differ (kids, shoes):
+  use `chooseSize`/`addToCart` rather than hard-coding "M".
+* Fixtures that must not collide use unique emails (`uniqueEmail`). Generated test images come from `support/images.ts`
+  (valid PNGs, no dependency).
+* Do not add `scroll-smooth` to a scroll-snap container (see `docs/frontend.md`, Performance).
+
+## Not covered
+
+HEIC upload (needs a HEIC file and macOS `sips`; unit-tested in `normalize-image.test.ts`), QPay (offline gateway only),
+and anything with a screen reader or a real phone.

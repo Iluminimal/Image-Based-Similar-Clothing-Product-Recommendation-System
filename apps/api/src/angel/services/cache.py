@@ -1,0 +1,189 @@
+"""Хайлтын Redis cache-ууд. Үйлдэл бүр best effort: Redis алдаа эсвэл timeout лог хийгдэж miss
+гэж тооцогдоно, тиймээс cache хайлтыг зөвхөн хурдасгаж чадна, хэзээ ч эвдэхгүй."""
+
+import asyncio
+import hashlib
+import json
+from dataclasses import asdict
+from typing import Any
+
+import numpy as np
+from numpy.typing import NDArray
+from pydantic import TypeAdapter
+from redis.asyncio import Redis
+
+from angel.core.logging import get_logger
+from angel.repositories.catalog.products import SearchFilters
+from angel.schemas.catalog.catalog import CatalogFilters
+from angel.schemas.catalog.search import SearchHit
+from angel.services.catalog.taxonomy import TaxonomySnapshot
+
+log = get_logger(__name__)
+
+_HITS = TypeAdapter(list[SearchHit])
+
+
+def normalize_query(query: str) -> str:
+    """Том жижиг үсэг, хоосон зай нь FashionCLIP-ийн tokenizer-д текстийн утгыг өөрчлөхгүй (жижиг
+    үсэг болгодог), тиймээс cache-ийг хуваах ёсгүй."""
+    return " ".join(query.lower().split())
+
+
+class SearchCache:
+    """Key-үүд embedding-ийн version агуулна: model эсвэл preprocessing өөрчлөгдсөний дараа
+    (re-embed) хуучин entry-г дахин уншихгүй, өөрөө дуусна."""
+
+    def __init__(
+        self,
+        redis: Redis,
+        *,
+        embedding_version: str,
+        dimension: int,
+        text_ttl_seconds: int,
+        similar_ttl_seconds: int,
+        filters_ttl_seconds: int = 600,
+        timeout_seconds: float,
+    ) -> None:
+        self._redis = redis
+        self._version = embedding_version
+        self._dimension = dimension
+        self._text_ttl = text_ttl_seconds
+        self._similar_ttl = similar_ttl_seconds
+        self._filters_ttl = filters_ttl_seconds
+        self._timeout = timeout_seconds
+
+    # --- текстийн embedding ---
+
+    def _text_key(self, query: str) -> str:
+        digest = hashlib.sha256(normalize_query(query).encode()).hexdigest()
+        return f"emb:txt:{self._version}:{digest}"
+
+    async def get_text_embedding(self, query: str) -> NDArray[np.float32] | None:
+        raw = await self._get(self._text_key(query))
+        if raw is None or len(raw) != self._dimension * 4:
+            return None
+        return np.frombuffer(raw, dtype=np.float32).copy()
+
+    async def set_text_embedding(self, query: str, embedding: NDArray[np.float32]) -> None:
+        await self._set(
+            self._text_key(query), embedding.astype(np.float32).tobytes(), self._text_ttl
+        )
+
+    # --- төстэй бараа ---
+
+    def _similar_key(
+        self,
+        product_id: int,
+        filters: SearchFilters,
+        limit: int,
+        refinement: tuple[str, float] | None = None,
+    ) -> str:
+        parts: dict[str, Any] = asdict(filters)
+        if refinement is not None:
+            # Текст, жин өөр бол үр дүн өөр: key-д орно (текстийн том жижиг үсэг хамаагүй).
+            parts["refinement"] = [normalize_query(refinement[0]), round(refinement[1], 4)]
+        spec = json.dumps(parts, sort_keys=True)
+        digest = hashlib.sha256(spec.encode()).hexdigest()[:16]
+        return f"sim:{self._version}:{product_id}:{limit}:{digest}"
+
+    async def get_similar(
+        self,
+        product_id: int,
+        filters: SearchFilters,
+        limit: int,
+        refinement: tuple[str, float] | None = None,
+    ) -> list[SearchHit] | None:
+        raw = await self._get(self._similar_key(product_id, filters, limit, refinement))
+        if raw is None:
+            return None
+        try:
+            return _HITS.validate_json(raw)
+        except ValueError:
+            log.warning("cache_entry_invalid", kind="similar")
+            return None
+
+    async def set_similar(
+        self,
+        product_id: int,
+        filters: SearchFilters,
+        limit: int,
+        hits: list[SearchHit],
+        refinement: tuple[str, float] | None = None,
+    ) -> None:
+        await self._set(
+            self._similar_key(product_id, filters, limit, refinement),
+            _HITS.dump_json(hits),
+            self._similar_ttl,
+        )
+
+    # --- catalogue-ийн filter сонголтууд ---
+
+    @property
+    def _filters_key(self) -> str:
+        return f"catalog:filters:{self._version}"
+
+    async def get_catalog_filters(self) -> CatalogFilters | None:
+        raw = await self._get(self._filters_key)
+        if raw is None:
+            return None
+        try:
+            return CatalogFilters.model_validate_json(raw)
+        except ValueError:
+            return None
+
+    async def set_catalog_filters(self, filters: CatalogFilters) -> None:
+        await self._set(self._filters_key, filters.model_dump_json().encode(), self._filters_ttl)
+
+    # --- ангиллын навигаци ---
+
+    @property
+    def _nav_key(self) -> str:
+        return f"catalog:nav:{self._version}"
+
+    async def get_taxonomy(self) -> TaxonomySnapshot | None:
+        raw = await self._get(self._nav_key)
+        if raw is None:
+            return None
+        try:
+            return TaxonomySnapshot.model_validate_json(raw)
+        except ValueError:
+            return None
+
+    async def set_taxonomy(self, snapshot: TaxonomySnapshot) -> None:
+        await self._set(self._nav_key, snapshot.model_dump_json().encode(), self._filters_ttl)
+
+    # --- хүчингүй болгох ---
+
+    async def invalidate_catalogue(self) -> None:
+        """Admin-ы өөрчлөлтийн дараа төстэй барааны жагсаалт, filter сонголтыг мартана, ингэвэл
+        идэвхгүй болсон эсвэл үнэ нь өөрчлөгдсөн бараа TTL дуусах хүртэл тэдгээрт үлдэхгүй."""
+        try:
+            await asyncio.wait_for(self._invalidate(), self._timeout * 20)
+        except Exception as exc:
+            log.warning("cache_unavailable", op="invalidate", error=type(exc).__name__)
+
+    async def _invalidate(self) -> None:
+        batch: list[bytes] = [self._filters_key.encode(), self._nav_key.encode()]
+        async for key in self._redis.scan_iter(match=f"sim:{self._version}:*", count=500):
+            batch.append(key)
+            if len(batch) >= 500:
+                await self._redis.delete(*batch)
+                batch = []
+        if batch:
+            await self._redis.delete(*batch)
+
+    # --- дотоод хэрэгслүүд ---
+
+    async def _get(self, key: str) -> bytes | None:
+        try:
+            value: Any = await asyncio.wait_for(self._redis.get(key), self._timeout)
+        except Exception as exc:
+            log.warning("cache_unavailable", op="get", error=type(exc).__name__)
+            return None
+        return value if isinstance(value, bytes) else None
+
+    async def _set(self, key: str, value: bytes, ttl_seconds: int) -> None:
+        try:
+            await asyncio.wait_for(self._redis.set(key, value, ex=ttl_seconds), self._timeout)
+        except Exception as exc:
+            log.warning("cache_unavailable", op="set", error=type(exc).__name__)

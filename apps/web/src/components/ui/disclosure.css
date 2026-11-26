@@ -1,0 +1,27 @@
+/* disclosure.tsx импортолдог, ингэснээр Disclosure ашигладаг хуудсууд л үүнийг татна. */
+/*
+ * `auto` өндөр рүү animation хийхийг дэмждэг browser (Chromium, Safari) дээр panel-ийг зөөлөн нээж
+ * хаадаг `<details>`; бусад дээр зүгээр нээгдэнэ. Script-гүй.
+ */
+.disclosure {
+  interpolate-size: allow-keywords;
+}
+.disclosure::details-content {
+  height: 0;
+  overflow: clip;
+  transition:
+    height 350ms var(--ease-out-expo),
+    content-visibility 350ms allow-discrete;
+}
+.disclosure[open]::details-content {
+  height: auto;
+}
+.disclosure > summary {
+  list-style: none;
+}
+.disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.disclosure[open] > summary .disclosure-chevron {
+  rotate: 180deg;
+}

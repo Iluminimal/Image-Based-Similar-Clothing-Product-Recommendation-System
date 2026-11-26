@@ -1,0 +1,189 @@
+"""API-ийн бүх алдааг RFC 7807 (`application/problem+json`) хэлбэрээр буцаана.
+
+Вэб алдааг гарчгаар биш `type` URN-ээр нь таньдаг: URN-ийг сольбол вэбийн `lib/api/errors.ts`-ийг
+хамт шинэчилнэ.
+"""
+
+from http import HTTPStatus
+from typing import Any
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from angel.core.logging import get_logger
+from angel.core.request_context import REQUEST_ID_HEADER, get_request_id
+from angel.schemas.problem import FieldError, ProblemDetail
+
+PROBLEM_JSON = "application/problem+json"
+
+_PREFIX = "urn:angel:problem:"
+PRODUCT_NOT_FOUND_TYPE = f"{_PREFIX}product-not-found"
+# Захиалгад орсон барааг устгах боломжгүй.
+PRODUCT_HAS_ORDERS_TYPE = f"{_PREFIX}product-has-orders"
+UNAUTHENTICATED_TYPE = f"{_PREFIX}unauthenticated"
+INVALID_CREDENTIALS_TYPE = f"{_PREFIX}invalid-credentials"
+EMAIL_TAKEN_TYPE = f"{_PREFIX}email-taken"
+FORBIDDEN_ORIGIN_TYPE = f"{_PREFIX}forbidden-origin"
+FORBIDDEN_TYPE = f"{_PREFIX}forbidden"
+ADDRESS_NOT_FOUND_TYPE = f"{_PREFIX}address-not-found"
+CART_ITEM_NOT_FOUND_TYPE = f"{_PREFIX}cart-item-not-found"
+ORDER_NOT_FOUND_TYPE = f"{_PREFIX}order-not-found"
+INVALID_SIZE_TYPE = f"{_PREFIX}invalid-size"
+INSUFFICIENT_STOCK_TYPE = f"{_PREFIX}insufficient-stock"
+CART_EMPTY_TYPE = f"{_PREFIX}cart-empty"
+CHECKOUT_BUSY_TYPE = f"{_PREFIX}checkout-busy"
+CART_FULL_TYPE = f"{_PREFIX}cart-full"
+PAYMENTS_UNAVAILABLE_TYPE = f"{_PREFIX}payments-unavailable"
+PAYMENT_PROVIDER_TYPE = f"{_PREFIX}payment-provider-error"
+PAYMENT_IN_PROGRESS_TYPE = f"{_PREFIX}payment-in-progress"
+INVALID_SIGNATURE_TYPE = f"{_PREFIX}invalid-signature"
+ADDRESS_LIMIT_TYPE = f"{_PREFIX}address-limit"
+SHIPPING_UNAVAILABLE_TYPE = f"{_PREFIX}shipping-unavailable"
+ATTEMPT_EXPIRED_TYPE = f"{_PREFIX}attempt-expired"
+WISHLIST_FULL_TYPE = f"{_PREFIX}wishlist-full"
+INVALID_CATEGORY_TYPE = f"{_PREFIX}invalid-category"
+CATEGORY_NOT_FOUND_TYPE = f"{_PREFIX}category-not-found"
+INVALID_TRANSITION_TYPE = f"{_PREFIX}invalid-order-transition"
+REVIEW_NOT_FOUND_TYPE = f"{_PREFIX}review-not-found"
+REVIEW_NOT_ALLOWED_TYPE = f"{_PREFIX}review-not-allowed"
+REVIEW_EXISTS_TYPE = f"{_PREFIX}review-exists"
+CONTACT_EMAIL_REQUIRED_TYPE = f"{_PREFIX}contact-email-required"
+INVALID_DESTINATION_TYPE = f"{_PREFIX}invalid-destination"
+OTP_INVALID_TYPE = f"{_PREFIX}otp-invalid"
+WEAK_PASSWORD_TYPE = f"{_PREFIX}weak-password"
+OTP_EXPIRED_TYPE = f"{_PREFIX}otp-expired"
+OTP_TOO_MANY_ATTEMPTS_TYPE = f"{_PREFIX}otp-too-many-attempts"
+SMS_UNAVAILABLE_TYPE = f"{_PREFIX}sms-unavailable"
+EMAIL_UNAVAILABLE_TYPE = f"{_PREFIX}email-unavailable"
+PHONE_TAKEN_TYPE = f"{_PREFIX}phone-taken"
+LAST_SIGN_IN_METHOD_TYPE = f"{_PREFIX}last-sign-in-method"
+REAUTH_REQUIRED_TYPE = f"{_PREFIX}reauth-required"
+OPEN_ORDERS_TYPE = f"{_PREFIX}open-orders"
+TOTP_REQUIRED_TYPE = f"{_PREFIX}totp-required"
+TOTP_INVALID_TYPE = f"{_PREFIX}totp-invalid"
+TOTP_SETUP_REQUIRED_TYPE = f"{_PREFIX}totp-setup-required"
+TOTP_ALREADY_ENABLED_TYPE = f"{_PREFIX}totp-already-enabled"
+TOTP_UNAVAILABLE_TYPE = f"{_PREFIX}totp-unavailable"
+SIGN_IN_REQUIRED_TYPE = f"{_PREFIX}sign-in-required"
+STOCK_BELOW_COMMITTED_TYPE = f"{_PREFIX}stock-below-committed"
+PRICE_CHANGED_TYPE = f"{_PREFIX}price-changed"
+IDEMPOTENCY_KEY_REUSED_TYPE = f"{_PREFIX}idempotency-key-reused"
+REQUEST_NOT_ALLOWED_TYPE = f"{_PREFIX}order-request-not-allowed"
+REQUEST_OPEN_TYPE = f"{_PREFIX}order-request-open"
+
+log = get_logger(__name__)
+
+
+class ProblemError(StarletteHTTPException):
+    """Service-үүдээс шиднэ, RFC 7807 хариу үүсгэнэ. Route алдааг гараар бүтээхгүй.
+
+    Зориуд HTTPException: FastAPI хүсэлтийн body задлах үед гарсан бусад exception бүрийг ерөнхий
+    400 болгодог, харин "413 too large"-д ингэж болохгүй.
+    """
+
+    def __init__(
+        self,
+        status_code: int,
+        title: str,
+        detail: str | None = None,
+        *,
+        type_: str = "about:blank",
+        extensions: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        super().__init__(status_code, detail or title, headers or {})
+        self.title = title
+        self.detail = detail  # type: ignore[assignment]  # None = хариунд оруулахгүй
+        self.type = type_
+        self.extensions = extensions or {}
+
+
+def problem_response(
+    request: Request, problem: ProblemDetail, headers: dict[str, str] | None = None
+) -> JSONResponse:
+    problem.instance = request.url.path
+    request_id = get_request_id(request.scope)
+    problem.request_id = request_id
+    response_headers = dict(headers or {})
+    if request_id:
+        # 500 handler нь RequestContextMiddleware-ийн гадна ажилладаг тул header-ийг эндээс тавина.
+        response_headers[REQUEST_ID_HEADER] = request_id
+    return JSONResponse(
+        problem.model_dump(exclude_none=True),
+        status_code=problem.status,
+        media_type=PROBLEM_JSON,
+        headers=response_headers,
+    )
+
+
+async def _handle_problem_error(request: Request, exc: ProblemError) -> JSONResponse:
+    problem = ProblemDetail(
+        type=exc.type,
+        title=exc.title,
+        status=exc.status_code,
+        detail=exc.detail,
+        **exc.extensions,
+    )
+    return problem_response(request, problem, dict(exc.headers or {}))
+
+
+# Тусгай `type`-гүй, framework-ийн өөрийн алдааны (route олдсонгүй, method буруу...) гарчиг.
+_STATUS_TITLES = {
+    400: "Хүсэлт буруу байна",
+    401: "Нэвтрээгүй байна",
+    403: "Хандах эрхгүй",
+    404: "Олдсонгүй",
+    405: "Зөвшөөрөгдөөгүй арга",
+    409: "Зөрчил гарлаа",
+    413: "Хүсэлт хэт том",
+    415: "Дэмжигдээгүй төрөл",
+    422: "Өгөгдөл буруу байна",
+    429: "Хэт олон хүсэлт",
+    500: "Серверийн алдаа",
+    502: "Гаднын үйлчилгээ хариу өгсөнгүй",
+    503: "Үйлчилгээ түр боломжгүй",
+}
+
+
+async def _handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    try:
+        phrase = HTTPStatus(exc.status_code).phrase
+    except ValueError:
+        phrase = ""
+    title = _STATUS_TITLES.get(exc.status_code) or phrase or "Алдаа"
+    # Starlette өөрийн анхдагч `detail`-ыг англи хэллэгээр ("Not Found") өгдөг: гарчиг аль хэдийн
+    # монголоор хэлж байгаа тул давтахгүй.
+    detail = str(exc.detail) if exc.detail and str(exc.detail) != phrase else None
+    problem = ProblemDetail(title=title, status=exc.status_code, detail=detail)
+    return problem_response(request, problem, dict(exc.headers or {}))
+
+
+async def _handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+    # `input`, `ctx`-г зориуд хасна: хэрэглэгчийн өгөгдлийг буцааж болзошгүй, эсвэл serialize
+    # хийгдэхгүй байж болно.
+    errors = [
+        FieldError(loc=[str(part) for part in err["loc"]], msg=err["msg"], type=err["type"])
+        for err in exc.errors()
+    ]
+    problem = ProblemDetail(
+        title="Хүсэлтийн өгөгдөл буруу байна",
+        status=HTTPStatus.UNPROCESSABLE_ENTITY,
+        detail="Нэг буюу хэд хэдэн талбар буруу байна.",
+        errors=errors,
+    )
+    return problem_response(request, problem)
+
+
+async def _handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
+    log.error("unhandled_exception", exc_info=exc)
+    problem = ProblemDetail(title="Серверийн алдаа", status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    return problem_response(request, problem)
+
+
+def register_exception_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(ProblemError, _handle_problem_error)  # type: ignore[arg-type]
+    app.add_exception_handler(StarletteHTTPException, _handle_http_exception)  # type: ignore[arg-type]
+    app.add_exception_handler(RequestValidationError, _handle_validation_error)  # type: ignore[arg-type]
+    app.add_exception_handler(Exception, _handle_unexpected_error)

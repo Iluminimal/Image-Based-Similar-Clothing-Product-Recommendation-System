@@ -1,0 +1,66 @@
+import math
+from collections.abc import Sequence
+from http import HTTPStatus
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from angel.core.errors import ORDER_NOT_FOUND_TYPE, ProblemError
+from angel.repositories.commerce.orders import OrderRepository
+from angel.schemas.admin.orders import (
+    AdminOrderListQuery,
+    AdminOrderOut,
+    AdminOrderPage,
+    AdminOrderSummary,
+)
+from angel.services.mappers import to_admin_order_out, to_admin_order_summary
+from angel.storage import Storage
+
+
+class AdminOrderService:
+    """Бүх хэрэглэгчийн захиалгыг зөвхөн унших харагдац (өөрчлөлт: `OrderFulfillmentService`)."""
+
+    def __init__(self, session: AsyncSession, storage: Storage) -> None:
+        self._session = session
+        self._storage = storage
+        self._orders = OrderRepository(session)
+
+    async def list(self, query: AdminOrderListQuery) -> AdminOrderPage:
+        async with self._session.begin():
+            rows, total = await self._orders.list_all(
+                text_query=query.q,
+                status=query.status,
+                limit=query.page_size,
+                offset=(query.page - 1) * query.page_size,
+            )
+            items = [to_admin_order_summary(order) for order in rows]
+            counts = await self._orders.status_counts(query.q)
+            waiting = await self._orders.open_request_count(query.q)
+        return AdminOrderPage(
+            items=items,
+            status_counts=counts,
+            open_requests=waiting,
+            total=total,
+            page=query.page,
+            page_size=query.page_size,
+            pages=math.ceil(total / query.page_size),
+        )
+
+    async def all_matching(self, query: AdminOrderListQuery) -> Sequence[AdminOrderSummary]:
+        """Шүүлтүүрт таарсан бүх захиалга, шинэ нь эхэнд (тайлан; хуудаслахгүй)."""
+        async with self._session.begin():
+            rows, _ = await self._orders.list_all(
+                text_query=query.q, status=query.status, limit=None, offset=0
+            )
+            return [to_admin_order_summary(order) for order in rows]
+
+    async def get(self, number: str) -> AdminOrderOut:
+        async with self._session.begin():
+            order = await self._orders.get_by_number(number)
+            if order is None:
+                raise ProblemError(
+                    HTTPStatus.NOT_FOUND,
+                    "Захиалга олдсонгүй",
+                    f"{number} дугаартай захиалга байхгүй байна.",
+                    type_=ORDER_NOT_FOUND_TYPE,
+                )
+            return to_admin_order_out(order, self._storage)

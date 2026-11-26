@@ -68,7 +68,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "ruff>=0.16.10",
-    "types-tqdm>=4.70.0.20260906",
+    "types-tqdm>=4.70.0.20261122",
 ]
 
 [tool.ruff]

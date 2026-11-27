@@ -1,14 +1,14 @@
-"""Embedding загваруудыг (FashionCLIP, Marqo-FashionSigLIP, ResNet-50) офлайнаар харьцуулах.
+"""Embedding загваруудыг (FashionCLIP, Marqo-FashionSigLIP, ResNet-50) офлайнаар харьцуулна.
 
     cd apps/api && uv run --group bench python ../../scripts/benchmark_models.py --limit 2000
     cd apps/api && uv run --group bench python ../../scripts/benchmark_models.py \\
         --out ../../docs/perf/models.json          # бүх каталог, анх удаа удаан (кэшлэдэг)
 
-Загвар бүр каталогийн ЯГ ИЖИЛ 224x224 оролтыг авч (`to_clip_array`), өөрийн embedding гаргана.
-Query нь каталогийн нэг бүтээгдэхүүн, хайлт нь exact (HNSW-гүй, cosine), query өөрийгөө
-оруулахгүй. Relevant гэдэг нь label таарах (article type / + colour / + gender). Үр дүнд:
-mAP, P, recall, hit rate, nDCG; encode-ийн хурд; параметрийн тоо; reference загвартай харьцуулсан
-paired-bootstrap итгэлийн завсар. Ажиллаж буй сервисэд (DB, pgvector) хүрэхгүй.
+Загвар бүрд каталогийн ЯГ ИЖИЛ 224x224 оролт өгнө (`to_clip_array`), загвар бүр өөрийн embedding
+гаргана. Query бол каталогийн нэг бараа. Хайлт exact (HNSW-гүй, cosine), query бараа өөрийгөө үр
+дүнд оруулахгүй. Label таарвал relevant (article type / + colour / + gender). Үр дүнд: mAP, P,
+recall, hit rate, nDCG; encode-ийн хурд; параметрийн тоо; reference загвартай харьцуулсан
+paired-bootstrap итгэлийн завсар. Ажиллаж буй сервист (DB, pgvector) хүрэхгүй.
 """
 
 from __future__ import annotations

@@ -152,7 +152,8 @@ _PUBLIC_DATA = {
 
 
 def _loaded_events(order: Order) -> list[OrderEvent]:
-    """Захиалгыг түүхтэй нь ачаалсан үед түүх (checkout, жагсаалтууд ачаалдаггүй)."""
+    """Захиалгыг түүхтэй нь ачаалсан бол түүхийг нь оруулна (checkout, жагсаалтууд түүхийг
+    ачаалдаггүй)."""
     return list(order.__dict__.get("events", []))
 
 
@@ -193,9 +194,9 @@ def to_order_out(
     pending_ttl_minutes: int | None = None,
     returns: ReturnPolicy | None = None,
 ) -> OrderOut:
-    """`pending_ttl_minutes` өгвөл төлбөр хүлээж буй захиалгад дуусах хугацаа ба QR (төлбөрийг
-    үргэлжлүүлэхэд) орно. `returns` (худалдан авагчийн захиалгын хуудас) өгвөл одоо гаргаж болох
-    хүсэлт, буцаах хугацаа, хаяг орно."""
+    """`pending_ttl_minutes` өгвөл төлбөр хүлээж буй захиалгад дуусах хугацаа болон QR-ыг (төлбөрөө
+    үргэлжлүүлэхэд) нэмнэ. `returns` өгвөл (худалдан авагчийн захиалгын хуудас) одоо гаргаж болох
+    хүсэлт, буцаах хугацаа, хаягийг нэмнэ."""
     pending = order.status == "pending"
     payment = order.payment
     requests = _loaded_requests(order)

@@ -1,4 +1,4 @@
-"""Түлхүүр, сүлжээ шаардахгүй төлбөрийн орлуулагч (хөгжүүлэлт, тест)."""
+"""Түлхүүр, сүлжээ шаардахгүй хиймэл төлбөр (хөгжүүлэлт, тестэд)."""
 
 import secrets
 from typing import Literal
@@ -7,11 +7,11 @@ from angel.payments.gateway import IntentInfo, PaymentEvent, PaymentMode
 
 
 class OfflineGateway:
-    """Provider-гүй хөгжүүлэлт (`PAYMENTS_MODE=offline`) ба тестийн орлуулагч.
+    """Provider-гүйгээр хөгжүүлэх (`PAYMENTS_MODE=offline`), тестлэхэд хэрэглэнэ.
 
-    Процессоос юу ч гарахгүй: төлбөрүүд зохиомол, худалдан авагч simulate endpoint-оор "төлнө".
-    Энэ нь жинхэнэ provider-ийн хүрдэг settlement кодыг ажиллуулна. Дэлгүүрийн валютаар
-    (төгрөгөөр) мөнгө авна. Production-д хэзээ ч зөвшөөрөхгүй (`Settings`-ийг хар).
+    Гадагш ямар ч хүсэлт явуулахгүй: төлбөр зохиомол, худалдан авагч simulate endpoint-оор "төлнө".
+    Ингэхэд жинхэнэ provider-тэй адил settlement код ажиллана. Мөнгийг дэлгүүрийн валютаар
+    (төгрөгөөр) авна. Production-д хэзээ ч зөвшөөрөхгүй (`Settings`-ийг үзнэ үү).
     """
 
     mode: PaymentMode = "offline"
@@ -20,12 +20,12 @@ class OfflineGateway:
     async def create_intent(
         self, *, amount: int, currency: str, order_number: str, idempotency_key: str
     ) -> IntentInfo:
-        # Key-ээс гаргана: давтагдсан хүсэлт ижил төлбөр авна.
+        # Id-г key-ээс гаргадаг тул давтагдсан хүсэлтэд ижил төлбөр гарна.
         suffix = idempotency_key.replace("-", "")[:24] or secrets.token_hex(12)
         return IntentInfo(f"pay_offline_{suffix}", "requires_payment")
 
     async def check(self, intent_id: str) -> PaymentEvent | None:
-        # Offline-д төлбөр зөвхөн simulate endpoint-оор ордог.
+        # Offline горимд төлбөр зөвхөн simulate endpoint-оор орно.
         return None
 
     async def cancel_intent(self, intent_id: str) -> Literal["canceled", "succeeded"]:

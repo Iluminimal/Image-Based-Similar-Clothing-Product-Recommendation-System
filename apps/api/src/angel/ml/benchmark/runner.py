@@ -86,10 +86,10 @@ def measure_latency(
     repeats: int = 30,
     warmup: int = 3,
 ) -> dict[str, dict[str, float]]:
-    """Нэг зургийн encode хугацаа (ms): batch бүрийн p50, p95 ба нэг зурагт ногдох дундаж.
+    """Нэг зураг encode хийх хугацаа (ms): batch бүрийн p50, p95 ба нэг зурагт ногдох дундаж.
 
-    `arrays` нь хамгийн том batch-аас багагүй. GPU-г `encode` дотор CPU руу буцаадаг тул (numpy)
-    хугацаа бүрэн дуусах хүртэлх бодит хугацаа."""
+    `arrays` дахь зураг хамгийн том batch-аас цөөн байж болохгүй. `encode` GPU-ийн үр дүнг CPU руу
+    (numpy) буцаадаг тул хэмжсэн хугацаа нь тооцоо бүрэн дуусах хүртэлх бодит хугацаа."""
     results: dict[str, dict[str, float]] = {}
     for size in batch_sizes:
         batch = arrays[:size]

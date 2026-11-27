@@ -36,10 +36,10 @@ class CategoryClassifier(Protocol):
 
 
 class LazyCategoryClassifier:
-    """Жинхэнэ classifier-ийг анх ашиглах үед үүсгэнэ (алдаа гарвал дахин оролдоно).
+    """Жинхэнэ classifier-ийг анх ашиглахад нь үүсгэнэ (алдаа гарвал дараа дахин оролдоно).
 
-    Label-үүд database-аас ирдэг, startup үед database түр бэлэн биш байж болно. Гэхдээ API
-    ердийнхөөрөө асаж, database бэлэн болмогц ажиллах ёстой.
+    Label-уудыг database-аас авдаг, гэтэл апп асах үед database бэлэн биш байж болно. Тэр үед ч API
+    хэвийн асаж, database бэлэн болмогц ангилагч ажиллах ёстой.
     """
 
     def __init__(self, factory: Callable[[], Awaitable[CategoryClassifier]]) -> None:
@@ -56,10 +56,10 @@ class LazyCategoryClassifier:
 
 
 class ZeroShotCategoryClassifier:
-    """Зургийн embedding-ийг category нэрсийн text embedding-тэй харьцуулна.
+    """Зургийн embedding-ийг ангиллын нэрсийн text embedding-тэй харьцуулна.
 
-    Label embedding-ийг нэг л удаа бодсон тул таамаглал нь хайлтад аль хэдийн хэрэгтэй зургийн
-    embedding дээр нэг жижиг матрицын үржвэр нэмэхэд л хүрнэ.
+    Label-уудын embedding-ийг нэг л удаа боддог. Зургийн embedding хайлтад аль хэдийн бодогдсон
+    байдаг тул таамаглахад ердөө нэг жижиг матрицын үржвэр нэмэгдэнэ.
     """
 
     def __init__(

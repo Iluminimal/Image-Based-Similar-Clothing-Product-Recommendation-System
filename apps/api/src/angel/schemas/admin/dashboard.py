@@ -30,7 +30,7 @@ class StatsQuery(BaseModel):
         return self
 
     def window(self, zone: ZoneInfo) -> tuple[datetime, datetime]:
-        """Тооцох хугацааны [эхлэл, төгсгөл) (дэлгүүрийн цагийн бүтэн өдрүүд): тусгай хугацаа,
+        """Тооцох хугацаа [эхлэл, төгсгөл), дэлгүүрийн цагийн бүтэн өдрүүдээр. Сонгосон хугацаа,
         эсвэл өнөөдрөөр төгсөх `days` өдөр."""
         last = self.end or today(zone)
         end = start_of_day(last + timedelta(days=1), zone)
@@ -91,8 +91,8 @@ class TopProduct(BaseModel):
 
 
 class AdminStats(BaseModel):
-    """Dashboard. Орлого нь төлөгдсөн, илгээсэн, хүргэсэн захиалгыг төлөгдсөн өдрөөр нь тооцно;
-    төлбөрийг нь буцаасан захиалга орлого биш."""
+    """Dashboard. Орлогод төлөгдсөн, илгээсэн, хүргэсэн захиалгыг төлөгдсөн өдрөөр нь тооцно.
+    Төлбөрийг нь буцаасан захиалга орлогод орохгүй."""
 
     days: int
     currency: str
@@ -105,8 +105,9 @@ class AdminStats(BaseModel):
     status_counts: dict[str, int]
     to_ship: int
     awaiting_payment: int
-    # Админы шийдвэр (шинэ хүсэлт) эсвэл төлбөр буцаалт (хүлээж авсан бараа) хүлээж буй
-    # хүсэлтүүд; `returns_to_handle` нь тэдгээрийн буцаалтын хэсэг (цуцлах нь `to_ship`-д орсон).
+    # Админы үйлдэл хүлээж буй хүсэлтүүд: шийдвэр гаргах шинэ хүсэлт, эсвэл бараа нь ирсэн тул
+    # төлбөрийг нь буцаах хүсэлт. `returns_to_handle` бол эдгээрийн буцаалтын хэсэг (цуцлах
+    # хүсэлтийг `to_ship`-д тооцсон).
     requests_to_handle: int
     returns_to_handle: int
     low_stock_threshold: int
@@ -119,8 +120,8 @@ class AdminStats(BaseModel):
     end: date
     funnel: Funnel
     by_category: list[CategorySales]
-    # Хугацаанд 2+ захиалгатай худалдан авагч / төлсөн худалдан авагч. Хугацаанд худалдан авалт
-    # байхгүй бол None. Бусад хувь (0..1) мөн адил.
+    # Хугацаанд 2+ захиалга өгсөн худалдан авагчдын, төлсөн бүх худалдан авагчид эзлэх харьцаа.
+    # Хугацаанд худалдан авалт байхгүй бол None. Бусад харьцаа (0..1) мөн адил.
     repeat_customer_rate: float | None
     refund_rate: float | None
     cancel_rate: float | None

@@ -19,10 +19,11 @@ def get_request_id(scope: Scope) -> str | None:
 
 
 class RequestContextMiddleware:
-    """Request ID олгоно (зөв ирсэн ID байвал дахин ашиглана), log мөр бүрт холбож, хариунд буцааж,
-    хүсэлт бүрт нэг access-log мөр бичнэ.
+    """Хүсэлт бүрд request ID өгнө (зөв ID дагалдаж ирсэн бол түүнийг ашиглана). Энэ ID-г log-ийн
+    мөр бүрд болон хариунд нэмнэ. Мөн хүсэлт бүрд нэг access-log мөр бичнэ.
 
-    Зориуд цэвэр ASGI: BaseHTTPMiddleware нь contextvars дамжуулалт, streaming-ийг эвддэг.
+    Зориуд цэвэр ASGI-ээр бичсэн: BaseHTTPMiddleware нь contextvars дамжуулах болон streaming-ийг
+    эвддэг.
     """
 
     def __init__(self, app: ASGIApp) -> None:

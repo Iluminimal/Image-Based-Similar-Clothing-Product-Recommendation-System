@@ -48,7 +48,8 @@ def _rate(part: int, whole: int) -> float | None:
 
 
 def _categories(rows: list[tuple[str, int, int]]) -> list[CategorySales]:
-    """Дээд ангилал хамгийн ихдээ `CATEGORIES_SHOWN`; үлдсэнийг нэг "бусад" мөр болгоно."""
+    """Дээд талын ангиллаас хамгийн ихдээ `CATEGORIES_SHOWN`-ийг харуулж, үлдсэнийг нэг "бусад" мөр
+    болгоно."""
     shown = [CategorySales(name=n, revenue_cents=r, units=u) for n, r, u in rows[:CATEGORIES_SHOWN]]
     rest = rows[CATEGORIES_SHOWN:]
     if rest:
@@ -73,7 +74,7 @@ class AdminDashboardService:
 
     async def stats(self, query: StatsQuery) -> AdminStats:
         # Дэлгүүрийн цагийн бүтэн өдрүүд (өнөөдөр эсвэл сонгосон сүүлийн өдрөөр төгсөнө) болон
-        # харьцуулах өмнөх ижил тооны өдрүүд.
+        # харьцуулахад зориулсан, түүнээс өмнөх ижил тооны өдрүүд.
         zone = self._settings.shop_zone
         if query.end is not None and query.end > today(zone):
             raise ProblemError(

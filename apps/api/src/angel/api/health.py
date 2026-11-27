@@ -4,7 +4,7 @@ from angel.core.deps import HealthServiceDep
 from angel.schemas.problem import ProblemDetail
 from angel.schemas.system.health import LivenessResponse, ReadinessResponse
 
-# Зориуд version-гүй: orchestrator-ууд шалгадаг, client-ууд ашигладаггүй.
+# Эдгээрийг зориуд version-гүй болгосон: зөвхөн orchestrator шалгадаг, client ашигладаггүй.
 router = APIRouter(tags=["health"])
 
 

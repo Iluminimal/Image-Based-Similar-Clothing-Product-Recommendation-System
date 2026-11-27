@@ -24,7 +24,7 @@ _WITH_DETAILS = (
 )
 # Шийдэгдэж дуусаагүй хүсэлттэй эсэх.
 _HAS_OPEN_REQUEST = Order.requests.any(OrderRequest.status.in_(OPEN_REQUEST_STATUSES))
-# Түүхийг нэмж ачаална: түүхийг харуулдаг хуудсуудад.
+# Захиалгын түүхийг хамт ачаална (түүх харуулдаг хуудсуудад).
 _WITH_EVENTS = (*_WITH_DETAILS, selectinload(Order.events))
 
 
@@ -51,7 +51,8 @@ class OrderRepository:
         return result.scalar_one_or_none()
 
     async def get_for_user(self, user_id: int, number: str) -> Order | None:
-        """Эзэмшигчээр хязгаарлана: өөр хүний захиалгын дугаар андуурсан дугаараас ялгагдахгүй."""
+        """Зөвхөн эзэмшигчийнх нь дотроос хайна: өөр хүний захиалгын дугаар, байхгүй дугаар хоёрыг
+        ялгах боломжгүй."""
         result = await self._session.execute(
             select(Order)
             .where(Order.user_id == user_id, Order.number == number)
@@ -70,8 +71,8 @@ class OrderRepository:
         return result.scalar_one_or_none()
 
     async def get_for_update(self, order_id: int) -> Order | None:
-        """Захиалгын мөрийг түгжинэ; төлөв өөрчлөлтийг нэг нэгээр нь шийднэ. Мөрүүд болон
-        төлбөрийг тусад нь (түгжээгүй) ачаална, учир нь FOR UPDATE болон eager join хамт
+        """Захиалгын мөрийг түгжинэ, ингэснээр төлөв өөрчлөх үйлдлүүд дараалж явна. Захиалгын бараа,
+        төлбөрийг тусад нь (түгжихгүйгээр) ачаална, учир нь FOR UPDATE eager join-той хамт
         ажилладаггүй."""
         result = await self._session.execute(
             select(Order)
@@ -148,7 +149,7 @@ class OrderRepository:
         return result.scalar_one_or_none()
 
     async def status_counts(self, text_query: str | None) -> dict[str, int]:
-        """Admin-ы tab бүрийн захиалгын тоо (хайлт үйлчилнэ, төлвийн filter үйлчлэхгүй)."""
+        """Жагсаалтын tab бүрийн захиалгын тоо (хайлт үйлчилнэ, төлвийн filter үйлчлэхгүй)."""
         clauses = self._admin_clauses(text_query, "all")
         rows = await self._session.execute(
             select(Order.status, func.count()).where(*clauses).group_by(Order.status)
@@ -170,7 +171,7 @@ class OrderRepository:
         data: dict[str, object] | None = None,
         actor_id: int | None = None,
     ) -> None:
-        """Дуудагчийн transaction-ийн хэсэг: өөрчлөлт хийгдсэн тохиолдолд л event үүснэ."""
+        """Дуудсан кодын transaction дотор бичнэ: өөрчлөлт хадгалагдсан үед л event үлдэнэ."""
         self._session.add(
             OrderEvent(order_id=order_id, type=event_type, data=data or {}, actor_id=actor_id)
         )
@@ -189,8 +190,8 @@ class OrderRepository:
         return {product_id: int(units) for product_id, units in result.all()}
 
     async def ordered_product_ids(self, product_ids: Sequence[int]) -> set[int]:
-        """Аль барааг хэзээ нэгэн цагт захиалсан бэ (цуцалсан захиалга ч тооцогдоно: захиалгын
-        мөр бараа руугаа заасаар байдаг)."""
+        """Аль бараа өмнө нь захиалагдсаныг тогтооно. Цуцалсан захиалгыг ч тооцно, учир нь захиалгын
+        мөр тэр бараа руу заасаар байдаг."""
         if not product_ids:
             return set()
         result = await self._session.execute(
@@ -229,8 +230,9 @@ class OrderRepository:
     async def pending_older_than(
         self, cutoff: datetime, limit: int, *, after: tuple[datetime, int] | None = None
     ) -> list[Order]:
-        """Хугацаа хэтэрсэн pending захиалгын нэг багц, хуучин нь эхэнд. `after` (created_at, id)
-        өмнөх багцын сүүлчийнхээс үргэлжлүүлнэ: хааж чадаагүй захиалга ардахаа бөглөхгүй."""
+        """Хугацаа хэтэрсэн pending захиалгаас нэг багц, хуучин нь эхэнд. `after` (created_at, id)
+        өгвөл өмнөх багцын сүүлчийнхээс үргэлжлүүлнэ. Ингэснээр хааж чадаагүй захиалга ард нь
+        байгаа захиалгуудыг саатуулахгүй."""
         statement = select(Order).where(Order.status == "pending", Order.created_at < cutoff)
         if after is not None:
             statement = statement.where(tuple_(Order.created_at, Order.id) > tuple_(*after))
@@ -244,8 +246,8 @@ class OrderRepository:
     async def owing_refunds(
         self, limit: int, *, idle_for: timedelta, after_id: int = 0
     ) -> list[int]:
-        """Мөнгийг нь буцаах ёстой хэвээр бөгөөд сүүлд оролдсоноос хойш `idle_for` өнгөрсөн
-        захиалгуудын id."""
+        """Төлбөрийг нь буцаах шаардлагатай хэвээр бөгөөд сүүлд оролдсоноос хойш `idle_for` хугацаа
+        өнгөрсөн захиалгуудын id."""
         result = await self._session.execute(
             select(Payment.order_id)
             .where(
@@ -259,8 +261,8 @@ class OrderRepository:
         return list(result.scalars())
 
     async def add_payment_if_missing(self, payment: Payment) -> None:
-        """Давтагдсан checkout нь төлбөр үүсгэж буй өмнөх хүсэлттэй өрсөлдөж болно: unique
-        `order_id` нь хоёр дахь insert-ийг юу ч хийхгүй болгоно."""
+        """Давтагдсан checkout болон төлбөр үүсгэж байгаа өмнөх хүсэлт зэрэг явж болно. `order_id`
+        unique тул хоёр дахь insert юу ч хийхгүй."""
         await self._session.execute(
             insert(Payment)
             .values(
@@ -285,7 +287,7 @@ class OrderRepository:
         return result.scalar_one_or_none()
 
     async def record_event(self, event_id: str, event_type: str) -> bool:
-        """Event id анх харагдахад True, дахин хүргэгдэх бүрд False."""
+        """Event id анх удаа ирвэл True, дахин ирэх бүрд False."""
         result = await self._session.execute(
             insert(ProcessedPaymentEvent)
             .values(id=event_id, type=event_type)

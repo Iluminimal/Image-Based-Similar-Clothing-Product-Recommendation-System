@@ -30,7 +30,7 @@ def _statuses(values: str) -> None:
 def upgrade() -> None:
     """Schema-г шинэчилнэ."""
     _statuses(f"{_OLD}, 'refund_pending'")
-    # Sweep буцаах ёстой төлбөрийг минут тутам хайна: ийм мөр цөөн тул partial index.
+    # Sweep минут тутам буцаах ёстой төлбөрүүдийг хайна. Ийм мөр цөөн тул partial index ашиглана.
     op.create_index(
         "ix_payments_refund_pending",
         "payments",
@@ -41,7 +41,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Schema-г буцаана. Буцаагдаагүй өр байвал алдахгүйн тулд зогсоно."""
+    """Schema-г буцаана. Буцааж өгөөгүй төлбөр байвал мэдээллийг нь алдахгүйн тулд зогсоно."""
     owed = (
         op.get_bind()
         .execute(sa.text("SELECT count(*) FROM payments WHERE status = 'refund_pending'"))

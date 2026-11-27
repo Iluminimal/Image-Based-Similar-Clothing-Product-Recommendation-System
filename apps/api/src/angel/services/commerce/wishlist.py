@@ -23,7 +23,7 @@ class WishlistService:
         async with self._session.begin():
             ids = await self._wishlist.list_product_ids(user_id, MAX_WISHLIST_ITEMS)
             products = await self._products.get_many(ids)
-        # Шинэ нь эхэнд; catalogue-оос татагдсан бараа жагсаалтаас чимээгүй гарна.
+        # Шинэ нь эхэнд. Catalogue-оос хасагдсан бараа жагсаалтаас чимээгүй алга болно.
         return WishlistOut(
             items=[
                 to_product_out(products[i], self._storage)

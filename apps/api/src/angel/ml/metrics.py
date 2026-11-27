@@ -1,13 +1,12 @@
 """Visual search-ийн чанарыг хэмжих metric-үүд: P@K, recall@K, hit rate, nDCG@K, (mean) AP.
 
-Функц бүр *relevance matrix* авна: мөр = query, багана = rank. Тухайн rank дээр буцсан
-бүтээгдэхүүн query-д relevant бол `True`. Каталогт relevant бүтээгдэхүүн огт байхгүй query
-(`total_relevant == 0`) оноогүй тул `nan` буцна; `mean_valid` бусдын дунджийг авч, хэдийг
-алгассаныг хэлнэ.
+Функц бүр *relevance matrix* авна: мөр = query, багана = rank. Тухайн rank-д буцсан бараа query-д
+relevant бол `True`. Каталогт relevant бараа огт байхгүй query (`total_relevant == 0`) оноогүй тул
+`nan` буцна. `mean_valid` бусдын дунджийг авч, хэдэн query алгассаныг хэлнэ.
 
-Нэг query-ийн AP = `i <= K байх rank бүрийн P@i * rel_i`-ийн нийлбэрийг хуваана: K дотор олж
-болох relevant-ийн тоо `min(K, R)` (default), эсвэл өөр нийтлэг аргаар бодитоор олсон тоо.
-Бүх query-ийн дундаж нь mAP.
+Нэг query-ийн AP: i <= K байх rank бүрийн `P@i * rel_i`-г нэмээд, нийлбэрийг хуваана. Анхдагчаар
+`min(K, R)`-д (K дотор олж болох relevant-ийн дээд тоо) хуваана. Өөр нэг нийтлэг арга бодитоор олсон
+relevant-ийн тоонд хуваадаг. Бүх query-ийн AP-ийн дундаж нь mAP.
 """
 
 from __future__ import annotations
@@ -55,7 +54,8 @@ def relevant_counts(codes: NDArray[np.int64]) -> Counts:
 def relevance_at_ranks(
     codes: NDArray[np.int64], query_rows: NDArray[np.int64], ranked_rows: NDArray[np.int64]
 ) -> Relevance:
-    """`ranked_rows[q, r]` нь q query-ийн r rank-д буцсан каталогийн мөр; relevant эсэх."""
+    """`ranked_rows[q, r]` бол q query-ийн r-р байранд гарсан каталогийн мөр. Тэдгээр нь relevant
+    эсэхийг буцаана."""
     wanted = codes[query_rows][:, None]
     same: Relevance = (codes[ranked_rows] == wanted) & (wanted >= 0)
     return same

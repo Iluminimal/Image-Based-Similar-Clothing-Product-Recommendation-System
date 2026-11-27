@@ -1,10 +1,13 @@
-"""Хөгжүүлэлтийн demo өгөгдөл: customer, бүх төлөвтэй 1.5 сарын захиалга, review. Admin
-dashboard-д харуулах зүйл гаргана.
+"""Хөгжүүлэлтийн demo өгөгдөл: customer, review болон 1.5 сарын турш бүх төлөвт орсон захиалгууд.
+Ингэснээр admin dashboard дээр харах зүйлтэй болно.
 
-Бүгд зохиомол бөгөөд өгөгдсөн `--seed`-д тогтмол. Customer нь `demo-<name>@example.com`, нэг
-мэдэгдэж буй нууц үгтэй. `clean` нь үүсгэснийг яг арилгаж, stock-ийг буцаана. Захиалга нь
-checkout-ийн бөглөдөг ижил хүснэгтүүдэд, түүхийг нь event болгон бичдэг тул admin дэлгэц болон
-customer-ийн захиалгын хуудас жинхэнэ захиалга шиг уншина. Production дээр хэзээ ч ажиллахгүй.
+Бүх өгөгдөл зохиомол. Ижил `--seed` өгвөл яг ижил өгөгдөл гарна. Customer-ууд
+`demo-<name>@example.com` хаягтай, бүгд нэг ил мэдэгдсэн нууц үгтэй. `clean` нь зөвхөн энэ
+command-ын үүсгэснийг устгаж, stock-ийг буцаана.
+
+Захиалгыг checkout-ийн бичдэг хүснэгтүүдэд, түүхийг нь event болгон бичдэг. Тиймээс admin дэлгэц
+болон customer-ийн захиалгын хуудас тэднийг жинхэнэ захиалга шиг харуулна. Production дээр хэзээ ч
+ажиллахгүй.
 """
 
 import argparse
@@ -49,7 +52,7 @@ CARRIERS = {
     "Дэлгүүрийн хүргэлт": lambda r: f"LK{r.randrange(10**6, 10**7)}",
 }
 
-# Нэрийг имэйлд латинаар, дэлгэцэнд кириллээр хадгална.
+# Имэйлд латин нэрийг, дэлгэцэнд кирилл нэрийг ашиглана.
 FIRST = {
     "Bilguun": "Билгүүн",
     "Enkhjin": "Энхжин",
@@ -155,7 +158,8 @@ async def seed_demo(
         pool = await _products(session)
         if not pool:
             raise SystemExit("there are no products to order: run `make ingest` first")
-        # Захиалгын event-ийн "хэн": ачилтыг агуулахын ажилтан хийдэг тул түүнийг, үгүй бол админыг.
+        # Захиалгын event-д үйлдэл хийсэн хүнийг бичнэ. Илгээх нь агуулахын ажилтны ажил тул тэднээс
+        # сонгоно. Агуулахын ажилтан байхгүй бол админыг авна.
         admin = (
             await session.execute(
                 text(
@@ -181,8 +185,8 @@ async def clean_demo(engine: AsyncEngine) -> str:
         if not ids:
             return "no demo data to remove"
         params: dict[str, Any] = {"ids": list(ids)}
-        # Цуцлагдаагүй захиалга бүр stock-ийг барьдаг. Refund хийсэн захиалга тухайн үед бараагаа
-        # буцаагаагүй бол л барьж байгаа.
+        # Цуцлагдаагүй захиалга бүр stock эзэлдэг. Төлбөрийг нь буцаасан захиалга бараагаа буцааж
+        # өгөөгүй бол л stock эзэлсэн хэвээр.
         await connection.execute(
             text(
                 """
@@ -274,7 +278,8 @@ class _Maker:
         shuffled = list(pool)
         rng.shuffle(shuffled)
         self.pool = shuffled
-        # Цөөн бүтээгдэхүүн бусдаасаа хавьгүй их зарагддаг тул "top products" жинхэнэ эрэмбэ болно.
+        # Цөөн хэдэн барааг бусдаасаа хамаагүй их зарагдахаар хийсэн. Ингэснээр "top products" бодит
+        # эрэмбэ шиг харагдана.
         self.weights = [1 / (rank + 1) ** 0.9 for rank in range(len(shuffled))]
         self.stock = {p.id: p.stock_quantity for p in shuffled}
         self.sold: Counter[int] = Counter()
@@ -311,7 +316,7 @@ class _Maker:
             if email in names:
                 continue
             names.add(email)
-            # Ихэнх нь аль хэдийн удаан байгаа; гуравны нэг нь энэ хугацаанд бүртгүүлсэн.
+            # Ихэнх хэрэглэгч эрт бүртгүүлсэн, гуравны нэг нь энэ хугацаанд бүртгүүлсэн.
             joined_days_ago = (
                 self.rng.uniform(0.2, self.days)
                 if self.rng.random() < 0.3
@@ -397,7 +402,7 @@ class _Maker:
 
     def _number(self) -> str:
         while True:
-            # new_order_number() санамсаргүй тул оронд нь seed-тэй generator-оос сонгоно.
+            # new_order_number() санамсаргүй утга өгдөг тул оронд нь seed-тэй generator-оос сонгоно.
             number = "LK-" + "".join(
                 self.rng.choice("23456789ABCDEFGHJKLMNPQRSTUVWXYZ") for _ in range(8)
             )
@@ -409,8 +414,9 @@ class _Maker:
         self, people: list["_Person"], reviewed: set[tuple[int, int]], index: int
     ) -> None:
         rng = self.rng
-        # Хамгийн шинэ цөөн нь тогтсон: төлбөр хүлээж буй, дөнгөж төлсөн, дараа нь өнөөдрийн
-        # хэд хэдэн захиалга (дэлгүүр үргэлж ингэж харагддаг). Үлдсэн нь хуучин байх тусам цөөрнө.
+        # Хамгийн шинэ цөөн захиалгын төлөвийг тогтмол өгнө: төлбөр хүлээж байгаа, дөнгөж төлсөн,
+        # дараа нь өнөөдрийн хэдэн захиалга (бодит дэлгүүр ийм харагддаг). Бусад нь хуучин байх
+        # тусам цөөрнө.
         fresh = FRESH_STATUSES.get(index)
         if fresh:
             age_days = rng.uniform(0.003, 0.03)
@@ -435,7 +441,8 @@ class _Maker:
             else ("standard", "standard", "pickup")
         )
         shipping = shipping_cost(self.settings, method, subtotal, zone)
-        # Үйл явдал хэзээ болсон. Ирээдүйд таарах алхамд хараахан хүрээгүй гэж үзнэ.
+        # Алхам бүр хэзээ болсныг тооцно. Цаг нь ирээдүйд таарвал тэр алхамд хараахан хүрээгүй гэж
+        # үзнэ.
         paid_at = created + timedelta(minutes=rng.uniform(1, 6))
         shipped_at = paid_at + timedelta(hours=rng.uniform(3, 30))
         delivered_at = shipped_at + timedelta(days=rng.uniform(1, 5))
@@ -449,7 +456,8 @@ class _Maker:
         if status in ("shipped", "delivered"):
             status = status_of_chain = _reachable(status, shipped_at, delivered_at, horizon)
         if status == "pending":
-            # Expiry sweep-ийн хугацаанаас илүү pending байхгүй (тэгвэл цуцлагдах байсан).
+            # Захиалга expiry sweep-ийн хугацаанаас удаан pending байж болохгүй (тийм бол аль хэдийн
+            # цуцлагдах байсан).
             created = self.now - timedelta(minutes=rng.uniform(2, 12))
             paid_at = created
         if status in ("paid", "refunded") and paid_at > horizon:
@@ -490,7 +498,7 @@ class _Maker:
             reached = status_of_chain
             if reached in ("shipped", "delivered"):
                 shipment: dict[str, Any] = {}
-                if order.shipping_method != "pickup":  # авах захиалга: тээвэрлэгчгүй
+                if order.shipping_method != "pickup":  # дэлгүүрээс авах захиалга: тээвэрлэгчгүй
                     carrier = rng.choice(list(CARRIERS))
                     order.carrier, order.tracking_number = carrier, CARRIERS[carrier](rng)
                     shipment = {"carrier": carrier, "tracking_number": order.tracking_number}
@@ -584,7 +592,8 @@ class _Maker:
             if holds_stock:
                 self.sold[item.product.id] += item.quantity
             else:
-                # Борлуулалт stock барьж байгаагүй (цуцлагдсан) эсвэл буцаасан: нөөцлөлтийг буцаана.
+                # Захиалга stock эзлээгүй (цуцлагдсан) эсвэл бараагаа буцааж өгсөн бол stock-ийг
+                # буцааж нэмнэ.
                 self.stock[item.product.id] += item.quantity
         self.orders_made += 1
         self.statuses[status] += 1
@@ -633,7 +642,7 @@ class _Person:
 
 
 def _reachable(wanted: str, shipped: datetime, delivered: datetime, horizon: datetime) -> str:
-    """`wanted` (paid, shipped, delivered)-ийн яг одоогоор болчихсон хамгийн сүүлийн шат."""
+    """`wanted` хүртэлх шатуудаас (paid, shipped, delivered) одоо болсон хамгийн сүүлийнх."""
     if wanted == "delivered" and delivered <= horizon:
         return "delivered"
     if wanted in ("delivered", "shipped") and shipped <= horizon:

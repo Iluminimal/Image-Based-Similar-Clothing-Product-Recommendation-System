@@ -22,13 +22,14 @@ def upgrade() -> None:
     """Schema болон өгөгдлийг шинэчилнэ."""
     op.add_column("addresses", sa.Column("khoroo", sa.String(length=40), nullable=True))
     op.alter_column("addresses", "postal_code", server_default="")
-    # Дэлгүүр зөвхөн Монгол улсад хүргэх тул өмнө хадгалагдсан гадаад хаягууд хэрэггүй болсон
-    # (захиалгын snapshot-д хамаарахгүй, тэд тусдаа хадгалагдсан).
+    # Дэлгүүр зөвхөн Монголд хүргэдэг болох тул гадаад улсын хадгалсан хаягуудыг устгана. Захиалга
+    # дээрх хаягийн snapshot тусдаа хадгалагддаг тул өөрчлөгдөхгүй.
     op.execute("DELETE FROM addresses WHERE country <> 'MN'")
 
-    # Үнэ USD cent-ээс төгрөг (x 100) рүү: `ingestion/pricing.py`-тэй ижил томьёо. Доллар x 3.5
-    # мянган төгрөг, 10 мянгаас доошгүй, `…900`-аар төгсгөнө (жишээ нь $25 -> 87,900 ₮).
-    # Төгрөгийн бага нэгж (x 100) USD cent-ээс 100 дахин том: int4 хүрэлцэхгүй байж болзошгүй.
+    # Үнийг USD cent-ээс төгрөг рүү `ingestion/pricing.py`-тэй ижил томьёогоор шилжүүлнэ: доллар x
+    # 3.5 мянган төгрөг, хамгийн багадаа 10 мянга, төгсгөл нь `…900` (жишээ нь $25 -> 87,900 ₮).
+    # Төгрөгийг бага нэгжээр (x 100) хадгалахад тоо USD cent-ээс хэдэн мянга дахин том болно. int4-д
+    # багтахгүй байж болзошгүй тул эхлээд баганыг BigInteger болгоно.
     for table, column in (
         ("products", "price_cents"),
         ("orders", "subtotal_cents"),
@@ -49,7 +50,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Schema-г буцаана. Үнэ болон устгасан хаягийг сэргээхгүй (өгөгдөл алдагдсан)."""
-    # Багануудын BigInteger хэвээр үлдэнэ (буцаавал өгөгдөл тасрах эрсдэлтэй).
+    # Баганууд BigInteger хэвээр үлдэнэ: int4 руу буцаавал том тоо багтахгүй байх эрсдэлтэй.
     op.alter_column("products", "currency", server_default="USD")
     op.alter_column("addresses", "postal_code", server_default=None)
     op.drop_column("addresses", "khoroo")

@@ -52,15 +52,15 @@ from angel.services.system.outbox import queue_email
 
 log = get_logger(__name__)
 
-# Browser шинэ cookie-г авч амжаагүй байхад дахин хүсэлт илгээдэг: хуудас шилжсэн, сүлжээ тасарсан,
-# хоёр tab зэрэг сэргээсэн. Энэ цонхонд, нэвтрэлт цааш яваагүй бол, дөнгөж сольсон token-д дахин
-# шинийг олгоно. Цонхноос хойш дахин ирсэн token бол алдагдсан гэсэн үг.
+# Browser шинэ cookie авч амжаагүй байхдаа дахин хүсэлт илгээж болно: хуудас шилжсэн, сүлжээ
+# тасарсан, хоёр tab зэрэг сэргээсэн гэх мэт. Энэ богино хугацаанд нэвтрэлт цаашаа үргэлжлээгүй бол
+# дөнгөж сольсон token-д дахин шинэ token өгнө. Үүнээс хойш дахин ирсэн token-ыг алдагдсан гэж үзнэ.
 REUSE_GRACE = timedelta(seconds=10)
-# Орлогдсон (сольж хэрэглээгүй) token-ийг сольсон token-оос өмнөх цагаар тэмдэглэнэ: ингэснээр
-# `rotated_after` сольсныг орлогдсоноос ялгана.
+# Ашиглагдалгүй орлогдсон token-ыг, түүнийг орлосон солилтоос өмнөх цагаар тэмдэглэнэ. Ингэснээр
+# `rotated_after` нь жинхэнэ солигдсоныг орлогдсоноос ялгана.
 _RETIRED_BEFORE = timedelta(microseconds=1)
 _LOGIN_FAILURES = "login-fail"
-# Өдрийн хязгаар: удаан, өргөн тархсан таамаглалыг 5 минутын цонх барьж чаддаггүй.
+# Өдрийн хязгаар: удаан, олон газраас таах оролдлогыг 5 минутын цонх барьж чаддаггүй.
 _LOGIN_FAILURES_DAILY = "login-fail-day"
 
 
@@ -75,7 +75,8 @@ class ClientInfo:
 
 @dataclass(frozen=True)
 class UserView:
-    """Холбогдсон нэвтрэх provider-уудтай хэрэглэгч: бүртгэлээс API юу харуулдаг."""
+    """Холбосон нэвтрэх provider-уудтай нь хэрэглэгч: API account-ын юуг харуулдгийг энэ
+    тодорхойлно."""
 
     user: User
     providers: list[str]
@@ -146,8 +147,8 @@ def _unauthenticated(detail: str = "Дахин нэвтэрнэ үү.") -> Probl
 
 
 def password_removed_notice(email: str) -> Email:
-    """Баталгаажаагүй хаягтай бүртгэлийг код эсвэл Google-ээр эзэмшиж байгааг нотлоход хуучин нууц
-    үг устдаг: эзэн нь үүнийг мэдэх ёстой."""
+    """Баталгаажаагүй хаягтай account-ын эзэмшлийг код эсвэл Google-ээр батлахад хуучин нууц үг
+    устдаг. Эзэн нь үүнийг мэдэх ёстой."""
     return Email(
         to=email,
         subject="Таны бүртгэлийн нууц үг хасагдлаа",
@@ -178,7 +179,7 @@ class AuthService:
     # --- аюулгүй байдлын үйл явдал, мэдэгдэл ---
 
     def record_event(self, user_id: int, type_: str, *, method: str | None = None) -> None:
-        """Энэ хүсэлтийн төхөөрөмж, IP-тэй үйл явдлыг дуудагчийн transaction-д нэмнэ."""
+        """Энэ хүсэлтийн төхөөрөмж, IP-тэй үйл явдлыг дуудсан кодын transaction дотор нэмнэ."""
         self._events.add(
             user_id,
             type_,
@@ -188,15 +189,15 @@ class AuthService:
         )
 
     def queue_notice(self, email: Email) -> None:
-        """Мэдэгдлийг дуудагчийн transaction-д outbox руу бичнэ: өөрчлөлт буцвал хэн ч мэдэгдэл
-        авахгүй, commit хийгдвэл мэдэгдэл алдагдахгүй."""
+        """Мэдэгдлийг дуудсан кодын transaction дотор outbox-д бичнэ: өөрчлөлт буцвал хэнд ч
+        мэдэгдэхгүй, commit хийгдвэл мэдэгдэл алдагдахгүй."""
         queue_email(self._session, email)
 
     async def register(
         self, request: RegisterRequest, guest_cart_token: str | None
     ) -> IssuedSession:
         ensure_strong_password(request.password, email=request.email, full_name=request.full_name)
-        # Hash хийх нь CPU-ийн ажил (~50 ms): event loop-оос холдуул.
+        # Hash тооцох нь CPU их ашигладаг (~50 ms) тул event loop дээр ажиллуулахгүй.
         password_hash = await asyncio.to_thread(hash_password, request.password)
         async with self._session.begin():
             if await self._users.get_by_email(request.email) is not None:
@@ -205,7 +206,7 @@ class AuthService:
                 user = await self._users.create(
                     email=request.email, password_hash=password_hash, full_name=request.full_name
                 )
-            except IntegrityError:  # зэрэг хийсэн өөр бүртгэлд хожигдсон
+            except IntegrityError:  # зэрэг явсан өөр бүртгэл түрүүлсэн
                 raise self._email_taken() from None
             await self._merge_cart(user.id, guest_cart_token)
             issued = await self._issue(user, family_id=uuid.uuid4())
@@ -219,15 +220,15 @@ class AuthService:
         return issued
 
     async def login(self, request: LoginRequest, guest_cart_token: str | None) -> IssuedSession:
-        # Email тус бүрийн амжилтгүй оролдлого, route дээрх хаяг тус бүрийн хязгаараас гадна: нэг
-        # бүртгэлийг тархсан байдлаар таамаглах халдлагыг энэ удаашруулна.
+        # Нэг email-ийн амжилтгүй оролдлогыг тоолно (route дээрх client-ийн хязгаараас тусдаа).
+        # Ингэснээр нэг account-ын нууц үгийг олон газраас таах халдлага удаашрана.
         failure_rate = await self.check_failure_limit(request.email)
         async with self._session.begin():
             user = await self._users.get_by_email(request.email)
-        # Үргэлж ямар нэг зүйл шалга: ингэвэл мэдэгдээгүй email буруу нууц үгтэй ижил хугацаа авна.
-        # Нууц үгийн hash байхгүй бол зөвхөн Google-ээр нэвтэрдэг бүртгэл. Энэ нь бусад амжилтгүй
-        # нэвтрэлттэй ижил харагдана, тиймээс форм аль email байгааг, хэрхэн нэвтэрдгийг хэзээ ч
-        # илчлэхгүй.
+        # Account байхгүй ч ямар нэг hash-ийг заавал шалгана: ингэснээр бүртгэлгүй email буруу нууц
+        # үгтэй ижил хугацаа авна. Hash байхгүй account бол зөвхөн Google-ээр нэвтэрдэг account. Тэр
+        # ч бусад амжилтгүй нэвтрэлттэй ижил харагдана. Тиймээс ямар email бүртгэлтэй, яаж
+        # нэвтэрдгийг форм хэзээ ч илчлэхгүй.
         if user is None or not user.is_active or user.password_hash is None:
             await asyncio.to_thread(burn_password_check, request.password)
             await self._count_failure(request.email, failure_rate)
@@ -255,7 +256,7 @@ class AuthService:
         async with self._session.begin():
             accepted = True
             if second_factor:
-                # Мөрийг түгжинэ: нэг кодыг зэрэг ирсэн хоёр хүсэлт хоёуланг нь нэвтрүүлэхгүй.
+                # Мөрийг түгжинэ: нэг кодтой хоёр хүсэлт зэрэг ирсэн ч хоёулаа нэвтрэхгүй.
                 locked = await self._users.get_for_update(user.id)
                 assert locked is not None
                 assert request.totp_code is not None
@@ -290,8 +291,8 @@ class AuthService:
             elif row.revoked_at is not None or row.expires_at <= now:
                 failure = "revoked_or_expired"
             elif row.used_at is not None and now - row.used_at > REUSE_GRACE:
-                # Аль хэдийн rotate хийгдсэн token-ийг дахин ашиглаж байна: хулгайлагдсан гэж
-                # үзээд ижил нэвтрэлтээс үүссэн бүх session-ийг дуусга.
+                # Аль хэдийн солигдсон token дахин ашиглагдаж байна. Хулгайлагдсан гэж үзээд тэр
+                # нэвтрэлтээс үүссэн бүх session-ийг дуусгана.
                 await self._tokens.revoke_family(row.family_id, now)
                 log.warning("refresh_token_reuse", user_id=row.user_id)
                 failure = "reuse_detected"
@@ -309,8 +310,8 @@ class AuthService:
                         # `used_at`-ийг хөдөлгөхгүй: цонх сунахгүй.
                         log.info("refresh_reissued", user_id=row.user_id)
                     issued = await self._issue(user, family_id=row.family_id)
-        # Блокийн дараа шиднэ, ингэвэл дээрх family-г хүчингүй болгосон өөрчлөлт commit хийгдсэн
-        # байна.
+        # Алдааг блокийн дараа шиднэ: ингэснээр дээрх family-г хүчингүй болгосон өөрчлөлт commit
+        # хийгдсэн байна.
         if issued is None:
             log.info("refresh_rejected", reason=failure)
             raise _unauthenticated()
@@ -356,8 +357,8 @@ class AuthService:
         await self._count_failure(email, rate)
 
     async def _record_wrong_credentials(self, user: User, email: str, rate: Rate) -> None:
-        """Байгаа бүртгэл дээрх буруу нууц үг эсвэл код: тоолж, журналд бичиж, өдрийн хязгаарт яг
-        хүрсэн бол эзэнд мэдэгдэнэ."""
+        """Бодит account дээр буруу нууц үг эсвэл код орсон: тоолж, журналд бичнэ. Өдрийн хязгаарт
+        яг хүрсэн бол эзэнд мэдэгдэнэ."""
         limit_reached = await self._count_failure(email, rate, user)
         async with self._session.begin():
             self.record_event(user.id, events.LOGIN_FAILED, method="password")
@@ -365,15 +366,16 @@ class AuthService:
                 self.queue_notice(limit_reached)
 
     async def clear_failures(self, email: str, *, include_daily: bool = False) -> None:
-        """Амжилттай нэвтрэхэд богино цонхыг цэвэрлэнэ. Өдрийн тоолуур үлдэнэ (амжилт нь удаан
-        таамаглагчийн тоог тэглэж болохгүй); нууц үг солих, сэргээх үед л тэглэнэ."""
+        """Амжилттай нэвтэрвэл богино хугацааны тоолуурыг цэвэрлэнэ. Өдрийн тоолуурыг үлдээнэ:
+        халдагч нэг амжилтаар тоогоо тэглэж чадах ёсгүй. Зөвхөн нууц үг солих, сэргээх үед
+        тэглэнэ."""
         await self._limiter.reset(_LOGIN_FAILURES, hash_token(email))
         if include_daily:
             await self._limiter.reset(_LOGIN_FAILURES_DAILY, hash_token(email))
 
     async def issue_session(self, user: User) -> IssuedSession:
-        """Cart-д хүрэлгүй шинэ нэвтрэлт (шинэ refresh family). Дуудагчийн transaction дотор
-        ажиллана."""
+        """Сагсанд хүрэхгүйгээр шинэ нэвтрэлт (шинэ refresh family) үүсгэнэ. Дуудсан кодын
+        transaction дотор ажиллана."""
         return await self._issue(user, family_id=uuid.uuid4())
 
     async def start_session(
@@ -384,11 +386,11 @@ class AuthService:
         method: str = "password",
         first_sign_in: bool = False,
     ) -> IssuedSession:
-        """Шинэ нэвтрэлт: зочны cart бүртгэлийнхтэй нэгдэж, шинэ refresh family эхэлнэ. Нэвтрэлтийг
-        аюулгүй байдлын журналд бичиж, энэ төхөөрөмж урьд нь бүртгэлд нэвтэрч байгаагүй бол
-        эзэнд мэдэгдэнэ. Бүртгэл дөнгөж одоо үүссэн (`first_sign_in`) бол харьцуулах урьдын
-        төхөөрөмж гэж байхгүй: үүнийг хадгалсан мөрүүдээс таахгүй, учир нь тэд цэвэрлэгддэг.
-        Дуудагчийн transaction дотор ажиллана (нууц үг, код, Google)."""
+        """Шинэ нэвтрэлт: зочны сагс account-ынхтай нэгдэж, шинэ refresh family эхэлнэ. Нэвтрэлтийг
+        аюулгүй байдлын журналд бичнэ. Энэ төхөөрөмжөөс өмнө нь нэвтэрч байгаагүй бол эзэнд
+        мэдэгдэнэ. Account дөнгөж үүссэн бол (`first_sign_in`) харьцуулах өмнөх төхөөрөмж
+        байхгүй. Үүнийг хадгалсан мөрүүдээс таахгүй, учир нь тэдгээр цэвэрлэгддэг.
+        Дуудсан кодын transaction дотор ажиллана (нууц үг, код, Google)."""
         await self._merge_cart(user.id, guest_cart_token)
         # Шинэ token нэмэхээс өмнө: тэгэхгүй бол энэ нэвтрэлт өөрөө "танил төхөөрөмж" болно.
         known = await self._events.knows_device(user.id, self._client.user_agent)
@@ -405,7 +407,7 @@ class AuthService:
         refresh_token = new_opaque_token()
         max_age = int(timedelta(days=self._settings.refresh_token_ttl_days).total_seconds())
         if user.is_staff:
-            # Ажилтны бүртгэл илүү их эрхтэй: ашиглаагүй бол ердийн хэрэглэгчээс эрт дуусна.
+            # Ажилтны account илүү их эрхтэй тул идэвхгүй бол ердийн хэрэглэгчээс эрт дуусна.
             max_age = min(max_age, self._settings.staff_refresh_ttl_hours * 3600)
         now = datetime.now(UTC)
         await self._tokens.add(
@@ -432,8 +434,8 @@ class AuthService:
     async def _count_failure(
         self, email: str, rate: Rate, user: User | None = None
     ) -> Email | None:
-        """Оролдлогыг тоолно. Эзэнд илгээх ёстой мэдэгдэл байвал буцаана (дуудагч өөрийн
-        transaction-д дараалалд оруулна)."""
+        """Оролдлогыг тоолно. Эзэнд илгээх мэдэгдэл байвал буцаана (дуудсан код өөрийн transaction
+        дотор дараалалд оруулна)."""
         if not self._settings.rate_limit_enabled:
             return None
         await self._limiter.hit(_LOGIN_FAILURES, hash_token(email), rate)
@@ -442,7 +444,7 @@ class AuthService:
             hash_token(email),
             Rate.parse(self._settings.rate_limit_login_email_daily),
         )
-        # Хязгаарт яг хүрсэн нэг удаа: эзэнд мэдэгдэнэ (өдөр бүр нэгээс олонгүй).
+        # Хязгаарт яг хүрэх үед л эзэнд мэдэгдэнэ (өдөрт нэгээс олонгүй).
         if user is not None and user.email and daily.allowed and daily.remaining == 0:
             return Email(
                 to=user.email,
@@ -455,7 +457,8 @@ class AuthService:
     def _notify_new_device(self, user: User) -> None:
         if not user.email:
             return  # зөвхөн утасны бүртгэл: үйл явдал журналд харагдана
-        # Дэлгүүрийн цагаар: UTC нь уншигчийн цагаас зөрж, танихгүй нэвтрэлт мэт харагдана.
+        # Дэлгүүрийн цагаар бичнэ: UTC цаг уншиж буй хүний цагаас зөрж, танихгүй нэвтрэлт мэт
+        # харагдана.
         when = datetime.now(self._settings.shop_zone).strftime("%Y-%m-%d %H:%M")
         self.queue_notice(
             Email(

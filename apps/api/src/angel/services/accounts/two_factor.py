@@ -83,8 +83,8 @@ class TwoFactorService:
         return TwoFactorSetup(secret=secret, otpauth_uri=uri, qr_image=qr_data_uri(uri))
 
     async def enable(self, user_id: int, code: str, refresh_token: str | None) -> RecoveryCodes:
-        """Эхний кодоор идэвхжүүлж, нөөц кодыг НЭГ УДАА буцаана. Бусад бүх нэвтрэлт дуусна: тэдгээр
-        нь зөвхөн нууц үгээр үүссэн."""
+        """Эхний кодоор 2FA-г идэвхжүүлж, нөөц кодуудыг НЭГ Л УДАА буцаана. Зөвхөн нууц үгээр үүссэн
+        бусад бүх нэвтрэлт дуусна."""
         key = self._key()
         codes = new_recovery_codes()
         async with self._session.begin():
@@ -126,9 +126,9 @@ class TwoFactorService:
     # --- туслах функцууд ---
 
     def _key(self) -> str:
-        """Шифрлэх түлхүүр нь тохируулсан `JWT_SECRET`. Хоосон бол (зөвхөн dev) сервер асах бүрт
-        санамсаргүй түлхүүр үүсдэг тул хадгалсан secret дараа нь тайлагдахгүй: асаахаас
-        татгалзана."""
+        """Шифрийн түлхүүрийг тохируулсан `JWT_SECRET`-ээс гаргана. Энэ хоосон бол (зөвхөн dev)
+        сервер асах бүрд санамсаргүй түлхүүр үүсэж, хадгалсан secret дараа нь тайлагдахгүй болно.
+        Тиймээс ийм үед 2FA тохируулахыг зөвшөөрөхгүй."""
         if not self._settings.jwt_secret:
             raise ProblemError(
                 HTTPStatus.SERVICE_UNAVAILABLE,

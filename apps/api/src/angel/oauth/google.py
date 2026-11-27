@@ -26,10 +26,10 @@ def _https_url(value: object) -> str | None:
 class GoogleOAuth:
     """Google-тэй PKCE бүхий authorization code flow.
 
-    ID token-ы гарын үсгийг шалгадаггүй: энэ нь манай client secret, PKCE verifier-тэй хүсэлтийн
-    хариуд Google-ийн token endpoint-оос TLS-ээр шууд ирдэг бөгөөд Google-ийн баримт үүнийг
-    гарал үүслийн нотолгоо гэж хүлээн зөвшөөрдөг. Харин claim-уудыг шалгана (issuer, audience,
-    хугацаа, илгээсэн nonce, тогтвортой subject, баталгаажсан email).
+    ID token-ы гарын үсгийг шалгадаггүй. Учир нь token нь манай client secret, PKCE verifier-тэй
+    хүсэлтийн хариуд Google-ийн token endpoint-оос TLS-ээр шууд ирдэг. Google-ийн баримтаар ийм үед
+    эх сурвалж нь батлагдсанд тооцно. Харин claim-уудыг заавал шалгана (issuer, audience, хугацаа,
+    илгээсэн nonce, тогтвортой subject, баталгаажсан email).
     """
 
     name = "google"
@@ -84,7 +84,8 @@ class GoogleOAuth:
                 "google_failed", f"token request failed: {type(exc).__name__}"
             ) from exc
         if response.status_code != 200:
-            # Google-ийн алдааны body шалтгааныг нэрлэнэ (жишээ нь invalid_grant); зөвхөн log-д.
+            # Google алдааны шалтгааныг хариуны body-д бичдэг (жишээ нь invalid_grant). Үүнийг
+            # зөвхөн log-д бичнэ.
             raise OAuthError("google_failed", f"token endpoint answered {response.status_code}")
         try:
             id_token = response.json()["id_token"]

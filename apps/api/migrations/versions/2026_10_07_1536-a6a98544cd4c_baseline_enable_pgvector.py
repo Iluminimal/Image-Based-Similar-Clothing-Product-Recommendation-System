@@ -19,8 +19,8 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Schema-г шинэчилнэ."""
-    # hnsw.iterative_scan (шүүлттэй vector хайлт) pgvector >= 0.8 шаарддаг; суулгасан
-    # хувилбарыг tests/core/test_database.py шалгадаг.
+    # Шүүлттэй vector хайлтад (hnsw.iterative_scan) pgvector 0.8 буюу түүнээс шинэ хувилбар
+    # хэрэгтэй. Суулгасан хувилбарыг tests/core/test_database.py шалгана.
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
 

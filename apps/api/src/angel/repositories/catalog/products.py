@@ -31,13 +31,13 @@ from sqlalchemy.sql.base import ExecutableOption
 from angel.models import Order, OrderItem, Product
 from angel.repositories.patterns import contains_pattern
 
-# Бүтэн catalogue дээр хэмжсэн (docs/ml-pipeline.md): 200 нь 80-тай ижил хугацаанд recall@10 = 1.0
-# өгнө. ~300-аас дээш бол planner-ийн зардлын тооцоо exact sequential scan руу шилжинэ (~13 ms-ийн
-# оронд ~90 ms), тиймээс хүсэлтийн утгыг хязгаарлана.
+# Бүтэн catalogue дээр хэмжсэн (docs/ml-pipeline.md): 200 утга 80-тай ижил хугацаанд recall@10 = 1.0
+# өгнө. ~300-аас их бол query planner exact sequential scan сонгож эхэлдэг (~13 ms-ийн оронд ~90
+# ms). Тиймээс хүсэлтийн утгыг хязгаарлана.
 DEFAULT_EF_SEARCH = 200
 MAX_EF_SEARCH = 300
-# Iterative scan цаашаа явахаас өмнө үзэж болох index tuple-ийн дээд хязгаар (pgvector-ийн үндсэн
-# утга 20000). Маш нарийн filter бүтэн index-ийг гүйхээс сэргийлнэ.
+# Iterative scan хамгийн ихдээ хэдэн index tuple үзэх вэ (pgvector-ийн анхдагч 20000). Маш нарийн
+# filter-тэй үед бүх index-ийг гүйлгэхээс сэргийлнэ.
 MAX_SCAN_TUPLES = 20_000
 
 
@@ -52,7 +52,7 @@ class SearchFilters:
     base_colours: tuple[str, ...] = ()
     seasons: tuple[str, ...] = ()
     usages: tuple[str, ...] = ()
-    # Навигацийн зангилааны хамарсан leaf ангиллууд; catalog service тодорхойлно.
+    # Навигацийн нэг цэсэнд хамаарах хамгийн доод (leaf) ангиллууд; catalog service тогтооно.
     category_ids: tuple[int, ...] = ()
     min_price_cents: int | None = None
     max_price_cents: int | None = None
@@ -90,7 +90,8 @@ FUZZY_THRESHOLD = 0.4
 
 
 def _tsquery(words: str) -> ColumnElement[Any]:
-    # websearch_to_tsquery хэрэглэгчийн шууд текстийг (хашилт, "or", "-үг") алдаагүй авна.
+    # websearch_to_tsquery хэрэглэгчийн бичсэн текстийг шууд (хашилт, "or", "-үг" орсон ч) алдаагүй
+    # уншина.
     return func.websearch_to_tsquery(literal_column("'english'::regconfig"), words)
 
 
@@ -112,15 +113,15 @@ def _sold_units() -> Subquery:
     )
 
 
-# Мөрүүд карт болон JSON болж харагддаг: 2 KB vector болон tsvector хэрэггүй, ачаалбал нэг үр дүнд
-# уншигдах байт ойролцоогоор хоёр дахин нэмэгдэнэ.
+# Эдгээр мөр карт, JSON болж харагддаг тул 2 KB-ийн vector болон tsvector хэрэггүй. Тэднийг ачаалбал
+# нэг үр дүнгийн уншигдах хэмжээ бараг хоёр дахин ихэснэ.
 _LIGHT_ROWS: tuple[ExecutableOption, ...] = (
     defer(Product.embedding),
     defer(Product.search_vector),
 )
 
 
-# Хэт урт цифр мөр bigint id байж чадахгүй.
+# Хэт олон цифртэй тоо bigint id байж чадахгүй.
 MAX_ID_DIGITS = 18
 AdminStatus = Literal["all", "active", "inactive"]
 AdminSort = Literal["newest", "price_asc", "price_desc", "stock_asc"]
@@ -147,9 +148,9 @@ class ProductRepository:
     async def get_many(
         self, product_ids: Sequence[int], *, for_update: bool = False
     ) -> dict[int, Product]:
-        """Id-аар бараа авна, идэвхгүй нь орно (cart-ын мөр татгалзсан барааг ч харуулах ёстой).
-        `for_update` нь мөрүүдийг id-н дарааллаар түгжинэ: олон бараа түгжих transaction бүр
-        ижил дарааллаар хийдэг тул хоёр checkout deadlock-д орохгүй."""
+        """Барааг id-аар нь авна, идэвхгүй барааг ч оруулна (сагс зарахаа больсон барааг ч харуулах
+        ёстой). `for_update` мөрүүдийг id-ийн дарааллаар түгжинэ. Олон бараа түгждэг transaction
+        бүр ижил дарааллаар түгждэг тул хоёр checkout deadlock-д орохгүй."""
         if not product_ids:
             return {}
         statement = (
@@ -159,8 +160,8 @@ class ProductRepository:
             .order_by(Product.id)
         )
         if for_update:
-            # populate_existing: түгжээн дор уншсан утга session-ийн өмнө cache хийсэн утгыг солих
-            # ёстой, үгүй бол нөөцийн тооцоо хуучин тооноос эхэлнэ.
+            # populate_existing: түгжсэний дараа уншсан утга session-д өмнө нь хадгалсан утгыг солих
+            # ёстой. Эс бөгөөс нөөцийг хуучин тооноос тооцож эхэлнэ.
             statement = statement.with_for_update().execution_options(populate_existing=True)
         result = await self._session.execute(statement)
         return {product.id: product for product in result.scalars()}
@@ -177,12 +178,12 @@ class ProductRepository:
     ) -> tuple[list[Product], int]:
         """Catalogue-ийн нэг хуудас болон таарсан нийт тоо.
 
-        `understood` нь `text_query`-г шүүлтүүр болгон ойлгосон (шүүлтүүрүүд, нэрнээс хайх үлдсэн
-        үгс): нэр нь `text_query`-тэй таарсан **эсвэл** үүнд таарсан бараа орно. Нэрээр таарсан нь
-        эрэмбэд түрүүлнэ (өөрийн монгол нэртэй бараа алдагдахгүй).
+        `understood` бол `text_query`-г шүүлтүүр болгон ойлгосон хувилбар: (шүүлтүүрүүд, нэрээс хайх
+        үлдсэн үгс). Нэр нь `text_query`-тэй таарсан **эсвэл** `understood`-д таарсан бараа орно.
+        Нэрээрээ таарсан нь эхэнд гарна, тиймээс өөрийн монгол нэртэй бараа алдагдахгүй.
 
-        Эрэмбэ үргэлж `id`-ээр төгсдөг: олон бараа ижил үнэ эсвэл rank-тай үед хуудсууд
-        давхцахгүй, мөр алгасахгүй."""
+        Эрэмбэ үргэлж `id`-аар төгсдөг: олон бараа ижил үнэ эсвэл rank-тай үед ч хуудсууд
+        давхцахгүй, бараа алгасахгүй."""
         clauses = filters.clauses()
         rank = None
         if text_query:
@@ -214,10 +215,10 @@ class ProductRepository:
         offset: int,
         limit: int,
     ) -> tuple[list[Product], int]:
-        """`list_products`-тай ижил, гэхдээ `text_query`-г барааны нэрэнд үсгийн алдаа тэсвэрлэн
-        таардаг (trigram). Яг таарах хайлт хоосон үед л дуудна: энэ нь зөв үгэнд хайлтыг
-        удаашруулахгүй, алдаатай үгэнд ч хоосон хуудас үлдээхгүй."""
-        # `<%` оператор нь session-ийн босгыг ашигладаг: transaction-д л хүчинтэй.
+        """`list_products`-тай адил, гэхдээ `text_query`-г барааны нэрээс үсгийн алдааг тэвчиж хайна
+        (trigram). Зөвхөн яг таарах хайлт хоосон үед дуудна. Ингэснээр зөв бичсэн хайлт
+        удаашрахгүй, алдаатай бичсэн ч хоосон хуудас гарахгүй."""
+        # `<%` оператор session-ийн босгыг ашигладаг. Бид зөвхөн энэ transaction-д тохируулна.
         await self._session.execute(
             text(f"SET LOCAL pg_trgm.word_similarity_threshold = {FUZZY_THRESHOLD}")
         )
@@ -270,8 +271,8 @@ class ProductRepository:
         usage: str | None,
         limit: int,
     ) -> list[Product]:
-        """Тухайн дэд ангилалын зарагдаж буй, нөөцтэй бараа: ижил `usage`-тай нь түрүүлж, дараа нь
-        хамгийн их зарагдсан нь. Look-ийг гүйцээхэд ашиглана."""
+        """Тухайн дэд ангиллын зарагдаж буй, нөөцтэй бараанууд. Ижил `usage`-тай нь эхэнд, дараа нь
+        хамгийн их зарагдсан нь. "Хослуулах бараа" хэсэгт ашиглана."""
         sold = _sold_units()
         same_usage = case((Product.usage == usage, 1), else_=0) if usage else literal(0)
         rows = await self._session.execute(
@@ -327,8 +328,8 @@ class ProductRepository:
         stock: str = "all",
         low_stock_threshold: int = 5,
     ) -> tuple[list[Product], int]:
-        """Admin-ы жагсаалт. Нэрээр энгийн substring хайлт (эсвэл яг id), учир нь admin үгийн
-        хагасыг бичдэг; storefront-ийн stemmed full-text хайлт үүнийг олохгүй."""
+        """Back-office-ийн барааны жагсаалт. Ажилтан үгийн хагасыг бичдэг тул нэрийг энгийн
+        substring-ээр (эсвэл яг id-аар) хайна. Дэлгүүрийн full-text хайлт хагас үгийг олохгүй."""
         clauses = self._admin_clauses(
             text_query=text_query,
             category_id=category_id,
@@ -361,7 +362,7 @@ class ProductRepository:
     def _admin_clauses(
         *, text_query: str | None, category_id: int | None, stock: str, low_stock_threshold: int
     ) -> list[ColumnElement[bool]]:
-        """Admin-ы жагсаалтын төлвөөс бусад шүүлтүүр."""
+        """Жагсаалтын төлвөөс бусад шүүлтүүрүүд."""
         clauses: list[ColumnElement[bool]] = []
         if text_query:
             by_name = Product.name.ilike(contains_pattern(text_query), escape="\\")
@@ -383,8 +384,8 @@ class ProductRepository:
         stock: str = "all",
         low_stock_threshold: int = 5,
     ) -> tuple[int, int]:
-        """(зарагдаж байгаа, зарахаа больсон) барааны тоо: admin-ы жагсаалтын таб бүрийн тоо.
-        Хайлт ба бусад шүүлтүүр үйлчилнэ, сонгосон төлөв үйлчлэхгүй."""
+        """(зарагдаж байгаа, зарахаа больсон) барааны тоо: жагсаалтын tab бүрийн тоо. Хайлт, бусад
+        шүүлтүүр үйлчилнэ, сонгосон төлөв үйлчлэхгүй."""
         clauses = self._admin_clauses(
             text_query=text_query,
             category_id=category_id,
@@ -407,8 +408,8 @@ class ProductRepository:
         return await self.save(product)
 
     async def save(self, product: Product) -> Product:
-        """Database-ийн үүсгэсэн timestamp-уудыг flush хийж дахин уншина (бичилтээр хүчингүй
-        болсон, async кодод lazy reload хийх боломжгүй)."""
+        """flush хийгээд database-ийн бичсэн timestamp-уудыг дахин уншина. Бичсэний дараа тэдгээр
+        хуучирдаг, async кодод өөрөө дахин ачаалагдахгүй."""
         await self._session.flush()
         await self._session.refresh(product, ["created_at", "updated_at"])
         return product
@@ -430,13 +431,13 @@ class ProductRepository:
         exclude_id: int | None = None,
         iterative_scan: bool = True,
     ) -> list[SimilarProduct]:
-        """HNSW index ашиглан cosine similarity-ээр шилдэг `limit` бараа.
+        """HNSW index ашиглан cosine similarity-ээр хамгийн төстэй `limit` барааг авна.
 
-        Filter-тэй HNSW хайлт бол сонгодог асуудалтай: index `ef_search` candidate буцаагаад
-        WHERE нөхцөл ихэнхийг нь хаяснаар `limit`-ээс цөөн мөр үлдэж болно. pgvector >= 0.8
-        iterative scan нь filter-ээс хангалттай мөр гарах хүртэл index-ийг үргэлжлүүлэн
-        сканддаг тул илүү татах шаардлагагүй. `relaxed_order` хурдан боловч мөрүүдийг жаахан
-        эмх замбараагүй буцааж болно, тиймээс энд дахин эрэмбэлнэ (limit жижиг)."""
+        Filter-тэй HNSW хайлтад мэдэгдэж буй нэг асуудал бий: index эхлээд `ef_search` ширхэг
+        candidate өгөөд, дараа нь WHERE нөхцөл ихэнхийг нь хасвал `limit`-ээс цөөн мөр үлдэж болно.
+        pgvector 0.8-аас хойшх iterative scan хангалттай мөр гарах хүртэл index-ийг үргэлжлүүлэн
+        уншдаг тул илүү олон мөр татах хэрэггүй. `relaxed_order` хурдан ч мөрүүдийн дараалал бага
+        зэрэг алдагдаж болзошгүй тул энд дахин эрэмбэлнэ (limit жижиг)."""
         distance = Product.embedding.cosine_distance(embedding)
         statement = (
             select(Product, distance.label("distance"))

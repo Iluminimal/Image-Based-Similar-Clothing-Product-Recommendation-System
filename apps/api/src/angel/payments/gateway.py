@@ -1,9 +1,9 @@
-"""Дэлгүүрт төлбөрийн provider-аас хэрэгтэй зүйл, тодорхой provider-оос хамаарахгүй.
+"""Дэлгүүрт төлбөрийн provider-оос хэрэгтэй үйлдлүүд. Тодорхой нэг provider-оос хамаарахгүй.
 
-Service-үүд зөвхөн энэ protocol-оос хамаарна. `QPayGateway` QPay-тэй ярина; `OfflineGateway` нь
-түлхүүргүй хөгжүүлэлт, тестэд зориулсан процесс доторх орлуулагч.
+Service-үүд зөвхөн энэ protocol-ыг мэднэ. `QPayGateway` QPay-тэй харилцана. `OfflineGateway` бол
+QPay-ийн түлхүүргүйгээр хөгжүүлэх, тестлэхэд зориулсан хиймэл хувилбар.
 
-Мөнгөн дүн бүр тухайн валютын бага нэгжээр, бүхэл тоогоор (MNT: төгрөг x 100).
+Бүх мөнгөн дүн тухайн валютын бага нэгжээр, бүхэл тоогоор (MNT: төгрөг x 100).
 """
 
 from dataclasses import dataclass, field
@@ -13,7 +13,8 @@ PaymentMode = Literal["qpay", "offline"]
 
 
 class PaymentProviderError(Exception):
-    """Provider-тэй холбогдсонгүй эсвэл дуудлагыг татгалзсан. Дахин оролдоход аюулгүй."""
+    """Provider-тэй холбогдож чадсангүй, эсвэл provider хүсэлтийг татгалзсан. Дахин оролдоход
+    аюулгүй."""
 
 
 @dataclass(frozen=True)
@@ -28,8 +29,8 @@ class IntentInfo:
 
 @dataclass(frozen=True)
 class PaymentEvent:
-    """Provider дээр баталгаажсан төлбөр. `amount`, `currency` нь provider бодитоор авсан дүн
-    (минор нэгжээр): settlement үүнийг төлбөрийн түгжсэн дүнтэй харьцуулна."""
+    """Provider дээр баталгаажсан төлбөр. `amount`, `currency` бол provider-ийн бодитоор авсан дүн
+    (бага нэгжээр). Settlement үүнийг төлбөрт урьдаас тогтоосон дүнтэй тулгана."""
 
     id: str
     intent_id: str
@@ -54,7 +55,8 @@ class PaymentGateway(Protocol):
         ...
 
     async def cancel_intent(self, intent_id: str) -> Literal["canceled", "succeeded"]:
-        """Төлөгдөөгүй төлбөрийг цуцлана. "succeeded" бол ээлжид төлөгдчихсөн гэсэн үг."""
+        """Төлөгдөөгүй төлбөрийг цуцална. "succeeded" буцаавал цуцлахаас өмнө аль хэдийн төлөгдсөн
+        гэсэн үг."""
         ...
 
     async def refund(self, intent_id: str, *, idempotency_key: str) -> str:

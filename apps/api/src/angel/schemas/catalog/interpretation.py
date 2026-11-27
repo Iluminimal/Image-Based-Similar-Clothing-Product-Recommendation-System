@@ -7,8 +7,7 @@ from pydantic import BaseModel
 
 class AppliedFilter(BaseModel):
     """Текстээс задалж хэрэгжүүлсэн шүүлтүүр. `value`: өнгө, хүйс, улирал, хэрэглээ, төрөлд англи
-    нэр; `min_price`/`max_price`-д бага нэгжийн
-    (төгрөг x 100) тоо; `in_stock`-д "true"."""
+    нэр; `min_price`/`max_price`-д бага нэгжийн (төгрөг x 100) тоо; `in_stock`-д "true"."""
 
     key: Literal[
         "gender",

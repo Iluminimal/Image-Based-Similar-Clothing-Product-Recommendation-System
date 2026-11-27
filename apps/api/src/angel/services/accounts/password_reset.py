@@ -1,4 +1,4 @@
-"""Нууц үг мартсан: бүртгэлийн утасны дугаар эсвэл email руу код очиж, түүгээр шинэ нууц үг
+"""Нууц үгээ мартсан бол: account-ын утасны дугаар эсвэл email рүү код очно. Тэр кодоор шинэ нууц үг
 сонгоно."""
 
 import asyncio
@@ -27,8 +27,9 @@ log = get_logger(__name__)
 
 
 def _may_reset(user: User) -> bool:
-    """Ажилтан имэйлийн кодоор нууц үгээ зөвхөн хоёр дахь хүчин зүйлтэй үед сэргээнэ; тэгээгүй бол
-    имэйл нь дангаараа back-office-ийн түлхүүр болно (сэргээх зам: серверийн command)."""
+    """Ажилтан зөвхөн хоёр дахь хамгаалалттай (2FA) үед имэйлийн кодоор нууц үгээ сэргээж чадна. Эс
+    бөгөөс имэйл дангаараа back-office-ийн түлхүүр болно. 2FA-гүй ажилтны нууц үгийг серверийн
+    command-оор сэргээнэ."""
     return user.is_active and (not user.is_staff or user.totp_enabled_at is not None)
 
 
@@ -43,8 +44,8 @@ class PasswordResetService:
         self._users = UserRepository(session)
 
     async def forgot(self, raw_destination: str) -> None:
-        """Гаднаас үргэлж ижил харагдана: бүртгэл байвал л код илгээгдэнэ, гэхдээ хариу (болон
-        cooldown) үүнээс хамаарахгүй."""
+        """Гаднаас харахад үргэлж ижил: account байвал л код илгээнэ, гэхдээ хариу болон cooldown
+        үүнээс хамаарахгүй."""
         destination = normalize_destination(raw_destination, self._settings.default_phone_region)
         async with self._session.begin():
             user = await self._find(destination)
@@ -55,8 +56,8 @@ class PasswordResetService:
 
     async def reset(self, raw_destination: str, code: str, new_password: str) -> IssuedSession:
         destination = normalize_destination(raw_destination, self._settings.default_phone_region)
-        # Кодыг шалгахаас ӨМНӨ: сул нууц үгэнд код үрэгдэхгүй (нэр, имэйлтэй харьцуулалт хийхгүй:
-        # бүртгэлийг код шалгасны дараа л мэднэ).
+        # Кодыг шалгахаас ӨМНӨ нууц үгийг шалгана: сул нууц үгээс болж код дэмий ашиглагдахгүй. Энд
+        # нэр, имэйлтэй харьцуулахгүй, учир нь аль account болохыг код шалгасны дараа л мэднэ.
         ensure_strong_password(new_password)
         owner = await self._otp.verify("reset_password", destination, code)
         new_hash = await asyncio.to_thread(hash_password, new_password)
@@ -66,7 +67,7 @@ class PasswordResetService:
             if user is None or not _may_reset(user):
                 raise invalid_code()
             user.password_hash = new_hash
-            # Код эзэнд хүрсэн: тэр хаяг эсвэл дугаар одоо баталгаажлаа.
+            # Код эзэнд нь хүрсэн тул тэр хаяг эсвэл дугаар баталгаажлаа.
             if is_phone(destination):
                 user.phone_verified_at = user.phone_verified_at or now
             else:
@@ -86,8 +87,8 @@ class PasswordResetService:
                         "Хэрэв та өөрөө хийгээгүй бол бидэнтэй яаралтай холбогдоно уу.",
                     )
                 )
-        # Ажилтны өдрийн тоолуур үлдэнэ: имэйлтэй халдагч нууц үг сэргээх бүртээ хоёр дахь кодыг
-        # таах шинэ оролдлого авч болохгүй.
+        # Ажилтны өдрийн тоолуурыг тэглэхгүй: имэйлийг нь эзэмшсэн халдагч нууц үг сэргээх бүртээ
+        # хоёр дахь кодыг таах шинэ оролдлого авах ёсгүй.
         await self._auth.clear_failures(user.identifier, include_daily=not user.is_staff)
         log.info("password_reset", user_id=user.id)
         if issued is None:

@@ -11,7 +11,7 @@ from angel.repositories.accounts.users import AddressRepository
 from angel.schemas.accounts.address import AddressIn, AddressList, AddressOut, AddressUpdate
 
 MAX_ADDRESSES = 10
-# Хэзээ ч хоосон байж болохгүй баганууд (PATCH-ийн null-аар цэвэрлэж болох нэмэлт баганаас
+# Хэзээ ч хоосон байж болохгүй баганууд (PATCH-д null илгээж цэвэрлэж болдог заавал биш баганаас
 # ялгаатай).
 _REQUIRED = {"full_name", "line1", "region", "city", "country", "phone"}
 
@@ -40,7 +40,7 @@ class AddressService:
                     f"Хамгийн ихдээ {MAX_ADDRESSES} хаяг хадгалах боломжтой.",
                     type_=ADDRESS_LIMIT_TYPE,
                 )
-            # Эхний хаяг нь default болно; default хүсвэл өмнөхийг нь орлоно.
+            # Эхний хаяг default болно. Шинэ хаягийг default болговол өмнөхийг орлоно.
             make_default = data.is_default or existing == 0
             if make_default:
                 await self._addresses.clear_default(user_id)
@@ -61,7 +61,8 @@ class AddressService:
             address = await self._addresses.get(user_id, address_id)
             if address is None:
                 raise _not_found()
-            # Аймаг, дүүргийн хослолыг нэгтгэсэн хаяг дээр шалгана (зөвхөн нэгийг нь өөрчилсөн ч).
+            # Аймаг, дүүрэг тохирч байгаа эсэхийг хуучин, шинэ утгыг нэгтгэсний дараа шалгана
+            # (зөвхөн нэгийг нь өөрчилсөн ч).
             try:
                 check_region_and_district(
                     changes.get("region") or address.region or "",

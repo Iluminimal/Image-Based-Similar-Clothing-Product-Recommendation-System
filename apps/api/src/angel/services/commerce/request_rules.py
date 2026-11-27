@@ -1,5 +1,5 @@
-"""Цуцлах, буцаах хүсэлтийг хэзээ гаргаж болохыг тодорхойлох цорын ганц газар: API шалгадаг ба
-web `available_request`-ийг л дагадаг."""
+"""Цуцлах, буцаах хүсэлтийг хэзээ гаргаж болохыг тогтоодог цорын ганц газар: API үүгээр шалгана, web
+зөвхөн `available_request`-ийг дагана."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -26,9 +26,9 @@ def return_deadline(order: Order, window_days: int) -> datetime | None:
 def available_request(
     order: Order, requests: Sequence[OrderRequest], *, now: datetime, window_days: int
 ) -> RequestKind | None:
-    """Илгээгээгүй төлсөн захиалгыг цуцлах, хүргэгдсэн захиалгыг хугацаанд нь буцаах хүсэлт.
-    Нэг зэрэг нэг л хүсэлт; татгалзсан бол ижил төрлийнхийг дахин гаргахгүй (өөрөө татаж
-    авсны дараа болно)."""
+    """Илгээгээгүй, төлөгдсөн захиалгад цуцлах хүсэлт; хүргэгдсэн захиалгад хугацаандаа багтвал
+    буцаах хүсэлт. Нэг үед нэг л хүсэлт. Татгалзагдсан бол ижил төрлийн хүсэлтийг дахин гаргахгүй
+    (харин өөрөө татаж авсан бол дахин гаргаж болно)."""
     if any(request.is_open for request in requests):
         return None
     kind: RequestKind

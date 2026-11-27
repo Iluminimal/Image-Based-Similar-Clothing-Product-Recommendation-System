@@ -54,7 +54,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Schema-г өмнөх төлөвт буцаана."""
-    # Нууц үггүй account-д ямар ч нууц үгтэй таарахгүй утга өгнө (argon2 hash биш).
+    # Нууц үггүй account-д ямар ч нууц үгтэй таарахгүй утга (argon2 hash биш) өгнө.
     op.execute("UPDATE users SET password_hash = '!' WHERE password_hash IS NULL")
     op.alter_column("users", "password_hash", existing_type=sa.String(length=255), nullable=False)
     op.drop_index("ix_oauth_identities_user_id", table_name="oauth_identities")

@@ -74,8 +74,8 @@ class OrderService:
             )
 
     async def cancel(self, user_id: int, number: str) -> OrderOut:
-        """Худалдан авагч өөрөө төлөгдөөгүй (pending) захиалгаа цуцална: нөөц буцна, нэхэмжлэх
-        provider дээр хаагдана. Төлөгдсөн захиалгыг цуцлахгүй (буцаалт админаар)."""
+        """Худалдан авагч өөрийн төлөгдөөгүй (pending) захиалгаа цуцална: нөөц буцаж, provider дээрх
+        нэхэмжлэх хаагдана. Төлөгдсөн захиалгыг ингэж цуцлахгүй (төлбөрийг админ буцаана)."""
         async with self._session.begin():
             order = await self._orders.get_for_user(user_id, number)
             if order is None:
@@ -114,7 +114,7 @@ class OrderService:
 
 
 def _not_found(number: str) -> ProblemError:
-    # Өөр хүний захиалгын дугаар ч үүнийг авна: байгаа эсэхийг шалгах арга байхгүй.
+    # Өөр хүний захиалгын дугаарт ч ижил хариу өгнө: тэр захиалга байгаа эсэхийг мэдэх боломжгүй.
     return ProblemError(
         HTTPStatus.NOT_FOUND,
         "Захиалга олдсонгүй",

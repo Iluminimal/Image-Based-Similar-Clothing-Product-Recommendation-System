@@ -17,7 +17,7 @@ from angel.schemas.problem import ProblemDetail
 router = APIRouter(prefix="/checkout", tags=["checkout"], dependencies=[Depends(no_store)])
 
 OrderNumber = Annotated[str, Path(min_length=4, max_length=20)]
-# Client үүсгэнэ, checkout оролдлого бүрд нэг (UUID болно).
+# Энэ утгыг client үүсгэнэ: checkout хийх оролдлого бүрд нэг (UUID байж болно).
 IdempotencyKey = Annotated[
     str,
     Header(

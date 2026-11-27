@@ -33,7 +33,7 @@ class CartRepository:
         cart = await self.find(user_id=user_id, guest_token_hash=guest_token_hash)
         if cart is not None:
             return cart
-        # Нэг хэрэглэгчийн cart-ыг зэрэг үүсгэх хоёр хүсэлт: хожигдогчийн insert юу ч хийхгүй.
+        # Нэг хэрэглэгчийн сагсыг хоёр хүсэлт зэрэг үүсгэх гэвэл хожуу орсны insert юу ч хийхгүй.
         await self._session.execute(
             insert(Cart)
             .values(user_id=user_id, guest_token_hash=guest_token_hash)
@@ -59,8 +59,8 @@ class CartRepository:
         cap: int,
         unit_price_cents: int | None = None,
     ) -> None:
-        """Atomic нэмэх эсвэл өсгөх: зэрэг хийсэн "cart-д нэмэх" даралт давхар мөр үүсгэхгүй,
-        өсгөлт алдагдахгүй, мөр хэзээ ч `cap`-аас хэтрэхгүй."""
+        """Мөр нэмэх эсвэл тоог нь өсгөхийг atomic хийнэ. "Сагсанд нэмэх"-ийг зэрэг дарсан ч давхар
+        мөр үүсэхгүй, нэмсэн тоо алдагдахгүй, мөрийн тоо `cap`-аас хэтрэхгүй."""
         statement = insert(CartItem).values(
             cart_id=cart_id,
             product_id=product_id,

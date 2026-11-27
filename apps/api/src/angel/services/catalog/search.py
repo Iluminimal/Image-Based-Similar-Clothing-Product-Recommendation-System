@@ -42,8 +42,9 @@ from angel.storage import Storage
 
 log = get_logger(__name__)
 
-# JPEG decoder зургийг энэ хэмжээнээс дээш байх хугацаанд 1/2, 1/4, ... болгон багасгаж болно:
-# утасны зурагт хамаагүй хурдан, ingestion catalogue-ийн зурагт ижил тохиргоо хэрэглэнэ.
+# Зургийн урт тал үүнээс багагүй байх хүртэл JPEG decoder 1/2, 1/4, ... болгон багасгаж decode хийж
+# болно. Утасны зурагт хамаагүй хурдан болно. Ingestion ч catalogue-ийн зурагт ижил тохиргоо
+# хэрэглэдэг.
 DECODE_MIN_SIDE = 800
 SIMILAR_DEFAULT_LIMIT = 12
 GARMENT_DEFAULT_LIMIT = 12  # хувцас тутамд
@@ -56,21 +57,21 @@ def _ms(start: float, end: float | None = None) -> float:
 def _combine(
     image: NDArray[np.float32], text: NDArray[np.float32], text_weight: float
 ) -> NDArray[np.float32]:
-    """Хоёр нэгж vector-ийн жинлэсэн нийлбэр, дахин normalize хийнэ (cosine-д чиглэл л хэрэгтэй)."""
+    """Хоёр нэгж vector-ийг жинтэй нэмж дахин normalize хийнэ (cosine-д чиглэл л хэрэгтэй)."""
     combined = (1.0 - text_weight) * image + text_weight * text
     norm = float(np.linalg.norm(combined))
-    if norm < 1e-6:  # зураг ба текст бүрэн арилгалцсан: зураг руу буцна
+    if norm < 1e-6:  # зураг, текст бие биеэ бүрэн арилгасан: зургийнхыг ашиглана
         return image
     return (combined / norm).astype(np.float32)
 
 
 @dataclass(frozen=True)
 class _Text:
-    """Хайлтын текст, шүүлтүүр (задласныг нэмсэн), юу хэрэгжсэн.
+    """Хайлтын текст, шүүлтүүр (текстээс ялгасныг нэмсэн), юу хэрэгжсэн.
 
-    `text` нь шүүлтүүр болоогүй үлдэгдэл: зураг, барааны embedding-д нэмэхэд хангалттай, учир нь
-    өнгө гэх мэт нь шүүлтүүрээр аль хэдийн хэрэгжсэн. `standalone` нь цэвэр текст хайлтад: таньсан
-    өнгө, улирлын англи нэрийг нэмж ("Blue"), CLIP-д ч тэр утгыг өгнө."""
+    `text` бол шүүлтүүр болоогүй үлдсэн үгс. Зураг, барааны embedding-д нэмэхэд энэ хангалттай: өнгө
+    гэх мэт нь шүүлтүүрээр аль хэдийн хэрэгжсэн. `standalone`-ийг зөвхөн текстээр хайхад хэрэглэнэ:
+    таньсан өнгө, улирлын англи нэрийг ("Blue") нэмж CLIP-д ч тэр утгыг мэдэгдэнэ."""
 
     text: str
     standalone: str
@@ -80,7 +81,7 @@ class _Text:
 
 @dataclass(frozen=True)
 class _Upload:
-    """Upload хийсэн зургийг боловсруулсан үр дүн: сонгосон хэсгийн vector ба юу олдсон."""
+    """Upload хийсэн зургийг боловсруулсан үр дүн: сонгосон хэсгийн vector болон юу олдсон."""
 
     vector: NDArray[np.float32]
     detected: list[DetectedCategory]
@@ -135,17 +136,17 @@ class SearchService:
         return self._respond("image", started, hits, db_ms, upload=upload)
 
     async def detect_garments(self, data: bytes) -> DetectResponse:
-        """Зөвхөн хувцсыг олно (embedding, database, ангилагчгүй): камерын live preview-д хэдэн
-        кадр тутамд дуудагддаг тул хамгийн хөнгөн зам. Зураг хадгалагдахгүй, лог ч бичихгүй."""
+        """Зөвхөн хувцсыг олно (embedding, database, ангилагч ашиглахгүй). Камерын live preview цөөн
+        кадр тутамд дууддаг тул хамгийн хөнгөн зам. Зургийг хадгалахгүй, log ч бичихгүй."""
         regions, _, detect_ms = await self._locate_upload(data)
         return DetectResponse(regions=[_region_out(r) for r in regions], detect_ms=detect_ms)
 
     async def search_garments(
         self, data: bytes, filters: SearchFilters, limit: int | None
     ) -> GarmentSearchResponse:
-        """Зурагт олдсон хувцас бүрийн төстэй бараа нэг дор. Бүх crop-ийг нэг batch-ээр embed
-        хийнэ (хэсэг бүрт тусдаа model дуудлага хийхээс хурдан), харин database хайлт хэсэг тутамд
-        нэг, дарааллаар (нэг session; ихдээ `yolo_max_regions` жижиг query)."""
+        """Зураг дээр олдсон хувцас бүрт төстэй барааг нэг дор хайна. Хайрцаг бүрийн зургийг нэг
+        batch-ээр embed хийнэ (тус тусад нь дуудахаас хурдан). Database хайлтыг хэсэг бүрд нэг
+        удаа, дарааллаар нь хийнэ (нэг session; хамгийн ихдээ `yolo_max_regions` жижиг query)."""
         started = time.perf_counter()
         regions, decode_ms, detect_ms = await self._locate_upload(data)
 
@@ -215,9 +216,9 @@ class SearchService:
         interpret: bool = False,
         region: int = 0,
     ) -> SearchResponse:
-        """ "Энэ зураг шиг, гэхдээ ...": зураг ба текстийн embedding нэг орон зайд байдаг тул
-        жинлэсэн нийлбэр query-г зургаас тайлбарласан өөрчлөлт рүү зөөнө. Текст бүхэлдээ
-        шүүлтүүр болсон бол ("цэнхэр") зөвхөн зургаар хайна."""
+        """ "Энэ зураг шиг, гэхдээ ...": зураг, текстийн embedding нэг орон зайд байдаг. Тиймээс
+        тэднийг жинтэй нэмбэл query зурагнаас текстэд тайлбарласан өөрчлөлт рүү шилжинэ. Текст
+        бүхэлдээ шүүлтүүр болсон бол ("цэнхэр") зөвхөн зургаар хайна."""
         started = time.perf_counter()
         upload = await self._embed_upload(data, region)
         parsed = await self._interpret(query, filters, interpret)
@@ -244,8 +245,8 @@ class SearchService:
         text_weight: float | None = None,
         interpret: bool = False,
     ) -> SearchResponse:
-        """Catalogue-ийн барааны хөрш, хадгалсан embedding-ээс. `query` өгвөл "энэ шиг, гэхдээ ..."
-        гэж embedding-д текст нэмнэ: зөвхөн текстийг model-д өгнө, барааны зургийг дахин
+        """Барааны хадгалсан embedding-ээр түүнтэй төстэй барааг олно. `query` өгвөл ("энэ шиг,
+        гэхдээ ...") embedding-д текст нэмнэ. Model-д зөвхөн текстийг өгнө, барааны зургийг дахин
         боловсруулахгүй."""
         started = time.perf_counter()
         limit = limit or SIMILAR_DEFAULT_LIMIT
@@ -281,7 +282,8 @@ class SearchService:
         """Upload-ыг decode хийж, хувцасны хэсгүүдийг олно: (хэсгүүд, decode_ms, detect_ms)."""
         decode_started = time.perf_counter()
         try:
-            # Decode хийх нь CPU-ийн ажил (Pillow GIL-ийг чөлөөлдөг): event loop-оос холдуул.
+            # Decode хийх нь CPU-ийн ажил (Pillow GIL-ийг чөлөөлдөг) тул event loop дээр
+            # ажиллуулахгүй.
             image = await asyncio.to_thread(
                 load_image,
                 data,
@@ -301,7 +303,8 @@ class SearchService:
         return regions, decode_ms, _ms(detect_started)
 
     async def _detect_categories(self, vector: NDArray[np.float32]) -> list[DetectedCategory]:
-        """Vector-ийн zero-shot ангиллын top таамаг (хэсэг бүрийн crop-оос)."""
+        """Vector-оор zero-shot ангиллын хамгийн магадлалтай таамгуудыг гаргана (хэсэг бүрийн
+        зургаас)."""
         return [
             DetectedCategory(
                 article_type=p.label.article_type,
@@ -393,8 +396,8 @@ class SearchService:
         self, vector: NDArray[np.float32], filters: SearchFilters, limit: int | None
     ) -> tuple[list[SearchHit], float]:
         started = time.perf_counter()
-        # Transaction (түүнтэй хамт pool-ийн connection) зөвхөн query-д барьцаалагдана, decode хийх
-        # эсвэл model ажиллуулах үед хэзээ ч биш.
+        # Transaction (болон pool-ийн connection)-ийг зөвхөн query явуулахад барина. Зураг decode
+        # хийх, model ажиллуулах үед хэзээ ч барихгүй.
         async with self._session.begin():
             found = await ProductRepository(self._session).search_similar(
                 vector, filters=filters, limit=limit or self._default_limit
@@ -423,8 +426,8 @@ class SearchService:
         applied: list[AppliedFilter] | None = None,
     ) -> SearchResponse:
         total_ms = _ms(started)
-        # Зураг, query текст, хэрэглэгчийн өгөгдлийг хэзээ ч биш: зөвхөн ачааллыг харахад хэрэгтэй
-        # зүйл.
+        # Зураг, хайлтын текст, хэрэглэгчийн өгөгдлийг log-д хэзээ ч бичихгүй. Зөвхөн ачааллыг
+        # харахад хэрэгтэй мэдээллийг бичнэ.
         log.info("search", kind=kind, results=len(hits), total_ms=total_ms, cached=cached)
         return SearchResponse(
             results=hits,

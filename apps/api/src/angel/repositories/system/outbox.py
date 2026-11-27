@@ -14,13 +14,13 @@ class OutboxRepository:
         self._session = session
 
     def add(self, *, to_address: str, subject: str, body: str) -> None:
-        """Дуудагчийн transaction-ийн хэсэг."""
+        """Дуудсан кодын transaction дотор бичнэ."""
         self._session.add(OutboxEmail(to_address=to_address, subject=subject, body=body))
 
     async def claim_due(self, limit: int, *, lease: timedelta) -> list[OutboxEmail]:
-        """Илгээх цаг нь болсон мөрүүдийг `lease` хугацаанд эзэмшинэ. Өөр worker-ийн түгжсэнийг
-        алгасдаг тул хоёр процесс нэг имэйлийг зэрэг авахгүй; эзэмшсэн worker унавал хугацаа
-        дуусмагц дахин авагдана. Дуудагч тэр даруй commit хийнэ."""
+        """Илгээх цаг нь болсон мөрүүдийг `lease` хугацаанд эзэмшинэ. Өөр worker түгжсэн мөрийг
+        алгасдаг тул хоёр процесс нэг имэйлийг зэрэг авахгүй. Эзэмшсэн worker унавал `lease`
+        дуусмагц тэр мөрийг дахин авна. Дуудсан код тэр даруй commit хийнэ."""
         rows = await self._session.execute(
             select(OutboxEmail)
             .where(OutboxEmail.status == "pending", OutboxEmail.next_attempt_at <= func.now())
@@ -49,7 +49,7 @@ class OutboxRepository:
     async def mark_attempt_failed(
         self, email_id: int, error: str, *, retry_in: timedelta | None
     ) -> None:
-        """`retry_in` None бол оролдлого дууссан: `failed`."""
+        """`retry_in` None бол дахин оролдохгүй: төлөв `failed` болно."""
         values: dict[str, object] = {"last_error": error}
         if retry_in is None:
             values["status"] = "failed"
@@ -99,8 +99,9 @@ class OutboxRepository:
         return int(result.rowcount)  # type: ignore[attr-defined]
 
     async def forget_finished(self, addresses: Sequence[str]) -> None:
-        """Бүртгэл устгахад: илгээгдсэн, унасан мөрүүд хаягийг хадгалах шалтгаангүй. Хүлээж буй нь
-        (жишээ нь төлбөр буцаасан мэдэгдэл) очсоны дараа цэвэрлэгээгээр устна."""
+        """Account устгахад хэрэглэнэ. Илгээсэн, унасан мөрүүдэд хаягийг хадгалах шалтгаангүй тул
+        устгана. Хүлээж буй мөрүүд (жишээ нь төлбөр буцаасан мэдэгдэл) илгээгдсэний дараа
+        цэвэрлэгээгээр устна."""
         await self._session.execute(
             delete(OutboxEmail).where(
                 OutboxEmail.to_address.in_(addresses), OutboxEmail.status != "pending"

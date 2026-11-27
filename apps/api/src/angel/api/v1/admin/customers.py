@@ -1,4 +1,4 @@
-"""Customer: хэн account-тай, юу худалдаж авсан, түр түдгэлзүүлэх ба сэргээх."""
+"""Customer: хэн account-тай, юу худалдаж авсныг харах; account-ыг түр түдгэлзүүлэх, сэргээх."""
 
 from typing import Annotated, Any
 

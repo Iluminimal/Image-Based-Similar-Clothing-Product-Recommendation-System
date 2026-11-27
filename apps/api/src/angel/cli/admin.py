@@ -1,6 +1,6 @@
-"""Үйл ажиллагааны command-ууд. Ажилтныг API-аар бүртгүүлэх боломжгүй (бүртгүүлбэл үргэлж customer
-болдог): администраторыг `make create-admin EMAIL=you@example.com`, агуулахын ажилтныг
-`make create-warehouse EMAIL=you@example.com`-оор үүсгэнэ."""
+"""Ажилтны account удирдах command-ууд. API-аар бүртгүүлсэн хүн үргэлж customer болдог тул ажилтныг
+эндээс үүсгэнэ: администраторыг `make create-admin EMAIL=you@example.com`, агуулахын ажилтныг
+`make create-warehouse EMAIL=you@example.com`."""
 
 import argparse
 import asyncio
@@ -62,8 +62,9 @@ ROLE_LABELS = {ROLE_ADMIN: "administrator", ROLE_WAREHOUSE: "warehouse worker"}
 
 
 def _password(args: argparse.Namespace) -> str | None:
-    """$ADMIN_PASSWORD-оос (script, CI), үгүй бол дэлгэцэнд харуулахгүйгээр асууна. Argument-аар
-    хэзээ ч авахгүй: command line нь shell history, process жагсаалтад үлддэг."""
+    """Нууц үгийг $ADMIN_PASSWORD-оос авна (script, CI). Байхгүй бол дэлгэцэнд харуулахгүйгээр
+    асууна. Command line-ийн argument-аар хэзээ ч авахгүй, учир нь тэнд бичсэн зүйл shell
+    history, process-ийн жагсаалтад үлддэг."""
     if args.keep_password:
         return None
     value = os.environ.get(PASSWORD_ENV)

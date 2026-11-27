@@ -12,7 +12,7 @@ from angel.db.base import Base
 config = context.config
 target_metadata = Base.metadata
 
-# URL-ийн цорын ганц эх сурвалж нь аппын тохиргоо (DATABASE_URL).
+# Өгөгдлийн сангийн URL-ийг зөвхөн аппын тохиргооноос (DATABASE_URL) авна.
 database_url = get_settings().database_url
 
 

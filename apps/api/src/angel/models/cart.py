@@ -47,7 +47,7 @@ class CartItem(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
     cart_id: Mapped[int] = mapped_column(ForeignKey("carts.id", ondelete="CASCADE"))
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"))
-    # Size-гүй бараанд "": NULL нь дээрх unique constraint-ийг хоосолчихно.
+    # Size-гүй бараанд "" хадгална. NULL байвал дээрх unique constraint давхардлыг барихгүй.
     size: Mapped[str] = mapped_column(String(16), server_default="")
     quantity: Mapped[int] = mapped_column(SmallInteger)
     # Мөр анх нэмэгдэх үеийн нэгж үнэ (дараа нь ширхэг нэмэхэд өөрчлөгдөхгүй). Үнэ өөрчлөгдсөнийг

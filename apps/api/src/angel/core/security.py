@@ -1,11 +1,11 @@
 """Нууц үгийн hash, access token, opaque token.
 
-* Нууц үг: argon2id (argon2-cffi default, RFC 9106 "low memory" profile). Параметр нэмэгдэхэд
-  `needs_rehash` нь login үед хуучин hash-ийг шинэчлэх боломж өгнө.
-* Access token: богино настай HS256 JWT. Зөвхөн `sub`, `jti`, `iat`, `exp`, `typ` агуулна: бусдыг
-  database-аас уншдаг тул role, email өөрчлөлт хэзээ ч хоцрохгүй.
-* Refresh, guest-cart token: 256 бит санамсаргүй, зөвхөн SHA-256-г нь хадгална. Entropy өндөр тул
-  хурдан hash хангалттай (удаан hash нь зөвхөн login-ийг удаашруулна).
+* Нууц үг: argon2id (argon2-cffi default, RFC 9106 "low memory" profile). Параметрийг чангатгавал
+  `needs_rehash`-ийн тусламжтай хуучин hash-ийг нэвтрэх үед шинэчилнэ.
+* Access token: богино настай HS256 JWT. Зөвхөн `sub`, `jti`, `iat`, `exp`, `typ` агуулна. Бусад
+  мэдээллийг database-аас уншдаг тул role, email өөрчлөгдөхөд хоцрохгүй.
+* Refresh болон зочны сагсны token: 256 бит санамсаргүй утга, зөвхөн SHA-256 hash-ийг нь хадгална.
+  Таах боломжгүй тул хурдан hash хангалттай (удаан hash нь зөвхөн нэвтрэлтийг удаашруулна).
 """
 
 import hashlib
@@ -22,8 +22,9 @@ ACCESS_TOKEN_TYPE = "access"  # noqa: S105 - claim-ийн утга, нууц б�
 JWT_ALGORITHM = "HS256"
 
 _hasher = PasswordHasher()
-# Email үл мэдэгдэх үед үүнийг шалгана: "ийм хэрэглэгч алга" нь "нууц үг буруу"-тай адил хугацаа
-# зарцуулж, хариуны хугацаанаас бүртгэлтэй email-ийг таашгүй болгоно.
+# Бүртгэлгүй email орвол энэ хуурамч hash-ийг шалгана. Ингэснээр "ийм хэрэглэгч алга", "нууц үг
+# буруу" хоёр ижил хугацаа авна. Тиймээс хариу хэр удаан ирснээс email бүртгэлтэй эсэхийг тааж
+# чадахгүй.
 _DUMMY_HASH = _hasher.hash(secrets.token_urlsafe(16))
 
 
@@ -76,7 +77,7 @@ def create_access_token(
 
 
 def decode_access_token(token: str, secret: str) -> int | None:
-    """Хэрэглэгчийн id; хүчинтэй, хугацаа дуусаагүй access token биш бол None."""
+    """Хэрэглэгчийн id-г буцаана. Access token хүчингүй эсвэл хугацаа нь дууссан бол None."""
     try:
         claims = jwt.decode(
             token,

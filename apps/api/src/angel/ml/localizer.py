@@ -1,9 +1,9 @@
 """Зураг дээрх хувцасны хэсгүүдийг олох (localizer).
 
-Хайлт нэг зургаас нэг vector гаргадаг тул олон хувцастай зураг (цамц + өмд + гутал) дээр бүх
-зүйл холилдсон vector гарна. Localizer зургийг хэсэг болгон хуваагаад, хэрэглэгч сонгосон
-хэсгийг л embed хийнэ. `WholeImageLocalizer` нь detection хийхгүй (өмнөх үйлдэл, харьцуулах
-baseline), `YoloGarmentLocalizer` (`ml/yolo.py`) нь жинхэнэ detector.
+Хайлтад нэг зургаас нэг vector гаргадаг. Тиймээс олон хувцастай зургаас (цамц + өмд + гутал) бүгд
+холилдсон vector гарна. Localizer зургийг хэсгүүдэд хувааж, зөвхөн хэрэглэгчийн сонгосон хэсгийг
+embed хийнэ. `WholeImageLocalizer` хэсэг олохгүй (хуучин арга, харьцуулах baseline).
+`YoloGarmentLocalizer` (`ml/yolo.py`) бол жинхэнэ detector.
 """
 
 from dataclasses import dataclass

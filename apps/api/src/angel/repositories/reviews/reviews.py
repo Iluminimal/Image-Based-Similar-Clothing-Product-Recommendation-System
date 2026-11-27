@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from angel.models import Order, OrderItem, Product, Review, User
 from angel.repositories.patterns import contains_pattern
 
-# Сэтгэгдлийг барааг гартаа авсан хүн бичнэ: хүргэгдсэн (дэлгүүрээс авсан), буцаагдаагүй.
+# Зөвхөн барааг гартаа авсан хүн сэтгэгдэл бичнэ: захиалга нь хүргэгдсэн (эсвэл дэлгүүрээс авсан),
+# буцаагдаагүй байх.
 BUYER_STATUSES = ("delivered",)
 # Худалдаж авсан ч хараахан гартаа аваагүй: "хүргэгдсэний дараа бичнэ" гэж хэлнэ.
 ON_THE_WAY_STATUSES = ("paid", "shipped")
@@ -19,8 +20,8 @@ class ReviewRepository:
     # --- бараа ---
 
     async def lock_active_product(self, product_id: int) -> bool:
-        """Барааны мөрийг түгжинэ (сэтгэгдлийн аливаа өөрчлөлт эндээс эхэлдэг тул дундаж дахин
-        тооцоолоход зэрэг орсон сэтгэгдэл алдагдахгүй). Бараа байхгүй эсвэл татагдсан бол
+        """Барааны мөрийг түгжинэ. Сэтгэгдлийн бүх өөрчлөлт эндээс эхэлдэг тул дундаж үнэлгээг дахин
+        тооцоход зэрэг орсон сэтгэгдэл алдагдахгүй. Бараа байхгүй эсвэл зарахаа больсон бол
         False."""
         result = await self._session.execute(
             select(Product.id)

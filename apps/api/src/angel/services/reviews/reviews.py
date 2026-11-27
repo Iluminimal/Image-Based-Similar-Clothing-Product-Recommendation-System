@@ -35,7 +35,8 @@ log = get_logger(__name__)
 
 
 def author_name(user: User) -> str:
-    """ "Ada Lovelace" нь "Ada L." гэж харагдана; нэг нэр эсвэл устгасан бүртгэл хэвээрээ."""
+    """ "Ada Lovelace" гэсэн нэр "Ada L." гэж харагдана. Ганц үгтэй нэр эсвэл устгасан account-ын
+    нэр хэвээрээ харагдана."""
     parts = user.full_name.split()
     if user.full_name in (DELETED_NAME, LEGACY_DELETED_NAME) or len(parts) < 2:
         return (
@@ -179,7 +180,7 @@ class ReviewService:
                 review.body = data.body
             await self._reviews.flush()
             await self._reviews.recompute_rating(review.product_id)
-            # `updated_at`-г database тавьдаг; session хаагдахаас өмнө дахин унш.
+            # `updated_at`-г database бичдэг тул session хаагдахаас өмнө дахин уншина.
             await self._session.refresh(review)
             author = await self._reviews.author(user_id)
         await self._cache.invalidate_catalogue()
@@ -195,8 +196,8 @@ class ReviewService:
         log.info("review_deleted", review_id=review_id, product_id=product_id)
 
     async def _own_locked(self, user_id: int, review_id: int) -> Review:
-        """Дуудагчийн сэтгэгдлийг бараатай нь хамт түгжинэ (үргэлж бараа эхэлж). Өөр хүний
-        сэтгэгдэл олдохгүй."""
+        """Дуудсан хэрэглэгчийн сэтгэгдлийг бараатай нь хамт түгжинэ (үргэлж эхлээд барааг). Өөр
+        хүний сэтгэгдлийг олохгүй."""
         review = await self._reviews.get(review_id)
         if review is None or review.user_id != user_id:
             raise _no_review(review_id)

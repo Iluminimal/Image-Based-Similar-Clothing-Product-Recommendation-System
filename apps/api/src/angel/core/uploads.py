@@ -1,8 +1,10 @@
-"""Upload-ийн хамгаалалт: задлахаас өмнө шалгаж болох бүхнийг шалгана.
+"""Upload-ийн хамгаалалт: зургийг задлахаас өмнө шалгаж болох бүхнийг шалгана.
 
-Клиентийн хэлсэн зүйлд итгэхгүй: зарласан төрөл нь зөвхөн эхний шүүлтүүр (415), жинхэнэ формат
-decode хийхдээ byte-аас тогтоогдоно (`load_image(formats=...)`), хэмжээг body ирэх явцад тоолно,
-тиймээс Content-Length худлаа байсан ч, chunked encoding ч хязгаараас гарч чадахгүй.
+Client-ийн хэлсэн зүйлд шууд итгэхгүй:
+- Зарласан төрлөөр зөвхөн эхний шүүлт хийнэ (415).
+- Жинхэнэ форматыг decode хийхдээ файлын byte-аас тогтооно (`load_image(formats=...)`).
+- Хэмжээг body ирэх явцад тоолно. Тиймээс Content-Length худал байсан ч, chunked encoding ашигласан
+  ч хязгаарыг давж чадахгүй.
 """
 
 import re
@@ -26,7 +28,7 @@ UPLOAD_PATHS = (
     "/admin/products",
 )
 _ADMIN_IMAGE_PATH = re.compile(r"^/admin/products/\d+/image$")
-# Multipart хүрээ болон файлтай хамт ирэх жижиг form талбарууд.
+# Multipart-ийн нэмэлт хэсэг болон файлтай хамт ирэх жижиг form талбаруудад үлдээх зай.
 _FORM_OVERHEAD_BYTES = 64 * 1024
 
 TOO_LARGE_TYPE = "urn:angel:problem:upload-too-large"
@@ -52,7 +54,7 @@ def invalid_image(detail: str) -> ProblemError:
 
 
 async def read_image_upload(file: UploadFile, max_bytes: int) -> bytes:
-    """Зарласан төрөл, хэмжээг шалгасны дараах upload-ийн byte. Хоосон body хэзээ ч буцаахгүй."""
+    """Зарласан төрөл, хэмжээг шалгаад upload-ийн byte-ийг буцаана. Хоосон body бол буцаахгүй."""
     content_type = (file.content_type or "").split(";")[0].strip().lower()
     if content_type not in ALLOWED_CONTENT_TYPES:
         raise ProblemError(
@@ -72,7 +74,7 @@ async def read_image_upload(file: UploadFile, max_bytes: int) -> bytes:
 
 class BodySizeLimitMiddleware:
     """Хэт том upload хүсэлтийг уншихаас өмнө (Content-Length) эсвэл унших явцад (stream)
-    татгалзана, ингэснээр клиент server-ийг хязгааргүй хэмжээний өгөгдөл buffer хийлгэж чадахгүй."""
+    татгалзана. Ингэснээр client server-ийн санах ойг хязгааргүй их өгөгдлөөр дүүргэж чадахгүй."""
 
     def __init__(self, app: ASGIApp, *, max_file_bytes: int, api_prefix: str) -> None:
         self.app = app

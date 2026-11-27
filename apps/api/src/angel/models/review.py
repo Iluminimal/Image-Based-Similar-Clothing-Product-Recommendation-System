@@ -16,8 +16,8 @@ from angel.models.mixins import TimestampMixin
 
 
 class Review(TimestampMixin, Base):
-    """Худалдан авагчийн барааны үнэлгээ. Хэрэглэгч бүр бараа бүрт нэг; администратор нууж болно
-    (зохиогчид үлдэх ч барааны хуудас, дунджаас хасагдана)."""
+    """Барааны худалдан авагчийн үнэлгээ. Хэрэглэгч нэг бараанд нэг л үнэлгээ өгнө. Администратор
+    нууж болно: зохиогчид нь харагдсаар байх ч барааны хуудас, дундаж үнэлгээнээс хасагдана."""
 
     __tablename__ = "reviews"
     __table_args__ = (
@@ -33,7 +33,7 @@ class Review(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    # Энэ хүнийг барааны худалдан авагч болгосон захиалга (админы лавлагаанд хадгална).
+    # Энэ хүн барааг худалдаж авсныг батлах захиалга (админы лавлагаанд хадгална).
     order_id: Mapped[int | None] = mapped_column(ForeignKey("orders.id", ondelete="SET NULL"))
     rating: Mapped[int] = mapped_column(SmallInteger)
     title: Mapped[str | None] = mapped_column(String(120))

@@ -38,8 +38,9 @@ def upgrade() -> None:
         sa.Column("totp_recovery_hashes", postgresql.ARRAY(sa.String(length=64)), nullable=True),
     )
     _purposes(f"{_OLD}, 'reauth'")
-    # Ажилтныг зөвхөн сервер дээрх command үүсгэдэг тул хаягийг нь оператор баталсан гэж үзнэ.
-    # Баталгаажаагүй үлдвэл кодоор нэвтрэх, Google холбох дүрэм нууц үгийг нь устгаж болох байсан.
+    # Ажилтныг зөвхөн сервер дээрх command үүсгэдэг тул тэдний имэйлийг оператор баталсан гэж үзнэ.
+    # Баталгаажаагүй гэж үлдээвэл кодоор нэвтрэх эсвэл Google холбох дүрмээр нууц үг нь устаж болох
+    # байсан.
     op.execute(
         "UPDATE users SET email_verified_at = now() "
         "WHERE role IN ('admin', 'warehouse') AND email IS NOT NULL AND email_verified_at IS NULL"

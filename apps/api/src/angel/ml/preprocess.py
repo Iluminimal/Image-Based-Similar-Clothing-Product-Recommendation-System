@@ -1,7 +1,7 @@
 """Зургийг decode хийж, CLIP-ийн оролт болгон бэлтгэнэ.
 
-Зураг model-ийн оролт болох ЯГ НЭГ газар. Ingestion болон хайлт хоёул ашигладаг тул каталог ба
-query-ийн embedding үргэлж ижил preprocessing-ээр гарна.
+Зургийг model-ийн оролт болгодог ЦОРЫН ГАНЦ газар. Ingestion, хайлт хоёул үүнийг ашигладаг тул
+каталог ба query-ийн embedding үргэлж ижил preprocessing-оор гарна.
 """
 
 from __future__ import annotations
@@ -18,7 +18,8 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 CLIP_SIZE = 224
 # Бүтнээр decode хийхээс өмнө үүнээс том зургийг татгалзана (decompression bomb-оос хамгаална).
 MAX_PIXELS = 50_000_000
-# Каталогийн studio дэвсгэр цагаан тул padding, ил тод хэсэг байгалийн харагдана.
+# Каталогийн зургуудын studio дэвсгэр цагаан тул padding болон ил тод хэсгийг цагаанаар дүүргэвэл
+# байгалийн харагдана.
 BACKGROUND = (255, 255, 255)
 
 ResizeMode = Literal["crop", "pad"]
@@ -38,10 +39,11 @@ def load_image(
 ) -> Image.Image:
     """Зургийг зөв чиглэлтэй RGB болгон decode хийж, EXIF metadata-г хасна.
 
-    `min_side` өгвөл JPEG decoder хоёр тал нь >= `min_side` хэвээр байх 1/2, 1/4, 1/8 масштабаар
-    decode хийж хурдасгана; бусад формат үүнийг үл тооно. Найдваргүй оролт (upload) `formats`
-    (Pillow-ийн формат нэр; бусад нь файлын нэр, төрлөөр биш magic bytes-аар татгалзагдана) болон
-    бага `max_pixels` дамжуулна. Зөвхөн эхний frame-ийг decode хийнэ.
+    `min_side` өгвөл JPEG decoder зургийг 1/2, 1/4, 1/8 хэмжээгээр (хоёр тал нь `min_side`-аас
+    багагүй байхаар) decode хийж хурдасгана. Бусад формат үүнийг тооцохгүй. Найдваргүй оролтод
+    (upload) `formats` болон бага `max_pixels` өгнө. `formats` бол зөвшөөрөх Pillow форматууд:
+    бусдыг файлын нэр, төрлөөс үл хамааран magic bytes-аар нь таньж татгалзана. Зөвхөн эхний
+    frame-ийг decode хийнэ.
     """
     file: str | Path | BinaryIO = io.BytesIO(source) if isinstance(source, bytes) else source
     try:
@@ -66,8 +68,8 @@ def load_image(
 
 
 def _strip_metadata(image: Image.Image) -> Image.Image:
-    """EXIF (камер, GPS ...), ICC profile, comment-ийг хасна. Чиглэл аль хэдийн засагдсан,
-    цаашид эдгээр хэрэггүй: decode хийсэн зургийг дахин encode хийхгүй."""
+    """EXIF (камер, GPS ...), ICC profile, comment-ийг хасна. Зургийн чиглэлийг аль хэдийн зассан
+    тул эдгээр цаашид хэрэггүй: decode хийсэн зургийг дахин encode хийхгүй."""
     image.getexif().clear()
     image.info.clear()
     return image
@@ -87,8 +89,9 @@ def _to_rgb(image: Image.Image) -> Image.Image:
 def to_clip_array(image: Image.Image, mode: ResizeMode = "pad") -> NDArray[np.uint8]:
     """224x224 uint8 HWC array болгон жижигрүүлнэ.
 
-    `crop` нь CLIP-ийн стандарт арга (богино тал 224, голыг таслах): босоо хувцасны дээд, доод
-    хэсгийг тасалдаг. `pad` бүх хувцсыг хадгалж, дөрвөлжин болтол дэвсгэр нэмнэ.
+    `crop` бол CLIP-ийн стандарт арга: богино талыг 224 болгоод голоос нь тайрна. Ингэхэд босоо
+    хувцасны дээд, доод хэсэг тасардаг. `pad` хувцсыг бүтнээр нь үлдээж, дөрвөлжин болтол дэвсгэр
+    нэмнэ.
     """
     width, height = image.size
     if mode == "crop":

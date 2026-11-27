@@ -10,8 +10,8 @@ Gender = Literal["Men", "Women", "Boys", "Girls", "Unisex"]
 Season = Literal["Fall", "Spring", "Summer", "Winter"]
 ProductName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=300)]
 ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
-# Дээд тал нь ₮10,000,000: дэлгүүрийн ямар ч бараанаас хамаагүй үнэтэй, харин тэг илүү бичсэн
-# алдааг барихуйц бага.
+# Дээд тал нь ₮10,000,000: дэлгүүрийн ямар ч барааны үнээс хамаагүй өндөр, харин тэг илүү бичсэн
+# алдааг барих хэмжээнд бага.
 PriceCents = Annotated[
     int, Field(ge=0, le=1_000_000_000, description="Price in minor units (togrog x 100).")
 ]
@@ -42,8 +42,8 @@ class ProductFields(BaseModel):
 
 
 class AdminProductCreateForm(ProductFields):
-    """Multipart form: барааны зураг болон дэлгэрэнгүй мэдээлэл. Зургаас thumbnail-ууд болон
-    visual search-ийн эрэмбэлэх embedding гарна."""
+    """Multipart form: барааны зураг болон дэлгэрэнгүй мэдээлэл. Зургаас thumbnail-ууд болон visual
+    search-д эрэмбэлэхэд хэрэглэх embedding үүсгэнэ."""
 
     file: Annotated[UploadFile, Field(description="JPEG, PNG or WebP, up to 8 MB")]
     is_active: bool = True
@@ -109,9 +109,9 @@ class AdminProductOut(BaseModel):
     committed: int
     on_hand: int
     is_active: bool
-    # Хэзээ нэгэн цагт захиалагдсан: ийм барааг устгах боломжгүй.
+    # Өмнө нь захиалагдсан эсэх: захиалагдсан барааг устгах боломжгүй.
     ordered: bool
-    # Admin хэсэгт үүсгэсэн бараанд NULL; импортолсонд dataset-ийн id.
+    # Гараар нэмсэн бараанд NULL; импортолсон бараанд dataset-ийн id.
     source_id: int | None
     embedding_version: str
     image: ProductImage

@@ -1,8 +1,9 @@
-"""Embedding-ийн чанарыг хэмжих: exact хайлт, mAP, P@K, nDCG, мөн paired bootstrap.
+"""Embedding-ийн чанарыг хэмжих: exact хайлт, mAP, P@K, nDCG, paired bootstrap.
 
 `scripts/evaluate_map.py` (DB дахь FashionCLIP) болон `scripts/benchmark_models.py` (олон загвар)
-хоёул ашиглана. Query нь каталогийн нэг бүтээгдэхүүн; хайлт түүнд хамгийн ойрыг буцаана (өөрийг
-нь оруулахгүй). Ижил label-тэй бол *relevant*; label-ийг гурван түвшинд авна (`LEVELS`).
+хоёул ашиглана. Query болгож каталогийн нэг барааг авна. Хайлт түүнд хамгийн ойр бараануудыг буцаана
+(өөрийг нь оруулахгүй). Label нь ижил бол *relevant* гэж үзнэ. Label-ийг гурван түвшинд авна
+(`LEVELS`).
 """
 
 from collections.abc import Sequence

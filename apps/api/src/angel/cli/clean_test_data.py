@@ -1,13 +1,19 @@
-"""Хөгжүүлэлтийн database дахь БҮХ туршилтын өгөгдлийг устгана (deploy-ийн өмнөх цэвэрлэгээ).
+"""Хөгжүүлэлтийн database-аас БҮХ туршилтын өгөгдлийг устгана (deploy хийхийн өмнөх цэвэрлэгээ).
 
-Үлдэх нь: `--keep-email`-ээр заасан хэрэглэгч(ид) (хаяг, хүссэн жагсаалт нь хамт), датасетээс
-ачаалсан бараа (`source_id IS NOT NULL`) болон ангилал. Устах нь: бусад бүх хэрэглэгч (e2e, demo,
-`deleted-*`), БҮХ захиалга, сэтгэгдэл (үлдэх хэрэглэгчийнх ч), зочны сагс, security event,
-staff audit log, админы самбараас гараар нэмсэн бараа (`source_id IS NULL`, `products/admin/...`
-зураг) болон тэдгээрийн зургийн файл. Захиалгын барьж байсан нөөцийг буцааж, үнэлгээг дахин бодно.
+Үлдэх зүйл:
+- `--keep-email`-ээр заасан хэрэглэгчид (хаяг, хадгалсан бараа нь хамт)
+- датасетээс ачаалсан бараа (`source_id IS NOT NULL`) болон ангилал
 
-Анхдагчаар зөвхөн юу устахыг тоолж харуулна (dry-run); жинхэнээр устгахад `--yes` өгнө.
-`APP_ENV=prod` үед ажиллахаас татгалзана.
+Устах зүйл:
+- бусад бүх хэрэглэгч (e2e, demo, `deleted-*`)
+- БҮХ захиалга, сэтгэгдэл (үлдэх хэрэглэгчийнх ч мөн)
+- зочны сагс, security event, staff audit log
+- гараар нэмсэн бараа (`source_id IS NULL`, `products/admin/...` зурагтай) болон зургийн файл нь
+
+Дараа нь захиалгад эзлэгдсэн stock-ийг буцааж, үнэлгээг дахин бодно.
+
+Анхдагчаар юу ч устгахгүй, зөвхөн юу устахыг тоолж харуулна (dry-run). Жинхэнээр устгах бол `--yes`
+өгнө. `APP_ENV=prod` үед огт ажиллахгүй.
 """
 
 import argparse
@@ -23,11 +29,11 @@ from angel.db.engine import create_engine
 from angel.ingestion.images import THUMBNAIL_SIZES, thumbnail_key
 from angel.storage import LocalStorage
 
-# Админы самбараас нэмсэн бараа: `source_id`-гүй, зураг нь `products/admin/` дор.
+# Гараар нэмсэн бараа: `source_id`-гүй, зураг нь `products/admin/` дотор.
 TEST_PRODUCTS = "source_id IS NULL AND image_key LIKE 'products/admin/%'"
 
-# Нөөцийг барьж байгаа захиалга (`clean_demo`-той ижил дүрэм): refund хийсэн нь бараагаа
-# буцаагаагүй бол л барина.
+# Stock эзэлж байгаа захиалгууд (`clean_demo`-той ижил дүрэм). Төлбөрийг нь буцаасан захиалга
+# бараагаа буцааж өгөөгүй бол л stock эзэлсэн хэвээр.
 HOLDS_STOCK = """
     o.status IN ('pending', 'paid', 'shipped', 'delivered')
     OR (o.status = 'refunded' AND EXISTS (
@@ -78,11 +84,11 @@ async def _count(connection: AsyncConnection, keep: list[str]) -> dict[str, int]
 
 async def _delete(connection: AsyncConnection, keep: list[str]) -> None:
     params: dict[str, Any] = {"keep": keep}
-    # 1) Захиалгын барьж байсан нөөцийг буцаана (устгах бараа биш, үлдэх бараанд л чухал).
+    # 1) Захиалгад эзлэгдсэн stock-ийг буцаана (энэ нь зөвхөн үлдэх бараанд хэрэгтэй).
     await connection.execute(text(RESTOCK))
-    # 2) Сэтгэгдэл (бүгд туршилтынх), захиалга (payments, items, events хамт), дараа нь бусад
-    #    хэрэглэгч (cascade: хаяг, сагс, хүссэн жагсаалт, token, OTP, OAuth). Үлдэх хэрэглэгчийн
-    #    захиалга ч устна.
+    # 2) Эхлээд сэтгэгдэл (бүгд туршилтынх), захиалгыг (payments, items, events хамт) устгана. Дараа
+    #    нь бусад хэрэглэгчийг устгана (cascade: хаяг, сагс, хадгалсан бараа, token, OTP, OAuth).
+    #    Үлдэх хэрэглэгчийн захиалга ч устна.
     await connection.execute(text("DELETE FROM reviews"))
     await connection.execute(text("DELETE FROM orders"))
     await connection.execute(

@@ -1,4 +1,4 @@
-"""Kaggle-ийн анхны `styles.csv`-ийг шалгасан, диск дээр зурагтай бүтээгдэхүүн болгоно."""
+"""Kaggle-ийн `styles.csv`-ийг шалгаж, зураг нь диск дээр байгаа барааны жагсаалт болгоно."""
 
 import csv
 import re
@@ -79,8 +79,8 @@ def load_catalog(
 ) -> tuple[list[CleanProduct], CleaningReport]:
     """Dataset-ийг parse, validate, шүүнэ. Үр дүн id-аар эрэмбэлэгдсэн (тогтмол дараалал)."""
     report = CleaningReport(csv_records=_count_csv_records(styles_csv))
-    # Файлд хашилтгүй таслалтай (талбар хэт олон) мөр байдаг. `skip` тэдгээрийг хасна; талбар нь
-    # дутуу мөр NaN-аар дүүргэгдэж, доорх шаардлагатай талбарын шалгалтад баригдана.
+    # Файлын зарим мөрөнд хашилтгүй таслал орсон тул талбарын тоо хэтэрдэг. `skip` тийм мөрийг
+    # хасна. Талбар дутуу мөр NaN-аар дүүрч, доорх заавал байх талбарын шалгалтаар хасагдана.
     frame = pd.read_csv(styles_csv, dtype=str, on_bad_lines="skip", keep_default_na=False)
     if (malformed := report.csv_records - len(frame)) > 0:
         report.dropped["malformed_row"] = malformed

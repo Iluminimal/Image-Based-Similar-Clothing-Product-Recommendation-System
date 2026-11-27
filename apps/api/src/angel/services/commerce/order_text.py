@@ -12,7 +12,7 @@ _METHODS = {
 
 
 def address_line(snapshot: dict[str, object]) -> str:
-    """Монголын дарааллаар: аймаг/хот, дүүрэг/сум, хороо, гудамж, нэмэлт."""
+    """Монгол дарааллаар: аймаг/хот, дүүрэг/сум, хороо, гудамж, нэмэлт."""
     parts = (
         snapshot.get("region"),
         snapshot.get("city"),
@@ -24,7 +24,7 @@ def address_line(snapshot: dict[str, object]) -> str:
 
 
 def confirmation_body(order: Order, charged: str) -> str:
-    """ "Баярлалаа" имэйлийн бие: юу авсан, хаашаа, хэдэн төгрөг."""
+    """ "Баярлалаа" имэйлийн бичвэр: юу авсан, хаашаа хүргэх, хэдэн төгрөг."""
     lines = [
         f"Баярлалаа! Таны {order.number} дугаартай захиалгын {charged} төлбөрийг хүлээн авлаа.",
         "",

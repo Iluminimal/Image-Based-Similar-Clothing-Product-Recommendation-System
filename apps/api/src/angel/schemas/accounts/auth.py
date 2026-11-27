@@ -7,8 +7,9 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, 
 # Хэрэглэгчийн role: customer худалдан авна; admin, warehouse нь back-office-ийн ажилтан.
 Role = Literal["customer", "admin", "warehouse"]
 FullName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
-# Зөвхөн урт нь дүрэм: найрлагын дүрэм ("нэг цифр, нэг тэмдэгт") хүмүүсийг сул, таамаглахад амархан
-# нууц үг сонгоход түлхдэг. 10 тэмдэгт доод хязгаар, 128 нь hash хийх хугацааг хязгаарлана.
+# Нууц үгэнд зөвхөн уртын дүрэм тавина. "Нэг цифр, нэг тэмдэгт" гэх мэт дүрэм хүмүүсийг сул, амархан
+# таагдах нууц үг сонгоход хүргэдэг. Доод хязгаар 10 тэмдэгт. Дээд хязгаар 128 нь hash хийх хугацааг
+# хязгаарлана.
 Password = Annotated[str, Field(min_length=10, max_length=128)]
 
 
@@ -32,8 +33,8 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    # EmailStr биш, дээд хязгаараас бусад урт шалгахгүй: буруу хэлбэртэй хаяг нь буруу нууц үгтэй
-    # ижил байдлаар (өөр алдаа үзүүлэхгүйгээр) амжилтгүй болох ёстой.
+    # Зориуд EmailStr ашиглаагүй, зөвхөн дээд уртыг шалгана. Буруу хэлбэртэй хаяг ч буруу нууц үгтэй
+    # яг адил алдаа өгөх ёстой (өөр алдаа харуулахгүй).
     email: Annotated[str, Field(min_length=1, max_length=320)]
     password: Annotated[str, Field(min_length=1, max_length=128)]
     # Хоёр шатлалт нэвтрэлттэй бүртгэл: authenticator-ийн 6 цифр эсвэл нөөц код.
@@ -84,8 +85,8 @@ class ChangePasswordRequest(BaseModel):
 class DeleteAccountRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    # Бүртгэлийн email (email байхгүй бол утасны дугаар)-ыг хэрэглэгч өөрөө дахин бичнэ: ингэвэл
-    # орхигдсон tab-аас нэг товшилтоор бүртгэл устгах боломжгүй.
+    # Account устгахын тулд хэрэглэгч email-ээ (email байхгүй бол утасны дугаараа) дахин бичнэ.
+    # Ингэснээр нээлттэй орхисон tab-аас нэг товшилтоор account устгах боломжгүй.
     confirm: Annotated[str, Field(min_length=1, max_length=320)]
     password: Annotated[str, Field(min_length=1, max_length=128)] | None = None
     reauth_code: OtpCode | None = None
@@ -97,8 +98,8 @@ class DeleteAccountRequest(BaseModel):
 
 
 class SessionOut(BaseModel):
-    """Access token нь `Authorization: Bearer`-д очиж, client-ийн санах ойд хадгалагдана. Refresh
-    token хариуны body-д хэзээ ч гарахгүй: httpOnly cookie байна."""
+    """Access token-ыг client санах ойдоо хадгалж, `Authorization: Bearer`-ээр илгээнэ. Refresh
+    token хариуны body-д хэзээ ч орохгүй, зөвхөн httpOnly cookie-ээр очно."""
 
     access_token: str
     token_type: Literal["bearer"] = "bearer"  # noqa: S105 - OAuth scheme name

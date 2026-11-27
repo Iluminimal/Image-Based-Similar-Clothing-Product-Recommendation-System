@@ -41,10 +41,9 @@ class ProductOut(BaseModel):
 
 
 class FilterParams(BaseModel):
-    """Catalogue-ийн filter-үүд, жагсаалт (query string), зургаар хайлт (form field), текстээр
-    хайлт (JSON) гурвын хооронд хуваалцдаг. Хэд хэдэн утга өгөхийн тулд параметрийг давтана:
-    `?gender=Men&gender=Unisex`. Үнэ нь бусад API шиг бүхэл бага нэгжээр
-    (төгрөг x 100)."""
+    """Catalogue-ийн filter-үүд. Жагсаалт (query string), зургаар хайлт (form field), текстээр хайлт
+    (JSON) гурав нэг адил ашиглана. Нэг filter-т хэд хэдэн утга өгөхийн тулд параметрийг давтана:
+    `?gender=Men&gender=Unisex`. Үнэ бусад API-тай адил бүхэл бага нэгжээр (төгрөг x 100)."""
 
     gender: FilterValues = []
     master_category: FilterValues = []
@@ -76,7 +75,8 @@ class ProductListQuery(FilterParams):
 
     q: Annotated[str | None, Field(min_length=1, max_length=200)] = None
     # Худалдан авагчийн навигаци (GET /catalog/nav): "men" мэт department slug болон
-    # "apparel/topwear/tshirts" мэт зангилааны path. Хоёулаа бусад filter-ийг цаашид нарийсгана.
+    # "apparel/topwear/tshirts" мэт зангилааны path. Хоёулаа бусад filter-тэй хамт үр дүнг
+    # нарийсгана.
     department: Annotated[str | None, Field(min_length=1, max_length=40)] = None
     category: Annotated[str | None, Field(min_length=1, max_length=400)] = None
     # `q` өгөгдсөн бол "relevance", үгүй бол "newest" гэж үзнэ.

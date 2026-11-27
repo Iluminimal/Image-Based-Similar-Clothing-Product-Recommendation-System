@@ -1,12 +1,12 @@
-"""Ingest хийсэн каталог дээр хайлтын latency хэмжиж spec-ийн зорилттой харьцуулна
-(CPU дээр зургаар хайлт p95 < ~400 ms, төстэй бүтээгдэхүүн p95 < 50 ms).
+"""Ingest хийсэн каталог дээр хайлтын latency-г хэмжиж, spec-ийн зорилттой харьцуулна (CPU дээр
+зургаар хайлт p95 < ~400 ms, төстэй бараа p95 < 50 ms).
 
     cd apps/api && uv run python ../../scripts/measure_latency.py --device cpu
     cd apps/api && uv run python ../../scripts/measure_latency.py --device mps
 
-Мөн hnsw.ef_search-ийг сэлгэж (recall@k-г exact scan-тай харьцуулж), шүүлттэй хайлтыг
-pgvector iterative scan-тай болон түүнгүйгээр харьцуулна. Эдгээр нь docs/ml-pipeline.md-д
-тэмдэглэсэн сонголтуудын үндэс.
+Мөн hnsw.ef_search-ийн өөр өөр утгыг туршиж (recall@k-г exact scan-тай харьцуулна), шүүлттэй хайлтыг
+pgvector-ийн iterative scan-тай, түүнгүйгээр харьцуулна. docs/ml-pipeline.md дахь сонголтууд эдгээр
+дүн дээр тулгуурласан.
 """
 
 from __future__ import annotations
@@ -60,7 +60,8 @@ async def main_async(args: argparse.Namespace) -> int:
             t1 = time.perf_counter()
             to_clip_array(image, embedder.resize_mode)
             t2 = time.perf_counter()
-            # API-ийн зам: inference embedder-ийн worker thread дээр, event loop чөлөөтэй үлдэнэ.
+            # API-ийн адил inference embedder-ийн worker thread дээр ажиллаж, event loop чөлөөтэй
+            # үлдэнэ.
             vector = (await embedder.aembed_images([image]))[0]
             t3 = time.perf_counter()
             async with sessions() as session, session.begin():

@@ -11,8 +11,8 @@ log = get_logger(__name__)
 
 
 class HealthRepository:
-    """Холболтын шалгалт. Тус бүр exception шиддэггүй, False буцаана: ингэвэл унасан dependency
-    500 болохын оронд мэдээлэгдэнэ."""
+    """Холболтын шалгалтууд. Exception шидэхгүй, False буцаана. Ингэснээр унасан dependency 500
+    алдаа болохгүй, шалгалтын дүнд харагдана."""
 
     def __init__(self, engine: AsyncEngine, redis: Redis, timeout: float) -> None:
         self._engine = engine

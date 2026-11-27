@@ -41,8 +41,8 @@ class ExpectedReturn(BaseModel):
 
 
 class FulfillmentBoard(BaseModel):
-    """Агуулахын ажилтны нүүр: юуг илгээх, нөөц хаана дууссан, өөрийн сүүлийн үйлдлүүд. Орлого,
-    хэрэглэгчийн мэдээлэл ороогүй."""
+    """Агуулахын ажилтны нүүр хуудас: юу илгээх, аль барааны нөөц дууссан, өөрийн сүүлийн үйлдлүүд.
+    Орлого, хэрэглэгчийн мэдээлэл орохгүй."""
 
     sla_hours: int
     to_ship: int
@@ -50,7 +50,8 @@ class FulfillmentBoard(BaseModel):
     oldest_paid_at: datetime | None
     shipped_today: int
     delivered_today: int
-    # Сүүлийн 7 хоногт илгээсэн захиалгын төлөгдсөнөөс илгээх хүртэлх дундаж цаг; үгүй бол None.
+    # Сүүлийн 7 хоногт илгээсэн захиалгууд төлөгдсөнөөс хойш дунджаар хэдэн цагийн дараа илгээгдсэн;
+    # ийм захиалга байхгүй бол None.
     avg_ship_hours: float | None
     out_of_stock: int
     low_stock: int

@@ -1,6 +1,7 @@
-"""Database-д эргүүлж унших шаардлагатай нууцыг (TOTP secret) шифрлэж хадгална: database-ийн хуулбар
-дангаараа 2FA-г тойрох боломж өгөхгүй. Түлхүүр нь `JWT_SECRET`-ээс тусдаа зориулалтын нэрээр
-гаргагддаг тул `JWT_SECRET`-ийг солих бол ажилтнуудын 2FA-г дахин тохируулна."""
+"""Дараа нь буцааж унших шаардлагатай нууцыг (TOTP secret) шифрлэж database-д хадгална. Ингэснээр
+database-ийн хуулбар дангаараа 2FA-г тойрох боломж өгөхгүй. Шифрийн түлхүүрийг `JWT_SECRET`-ээс
+тусгай нэрээр гаргаж авдаг. Тиймээс `JWT_SECRET`-ийг солих бол ажилтнууд 2FA-гаа дахин
+тохируулна."""
 
 import base64
 import hashlib
@@ -24,7 +25,7 @@ def seal(master: str, plaintext: str) -> str:
 
 
 def unseal(master: str, token: str) -> str | None:
-    """Эх бичвэр, эсвэл түлхүүр солигдсон / утга эвдэрсэн бол None."""
+    """Эх бичвэрийг буцаана. Түлхүүр солигдсон эсвэл утга эвдэрсэн бол None."""
     try:
         raw = base64.urlsafe_b64decode(token.encode())
         opened = AESGCM(_key(master)).decrypt(raw[:_NONCE_BYTES], raw[_NONCE_BYTES:], None)

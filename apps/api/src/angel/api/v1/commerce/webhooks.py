@@ -25,8 +25,8 @@ _CALLBACK: dict[str, Any] = {
 }
 
 
-# QPay GET эсвэл POST-оор дуудаж болно. Method бүр өөрийн `operationId`-тэй: нэг route-д хоёуланг
-# нь бүртгэвэл нэр нь ажиллуулалт бүрт өөр гарч, үүсгэсэн client хэлбэлздэг.
+# QPay GET, POST алинаар нь ч дуудаж болно. Method бүрд тусдаа `operationId` өгсөн. Хоёуланг нь нэг
+# route-д бүртгэвэл нэр нь API асах бүрд өөр гарч, үүсгэсэн client-ийн код дэмий өөрчлөгддөг.
 @router.get("/qpay", operation_id="qpay_callback_get", **_CALLBACK)
 @router.post("/qpay", operation_id="qpay_callback_post", **_CALLBACK)
 async def qpay_callback(order: OrderQuery, service: WebhookServiceDep) -> dict[str, bool]:

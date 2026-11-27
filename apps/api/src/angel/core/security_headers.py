@@ -4,12 +4,12 @@ from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 _HEADERS = {
-    # API нь JSON, зураг буцаадаг: browser-т өөр төрөл таах эрх хэзээ ч өгөхгүй.
+    # API зөвхөн JSON, зураг буцаадаг. Browser-ийг агуулгын төрлийг өөрөө таахыг зөвшөөрөхгүй.
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     # API-ийн хариуг хэзээ ч frame-д оруулахгүй.
     "X-Frame-Options": "DENY",
-    # Зураг, JSON-ийг өөр сайтаас шууд оруулж ирэхээс сэргийлнэ (веб нь нэг origin-оос авдаг).
+    # Өөр сайт манай зураг, JSON-ийг шууд ашиглахаас сэргийлнэ (вэб өөрийн origin-оос авдаг).
     "Cross-Origin-Resource-Policy": "same-site",
     "Permissions-Policy": (
         "accelerometer=(), camera=(), geolocation=(), gyroscope=(), microphone=(), "
@@ -18,7 +18,7 @@ _HEADERS = {
 }
 # API нь JSON, зураг л буцаадаг: script, style, frame хэрэггүй.
 _CSP = "default-src 'none'; frame-ancestors 'none'"
-# HTTPS дээр л (Secure cookie-тэй адил): http dev дээр browser үүнийг үл тооно.
+# Зөвхөн HTTPS дээр (Secure cookie-тэй адил): http дээрх dev орчинд browser үүнийг тооцохгүй.
 _HSTS = "max-age=63072000; includeSubDomains"
 
 
@@ -26,7 +26,7 @@ class SecurityHeadersMiddleware:
     def __init__(
         self, app: ASGIApp, *, hsts: bool = False, docs_paths: tuple[str, ...] = ()
     ) -> None:
-        """`docs_paths`: Swagger UI-г энд CSP-гүй үйлчилнэ (CDN-ээс script, style ачаалдаг)."""
+        """`docs_paths` дахь Swagger UI-д CSP тавихгүй (тэр CDN-ээс script, style ачаалдаг)."""
         self.app = app
         self._hsts = hsts
         self._docs_paths = docs_paths

@@ -73,7 +73,8 @@ class Detection:
 
 
 def pad_box(box: Box, padding: float) -> Box:
-    """Хайрцгийн өргөн, өндрийн `padding` хувиар бүх талаас томруулж, зургийн хүрээнд тайрна."""
+    """Хайрцгийг өргөн, өндрийнх нь `padding` хувиар бүх тал руу томруулаад, зургаас гарсан хэсгийг
+    тайрна."""
     dx = (box.x1 - box.x0) * padding
     dy = (box.y1 - box.y0) * padding
     return Box(
@@ -89,10 +90,11 @@ def rank_regions(
     min_area: float,
     padding: float,
 ) -> list[Region]:
-    """Detection-ийг хайх хэсэг болгоно: хэт жижгийг хаяж, хамгийн тод нь эхэнд эрэмбэлнэ.
+    """Detection-ийн үр дүнг хайх хэсэг болгоно: хэт жижгийг нь хасаж, гол зүйлийг эхэнд эрэмбэлнэ.
 
-    Эрэмбийн оноо = `score * sqrt(талбай)`: итгэлтэй ба том зүйл (бүтэн хувцас) нь итгэлтэй
-    боловч жижиг зүйлээс (цаг, нүдний шил) өмнө гарна. Юу ч олдоогүй бол бүтэн зургийг буцаана.
+    Эрэмбийн оноо = `score * sqrt(талбай)`. Ингэснээр итгэлтэй таньсан том зүйл (бүтэн хувцас) нь
+    итгэлтэй таньсан жижиг зүйлээс (цаг, нүдний шил) өмнө гарна. Юу ч олдоогүй бол бүтэн зургийг
+    буцаана.
     """
     kept = [d for d in detections if d.box.area >= min_area]
     kept.sort(key=lambda d: d.score * d.box.area**0.5, reverse=True)
@@ -105,11 +107,12 @@ def rank_regions(
 
 
 def import_ultralytics() -> tuple[Any, Any]:
-    """`ultralytics`-ийн `(YOLO, settings)`-ийг process-ийн бусад хэсэгт нөлөөлөхгүйгээр ачаална.
+    """`ultralytics`-ийн `(YOLO, settings)`-ийг процессын бусад хэсэгт нөлөөлөхгүйгээр ачаална.
 
-    Тус сан import хийхдээ `PIL.Image.open`-ийг сольдог: Pillow танихгүй файл бүрт HEIF plugin
-    (`pi-heif`) хайж, байхгүй бол ажиллаж буй сервер дээрээ суулгахыг оролддог. Upload бол нэр нь
-    мэдэгдэхгүй хүний өгөгдөл тул суулгалтыг унтрааж, Pillow-ийн өөрийн `open`-ийг буцаана."""
+    Энэ санг import хийхэд `PIL.Image.open`-ийг сольдог. Солигдсон функц Pillow-ийн танихгүй файл
+    бүрт HEIF plugin (`pi-heif`) хайж, байхгүй бол ажиллаж байгаа сервер дээр суулгахыг оролддог.
+    Upload бол танихгүй хүний илгээсэн файл тул энэ суулгалтыг унтрааж, Pillow-ийн өөрийн `open`-ийг
+    сэргээнэ."""
     os.environ["YOLO_AUTOINSTALL"] = "False"  # сан үүнийг import хийх үедээ нэг л удаа уншина
     from ultralytics import YOLO, settings  # type: ignore[attr-defined]
 
@@ -146,8 +149,8 @@ class YoloGarmentLocalizer:
         from huggingface_hub import hf_hub_download
 
         YOLO, settings = import_ultralytics()
-        # Ultralytics-ийн нэргүй статистик илгээлтийг унтраана (хэрэглэгчийн зураг хэзээ ч явахгүй,
-        # гэхдээ сүлжээнд шаардлагагүй дуудлага хийх хэрэггүй).
+        # Ultralytics-ийн нэргүй статистик илгээхийг унтраана. Хэрэглэгчийн зураг хэзээ ч
+        # илгээгддэггүй, гэхдээ гадагш шаардлагагүй хүсэлт явуулахгүй.
         with contextlib.suppress(Exception):
             settings.update({"sync": False})
         repo, filename, revision = self._source

@@ -18,7 +18,8 @@ def _baseline(report: Report, level: str, name: str, k: int) -> float:
 
 
 def _stars(report: Report, model: str, level: str) -> str:
-    """Reference загвараас *статистик чухал* өөр бол тэмдэг: завсар 0-г агуулахгүй."""
+    """Reference загвараас ялгаа нь *статистикийн хувьд бодитой* бол тэмдэг тавина (итгэлийн завсар
+    0-г агуулахгүй)."""
     row = report.get("significance", {}).get(model, {}).get(level)
     if not row or row["n"] == 0:
         return ""

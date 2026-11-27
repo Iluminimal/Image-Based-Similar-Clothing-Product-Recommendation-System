@@ -1,5 +1,6 @@
-"""Хайлтын Redis cache-ууд. Үйлдэл бүр best effort: Redis алдаа эсвэл timeout лог хийгдэж miss
-гэж тооцогдоно, тиймээс cache хайлтыг зөвхөн хурдасгаж чадна, хэзээ ч эвдэхгүй."""
+"""Хайлтын Redis cache-ууд. Бүх үйлдэл "боломжийн хэрээр" ажиллана: Redis алдаа эсвэл timeout өгвөл
+log-д бичээд cache-д байхгүй (miss) гэж үзнэ. Тиймээс cache хайлтыг хурдасгаж чадна, харин хэзээ
+ч эвдэхгүй."""
 
 import asyncio
 import hashlib
@@ -24,14 +25,14 @@ _HITS = TypeAdapter(list[SearchHit])
 
 
 def normalize_query(query: str) -> str:
-    """Том жижиг үсэг, хоосон зай нь FashionCLIP-ийн tokenizer-д текстийн утгыг өөрчлөхгүй (жижиг
-    үсэг болгодог), тиймээс cache-ийг хуваах ёсгүй."""
+    """FashionCLIP-ийн tokenizer том үсгийг жижиг болгодог тул том, жижиг үсэг, илүү хоосон зай
+    текстийн утгыг өөрчлөхгүй. Тиймээс ийм ялгаа тусдаа cache үүсгэх ёсгүй."""
     return " ".join(query.lower().split())
 
 
 class SearchCache:
-    """Key-үүд embedding-ийн version агуулна: model эсвэл preprocessing өөрчлөгдсөний дараа
-    (re-embed) хуучин entry-г дахин уншихгүй, өөрөө дуусна."""
+    """Key-үүдэд embedding-ийн version ордог. Model эсвэл preprocessing өөрчлөгдсөний дараа
+    (re-embed) хуучин бичлэг дахиж уншигдахгүй, хугацаа нь дуусаад устна."""
 
     def __init__(
         self,
@@ -155,8 +156,9 @@ class SearchCache:
     # --- хүчингүй болгох ---
 
     async def invalidate_catalogue(self) -> None:
-        """Admin-ы өөрчлөлтийн дараа төстэй барааны жагсаалт, filter сонголтыг мартана, ингэвэл
-        идэвхгүй болсон эсвэл үнэ нь өөрчлөгдсөн бараа TTL дуусах хүртэл тэдгээрт үлдэхгүй."""
+        """Админ хэсгээс бараа өөрчилсний дараа төстэй барааны жагсаалт, filter-ийн сонголтуудын
+        cache-ийг устгана. Ингэснээр идэвхгүй болсон эсвэл үнэ нь өөрчлөгдсөн бараа TTL дуустал
+        хуучнаараа харагдахгүй."""
         try:
             await asyncio.wait_for(self._invalidate(), self._timeout * 20)
         except Exception as exc:

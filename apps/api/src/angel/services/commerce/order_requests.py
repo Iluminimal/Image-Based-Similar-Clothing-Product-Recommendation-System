@@ -38,7 +38,8 @@ class OrderRequestService:
 
     async def create(self, user_id: int, number: str, data: OrderRequestCreate) -> OrderOut:
         async with self._session.begin():
-            # Бүртгэл устгахтай нэг түгжээ: "нээлттэй хүсэлтгүй" шалгалтын дараа хүсэлт үүсэхгүй.
+            # Account устгахтай ижил түгжээ авна: "нээлттэй хүсэлтгүй" гэж шалгасны дараа шинэ
+            # хүсэлт үүсэхгүй.
             await self._session.execute(
                 text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
                 {"key": f"checkout:{user_id}"},

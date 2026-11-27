@@ -1,4 +1,5 @@
-"""QPay: payments дээр түгжсэн төлбөрийн дүн/валют/ханш ба provider_data; Stripe-ийн үлдэгдлийг авах
+"""QPay: payments-д авах дүн, валют, тогтсон ханш, provider_data нэмж, Stripe-ээс үлдсэн нэр,
+баганыг цэвэрлэнэ
 
 Revision ID: a3f7c1d9e2b4
 Revises: e5b2c8a41d07
@@ -31,7 +32,7 @@ def upgrade() -> None:
         "payments",
         sa.Column("provider_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     )
-    # Өмнөх төлбөрүүд (offline) захиалгын валютаараа, 1:1 ханшаар авагдсан.
+    # Өмнөх (offline) төлбөрүүдийг захиалгын валютаар, 1:1 ханшаар авсан.
     op.execute(
         "UPDATE payments SET charge_currency = currency, charge_minor = amount_cents, "
         "exchange_rate = 1"

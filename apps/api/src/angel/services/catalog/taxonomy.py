@@ -1,14 +1,14 @@
 """Худалдан авагчид харагдах ангиллын мод: department > бүлэг > дэд ангилал > article type.
 
-`categories` хүснэгт нь dataset-ийг (master > sub > article type) тусгана. Хоёр зүйл үүнийг
-навигаци болгоход тохиромжгүй болгодог:
+`categories` хүснэгт dataset-ийн бүтцийг (master > sub > article type) давтдаг. Гэхдээ хоёр
+шалтгаанаар түүнийг шууд цэс болгох боломжгүй:
 
-- Gender модонд байхгүй, гэтэл худалдан авагчид "Women" эсвэл "Men"-ээс эхэлдэг.
-- Арван нэг article type-ийн нэр хоёр эцэгтэй, ихэнхдээ өгөгдлийн алдаа (Belts доорх "Tshirts",
-  Topwear доорх "Dresses"). Хамгийн их бараатай leaf яллаж бусдыг шингээнэ, тиймээс нэр бүр модонд
-  яг нэг газартай, бараа хоёр удаа тоологдохгүй.
+- Модонд хүйс байхгүй, гэтэл худалдан авагч "Women" эсвэл "Men"-ээс эхэлдэг.
+- Арван нэгэн article type-ийн нэр хоёр өөр эцгийн дор байдаг, ихэвчлэн өгөгдлийн алдаа (Belts доорх
+  "Tshirts", Topwear доорх "Dresses"). Хамгийн их бараатай нь гол болж, бусдыг нь өөртөө нэгтгэнэ.
+  Тиймээс нэр бүр модонд яг нэг газар байж, бараа хоёр удаа тоологдохгүй.
 
-Энд бүх зүйл pure: service мөрүүдийг оруулж, үр дүнг cache хийнэ."""
+Энд бүх функц pure: service мөрүүдийг өгч, үр дүнг cache хийнэ."""
 
 from collections import defaultdict
 from collections.abc import Sequence
@@ -55,8 +55,8 @@ MASTER_ORDER = ("apparel", "footwear", "accessories")
 
 
 class TaxonomySnapshot(BaseModel):
-    """Cache юу хадгалдаг вэ: навигацийн мод болон зангилаа бүрийн path-д жагсаалт таарах ёстой
-    category id-нууд (зангилаа нь үр удам болон шингээсэн давхардлуудыг хамарна)."""
+    """Cache-д хадгалах зүйл: цэсний мод болон цэс бүрийн path-д жагсаалтад таарах category id-ууд
+    (дэд ангиллууд болон нэгтгэсэн давхардлуудыг оруулна)."""
 
     nav: CatalogNav
     category_ids: dict[str, list[int]]
@@ -69,7 +69,7 @@ def display_name(name: str) -> str:
 def build_snapshot(
     categories: Sequence[Category], counts: Sequence[tuple[str, int, int]]
 ) -> TaxonomySnapshot:
-    """`counts` нь бараатай нүд бүрийн (gender, category_id, идэвхтэй барааны тоо)."""
+    """`counts` бол бараатай (gender, category_id) хослол бүрийн идэвхтэй барааны тоо."""
     by_id = {c.id: c for c in categories}
     per_category: dict[int, int] = defaultdict(int)
     for _gender, category_id, n in counts:
@@ -80,7 +80,7 @@ def build_snapshot(
     for leaf in leaves:
         by_name[leaf.name].append(leaf)
 
-    # canonical leaf id -> түүний хамарсан бүх leaf id
+    # гол leaf id -> түүнд нэгтгэсэн бүх leaf id
     members: dict[int, list[int]] = {}
     for group in by_name.values():
         canonical = max(group, key=lambda c: (per_category[c.id], -c.id))

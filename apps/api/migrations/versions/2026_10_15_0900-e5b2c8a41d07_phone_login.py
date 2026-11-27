@@ -72,7 +72,7 @@ def upgrade() -> None:
     op.create_check_constraint(
         op.f("ck_users_contact_present"), "users", "email IS NOT NULL OR phone IS NOT NULL"
     )
-    # Google өөрөөр нэвтрүүлсэн имэйл хаягийг баталгаажсан гэж үзнэ.
+    # Google-ээр нэвтэрдэг хэрэглэгчийн имэйл хаягийг баталгаажсан гэж үзнэ.
     op.execute(
         "UPDATE users SET email_verified_at = now() "
         "WHERE id IN (SELECT user_id FROM oauth_identities WHERE provider = 'google')"
@@ -80,7 +80,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Schema-г буцаана. Имэйлгүй account байвал алдаа өгнө: тэднийг хадгалах боломжгүй."""
+    """Schema-г буцаана. Имэйлгүй account байвал алдаа өгнө: хуучин schema ийм account хадгалж
+    чадахгүй."""
     op.drop_constraint(op.f("ck_users_contact_present"), "users", type_="check")
     op.drop_constraint(op.f("ck_users_phone_e164"), "users", type_="check")
     op.drop_constraint(op.f("uq_users_phone"), "users", type_="unique")

@@ -1,4 +1,4 @@
-"""Агуулахын самбарын зөвхөн унших aggregate-ууд (захиалга, бараа дээрх count, avg)."""
+"""Агуулахын самбарт хэрэгтэй тоонууд (захиалга, барааны count, avg; зөвхөн уншина)."""
 
 from datetime import datetime
 
@@ -56,8 +56,8 @@ class FulfillmentRepository:
         return None if seconds is None else round(float(seconds) / 3600, 1)
 
     async def stock_alerts(self, threshold: int, limit: int) -> tuple[list[Product], int, int]:
-        """Нөөц нь дууссан эсвэл `threshold` ба түүнээс доош байгаа зарагдаж буй бараа (багаас
-        нь), мөн дууссан, багассан барааны тоо."""
+        """Нөөц нь дууссан эсвэл `threshold`-оос ихгүй, зарагдаж буй бараанууд (цөөн үлдэгдэлтэйгээс
+        нь эхэлж), мөн дууссан, багассан барааны тоо."""
         on_sale = Product.is_active.is_(True)
         products = await self._session.execute(
             select(Product)

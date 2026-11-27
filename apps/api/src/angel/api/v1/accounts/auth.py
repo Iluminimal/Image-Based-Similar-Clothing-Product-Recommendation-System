@@ -499,8 +499,8 @@ async def delete_me(
 
 
 # --- Google-ээр нэвтрэх --------------------------------------------------------------------------
-# Хоёр endpoint хоёул fetch биш browser-ийн navigation: browser redirect дагадаг тул redirect-ээр
-# хариулна (JSON хэзээ ч биш). Алдаа гарвал `?error=` богино кодтойгоор login хуудас руу буцна.
+# Энэ хоёр endpoint-ийг fetch-ээр дууддаггүй, browser шууд нээдэг. Тиймээс JSON буцаахгүй, үргэлж
+# redirect-ээр хариулна. Алдаа гарвал богино `?error=` кодтойгоор login хуудас руу буцаана.
 
 
 @router.get("/providers", summary="Which sign-in methods besides a password are available")
@@ -562,7 +562,8 @@ async def google_callback(
     if service is None:
         return fail("google_failed")
     if error is not None:
-        # "access_denied" нь хэрэглэгч Cancel дарсан; бусад нь Google эсвэл бидний алдаа.
+        # "access_denied" бол хэрэглэгч Cancel дарсан гэсэн үг. Бусад алдаа нь Google эсвэл манай
+        # талынх.
         return fail("google_denied" if error == "access_denied" else "google_failed")
     if not code or not state:
         return fail("google_failed")

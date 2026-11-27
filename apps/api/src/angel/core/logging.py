@@ -43,9 +43,9 @@ def configure_logging(level: str = "INFO", *, json_logs: bool = True) -> None:
     root.handlers = [handler]
     root.setLevel(level)
 
-    # Uvicorn өөрийн handler тавьдаг; түүний logger-уудыг root pipeline руу шилжүүлнэ. Access log
-    # нь хаалттай (handler, propagation байхгүй: uvicorn handler байхгүй бол log бичихгүй),
-    # учир нь RequestContextMiddleware хүсэлт бүрт илүү баялаг access мөр бичдэг.
+    # Uvicorn өөрийн handler тавьдаг тул түүний logger-уудыг root pipeline руу шилжүүлнэ. Харин
+    # uvicorn-ы access log-ийг унтраана (handler, propagation байхгүй бол юу ч бичигдэхгүй). Учир нь
+    # RequestContextMiddleware хүсэлт бүрд илүү дэлгэрэнгүй access мөр бичдэг.
     for name in ("uvicorn", "uvicorn.error"):
         logger = logging.getLogger(name)
         logger.handlers = []

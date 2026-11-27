@@ -1,8 +1,8 @@
-"""Нэвтэрсэн хүн өөрийн бүртгэл дээр хийх үйлдлүүд: нэр, нууц үг, утас, имэйл, төхөөрөмжүүд,
-аюулгүй байдлын үйлдлүүд, бүртгэл устгах.
+"""Нэвтэрсэн хэрэглэгч өөрийн account дээр хийх үйлдлүүд: нэр, нууц үг, утас, имэйл, төхөөрөмжүүд,
+аюулгүй байдлын үйлдлийн түүх, account устгах.
 
-Нууц үг, утас, имэйл өөрчлөх болон устгахын өмнө нууц үг эсвэл шинэ кодоор дахин баталгаажуулна:
-нээлттэй үлдсэн session дангаараа хангалтгүй.
+Нууц үг, утас, имэйл өөрчлөх, account устгахын өмнө нууц үг эсвэл шинэ кодоор дахин баталгаажуулна.
+Нээлттэй үлдсэн session дангаараа хангалтгүй.
 """
 
 import asyncio
@@ -61,12 +61,13 @@ from angel.services.accounts.otp import (
 log = get_logger(__name__)
 
 DELETED_NAME = "Устгасан хэрэглэгч"
-# Монгол болохоос өмнө устгагдсан бүртгэлийн хадгалсан нэр: харуулахдаа DELETED_NAME болгоно.
+# Дэлгүүр монгол хэлтэй болохоос өмнө устгагдсан account-д хадгалсан нэр. Харуулахдаа DELETED_NAME
+# болгоно.
 LEGACY_DELETED_NAME = "Deleted user"
 
 
 def _wrong_password() -> ProblemError:
-    # 403, 401 биш: хэрэглэгч нэвтэрсэн байгаа, мөн web app 401-ийг session дууссан гэж ойлгодог.
+    # 401 биш 403: хэрэглэгч нэвтэрсэн хэвээр. Web апп 401-ийг session дууссан гэж ойлгодог.
     return ProblemError(
         HTTPStatus.FORBIDDEN,
         "Нууц үг буруу",
@@ -101,8 +102,8 @@ class AccountService:
             return UserView(user, await self._users.providers(user.id))
 
     async def change_password(self, user_id: int, request: ChangePasswordRequest) -> IssuedSession:
-        """Нууц үгийг тохируулна эсвэл солино. Бусад бүх нэвтрэлт дуусна (нууц үг солигдсон нь
-        хуучныг нь бусад хүн мэдэж болзошгүй гэсэн үг) бөгөөд энэ browser шинэ session авна."""
+        """Нууц үг тохируулах эсвэл солих. Бусад бүх нэвтрэлт дуусна (нууц үг солих нь хуучныг бусад
+        хүн мэдсэн байж болзошгүй гэсэн үг). Энэ browser шинэ session авна."""
         async with self._session.begin():
             user = await self._active_user(user_id)
         # Нууц үгийг эхэлж шалгана: сул нууц үгээс болж баталгаажуулах код дэмий зарцуулагдахгүй.
@@ -130,9 +131,9 @@ class AccountService:
         return issued
 
     async def delete(self, user_id: int, request: DeleteAccountRequest) -> None:
-        """Бүртгэлийг нэргүйжүүлнэ. Захиалгууд үлдэнэ (нягтлан бодох бүртгэл, мөн
-        `orders.user_id` нь RESTRICT), гэхдээ зөвхөн өөрсдийн snapshot-ийг хадгална: харин user
-        мөрөөс тэр хүн хэн байсныг мэдэх боломжгүй болно."""
+        """Account-ыг нэргүй болгоно. Захиалгууд үлдэнэ (нягтлан бодох бүртгэлд хэрэгтэй,
+        `orders.user_id` нь RESTRICT). Захиалга зөвхөн өөрийн snapshot-ыг хадгална, харин user
+        мөрөөс тэр хэн байсныг мэдэх боломжгүй болно."""
         async with self._session.begin():
             user = await self._active_user(user_id)
         if user.is_staff:
@@ -153,7 +154,7 @@ class AccountService:
             await self._require_no_open_orders(user_id)
         await self._confirm_identity(user, request.password, request.reauth_code)
         async with self._session.begin():
-            # Checkout-той ижил түгжээ: шалгалт ба устгалын хооронд шинэ захиалга үүсэхгүй.
+            # Checkout-той ижил түгжээ авна: шалгах, устгах хоёрын хооронд шинэ захиалга үүсэхгүй.
             await self._session.execute(
                 text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
                 {"key": f"checkout:{user_id}"},
@@ -177,9 +178,9 @@ class AccountService:
         log.info("account_deleted", user_id=user_id)
 
     async def _forget_personal_data(self, user: User) -> None:
-        """Бүртгэлийн мөр устдаггүй (захиалга түүнийг заадаг) тул cascade ажиллахгүй: хүний ул
-        мөрийг агуулсан бусад бичлэгийг энд арилгана. Хаяг нь солигдохоос өмнө дуудна. Захиалгын
-        snapshot (нэр, хаяг, утас, имэйл) санхүүгийн бичлэг болж үлдэнэ."""
+        """Захиалга user мөр рүү заадаг тул мөрийг устгахгүй, тиймээс cascade ажиллахгүй. Тэр хүний
+        мэдээлэл агуулсан бусад бичлэгийг энд арилгана. Хаяг солигдохоос өмнө дуудна. Захиалгын
+        snapshot (нэр, хаяг, утас, имэйл) санхүүгийн бичиг баримт болж үлдэнэ."""
         orders = OrderRepository(self._session)
         own = [address for address in (user.email, user.phone) if address]
         await OtpRepository(self._session).delete_for_account(user.id, own)
@@ -209,8 +210,8 @@ class AccountService:
         ]
 
     async def security_events(self, user_id: int) -> list[SecurityEventOut]:
-        """Бүртгэлийн сүүлийн аюулгүй байдлын үйл явдлууд (30): эзэн өөрийнхөө бүртгэлд юу
-        болсныг харна. IP-ийн сүүлийн хэсгийг нууцлана."""
+        """Account-ын сүүлийн 30 аюулгүй байдлын үйл явдал: эзэн нь account дээрээ юу болсныг харна.
+        IP-ийн сүүлийн хэсгийг нууцална."""
         async with self._session.begin():
             rows = await self._events.recent(user_id, SECURITY_EVENTS_SHOWN)
         return [
@@ -241,7 +242,7 @@ class AccountService:
         return family_id == current
 
     async def revoke_other_sessions(self, user_id: int, refresh_token: str | None) -> None:
-        """ "Бусад бүх газраас гарах": энэ browser-ийн нэвтрэлтээс бусад бүгд."""
+        """ "Бусад бүх газраас гарах": энэ browser-оос бусад бүх нэвтрэлт."""
         async with self._session.begin():
             current = await self._current_family(user_id, refresh_token)
             if current is None:
@@ -266,7 +267,7 @@ class AccountService:
     async def request_phone(
         self, user_id: int, raw_phone: str, password: str | None, reauth_code: str | None = None
     ) -> None:
-        """Хүн ашиглахыг хүссэн дугаар руу (шинэ эсвэл солих) код илгээнэ."""
+        """Нэмэх эсвэл солих гэж буй дугаар руу код илгээнэ."""
         phone = normalize_phone_number(raw_phone, self._settings.default_phone_region)
         user = await self._checked_user(user_id, password, reauth_code)
         if user.phone == phone:
@@ -337,7 +338,8 @@ class AccountService:
                 await self._session.flush()
                 self._auth.record_event(user.id, events.EMAIL_CHANGED)
                 if previous and previous != email:
-                    # Хуучин хаяг руу: булаан авсан хүн хаягийг нууцаар сольж чадахгүй.
+                    # Хуучин хаяг руу мэдэгдэнэ: account булаан авсан хүн хаягийг нууцаар сольж
+                    # чадахгүй.
                     self._auth.queue_notice(
                         Email(
                             to=previous,
@@ -361,7 +363,7 @@ class AccountService:
                 return UserView(user, await self._users.providers(user.id))
             if user.phone is None:
                 raise _last_method("имэйл хаяг")
-            # Нууц үгээр нэвтрэхэд email хэрэгтэй: email-гүй бол нууц үг хэрэггүй ачаа болно.
+            # Нууц үгээр нэвтрэхэд email хэрэгтэй. Email-гүй бол нууц үг хэрэггүй ачаа болно.
             user.email = None
             user.email_verified_at = None
             user.password_hash = None
@@ -433,8 +435,8 @@ class AccountService:
     async def _confirm_identity(
         self, user: User, given: str | None, reauth_code: str | None
     ) -> None:
-        """Эмзэг өөрчлөлтийн өмнө session дангаараа хангалтгүй: нууц үгтэй бол нууц үг, үгүй бол
-        дөнгөж илгээсэн код. Transaction-оос гадуур дуудна (код өөрийн transaction-тай)."""
+        """Эмзэг өөрчлөлт хийхэд session дангаараа хангалтгүй: нууц үгтэй бол нууц үг, үгүй бол
+        дөнгөж илгээсэн код шаардана. Transaction-оос гадуур дуудна (код өөрийн transaction-тай)."""
         if user.password_hash is None:
             if reauth_code is None:
                 raise ProblemError(

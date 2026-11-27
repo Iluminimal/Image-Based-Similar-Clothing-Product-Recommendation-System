@@ -35,9 +35,9 @@ class SecurityEventRepository:
         return list(rows.scalars())
 
     async def knows_device(self, user_id: int, user_agent: str | None) -> bool:
-        """Энэ бүртгэлд ийм user agent-тэй нэвтрэлт урьд нь амжилттай болсон уу: хадгалсан
-        refresh token, эсвэл `login` үйл явдал. Token эрт цэвэрлэгддэг тул үйл явдал нь
-        төхөөрөмжийг илүү удаан санана. Амжилтгүй оролдлого тооцогдохгүй."""
+        """Энэ account-д ийм user agent-тэй амжилттай нэвтрэлт өмнө нь байсан эсэх. Хадгалсан
+        refresh token болон `login` үйл явдлаас хайна. Token эрт устдаг тул үйл явдал
+        төхөөрөмжийг илүү удаан санана. Амжилтгүй оролдлогыг тооцохгүй."""
         if not user_agent:
             return False
         result = await self._session.execute(

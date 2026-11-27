@@ -1,9 +1,9 @@
 """End-to-end тестэд зориулсан жижиг synthetic каталог (dataset, model байхгүй үед).
 
-Бүгд тогтмол (deterministic). Зургийг өөрсдөө зурж, жинхэнэ ingestion-ы бичдэг 400/800 px WebP
-thumbnail хэлбэрээр хадгална. Embedding-ийг decode хийсэн 800 px thumbnail-аас бодно. Хэрэглэгч
-бүтээгдэхүүний зургийг татаж аваад хайвал яг эдгээр bytes upload болдог тул fake embedder-тэй
-бүтээгдэхүүн эхэнд гарна (жинхэнэ каталог дээр FashionCLIP-тэй адил).
+Бүх зүйл тогтмол (deterministic). Зургийг өөрсдөө зурж, жинхэнэ ingestion-ы адил 400/800 px WebP
+thumbnail болгож хадгална. Embedding-ийг 800 px thumbnail-аас бодно. Тиймээс тэр файлыг өөрчлөлгүй
+API-аар илгээвэл яг ижил byte очиж, fake embedder тэр барааг эхэнд гаргана (жинхэнэ каталог дээрх
+FashionCLIP шиг).
 """
 
 import argparse
@@ -44,7 +44,8 @@ ARTICLES = (
 GENDERS = ("Women", "Men", "Unisex", "Girls", "Boys")
 COLOURS = ("Blue", "Red", "Black", "White", "Green", "Yellow")
 BRANDS = ("Avirate", "Nordkap", "Fable", "Marlow", "Quill", "Ostrava")
-# Нөөц их тул нэгийг нь худалдаж авдаг тестүүд мөргөлдөхгүй; 10 бүтээгдэхүүн тутмын нэг дууссан.
+# Нөөцийг их өгсөн тул нэг бараанаас худалдан авдаг тестүүд бие биедээ саад болохгүй. 10 бараа
+# тутмын нэг нь дууссан байна.
 STOCK = 40
 SOLD_OUT_EVERY = 10
 
@@ -73,7 +74,8 @@ def garment_image(seed: int) -> Image.Image:
 async def seed_catalogue(
     engine: AsyncEngine, storage: Storage, embedder: EmbeddingService, count: int
 ) -> int:
-    """1..count бүтээгдэхүүн. Дахин ажиллуулж болно: мөрийг upsert, thumbnail-ийг дарж бичнэ."""
+    """1-ээс count хүртэл бараа үүсгэнэ. Дахин ажиллуулж болно: мөрийг upsert хийж, thumbnail-ыг
+    дарж бичнэ."""
     products: list[CleanProduct] = []
     vectors = []
     blurs: dict[int, str] = {}

@@ -1,11 +1,12 @@
-"""Cookie дээр тулгуурласан endpoint-уудыг cross-site хүсэлтээс хамгаална.
+"""Cookie ашигладаг endpoint-уудыг cross-site хүсэлтээс хамгаална.
 
-Bearer-token endpoint CSRF-д автоматаар өртөхгүй (browser header-ийг өөрөө хавсаргадаггүй).
-Refresh, guest-cart cookie-ууд автоматаар хавсарддаг тул тэдгээрээр төлөв өөрчилдөг хүсэлт
-манай сайтаас ирсэн байх ёстой. SameSite=Lax ихэнх тохиолдлыг хаадаг; энэ нь хоёр дахь давхарга:
-`Origin` нь манайх биш browser хүсэлтийг татгалзана. Browser биш клиент (curl, server код)
-эдгээр header-ийг илгээдэггүй тул зөвшөөрнө: тэднийг хохирогчийн cookie ашиглуулж хууран
-мэхэлж чадахгүй.
+Bearer token ашигладаг endpoint-д CSRF-ийн аюул байхгүй, учир нь browser тэр header-ийг өөрөө
+хавсаргадаггүй. Харин refresh болон зочны сагсны cookie автоматаар дагалддаг. Тиймээс тэдгээрээр юм
+өөрчлөх хүсэлт заавал манай сайтаас ирсэн байх ёстой.
+
+SameSite=Lax ихэнх тохиолдлыг хаадаг. Энэ шалгалт бол хоёр дахь хамгаалалт: `Origin` нь манайх биш
+browser хүсэлтийг татгалзана. Browser биш client (curl, серверийн код) эдгээр header-ийг илгээдэггүй
+тул зөвшөөрнө: халдагч тэднийг ашиглан хохирогчийн cookie-г илгээж чадахгүй.
 """
 
 from fastapi import Request
@@ -34,6 +35,7 @@ async def require_same_origin(request: Request) -> None:
         if origin not in settings.cors_origins:
             raise _forbidden()
         return
-    # Origin байхгүй (хуучин browser-ийн same-origin хүсэлт): Fetch Metadata-гаар мэдэж болно.
+    # Origin header байхгүй бол (хуучин browser-ийн same-origin хүсэлт) Fetch Metadata header-ээс
+    # шалгана.
     if request.headers.get("sec-fetch-site") == "cross-site":
         raise _forbidden()

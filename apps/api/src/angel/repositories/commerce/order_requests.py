@@ -1,4 +1,5 @@
-"""Цуцлах, буцаах хүсэлтийн уншилт, бичилт. Өөрчлөх бүрд дуудагч захиалгын мөрийг түгжсэн байна."""
+"""Цуцлах, буцаах хүсэлтийг унших, бичих. Өөрчлөхөөсөө өмнө дуудсан код захиалгын мөрийг түгжсэн
+байх ёстой."""
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +17,8 @@ class OrderRequestRepository:
         self._session.add(request)
 
     async def forget_written_by(self, user_id: int) -> None:
-        """Бүртгэл устгахад: хүний өөрийн үгээр бичсэн тайлбар арилна (шалтгааны ангилал үлдэнэ)."""
+        """Account устгахад хэрэглэнэ: хэрэглэгчийн өөрийн бичсэн тайлбарыг арилгана (шалтгааны
+        ангилал үлдэнэ)."""
         own = select(Order.id).where(Order.user_id == user_id)
         await self._session.execute(
             update(OrderRequest).where(OrderRequest.order_id.in_(own)).values(details=None)
@@ -32,7 +34,8 @@ class OrderRequestRepository:
         return {(kind, status): int(count) for kind, status, count in rows.all()}
 
     async def expected_returns(self, limit: int) -> tuple[list[tuple[OrderRequest, Order]], int]:
-        """Зөвшөөрөгдсөн ч бараа нь ирээгүй буцаалтууд (хамгийн эрт зөвшөөрсөн нь эхэнд), тоо."""
+        """Зөвшөөрөгдсөн ч бараа нь хараахан ирээгүй буцаалтууд (хамгийн эрт зөвшөөрсөн нь эхэнд)
+        болон тэдгээрийн тоо."""
         waiting = (OrderRequest.kind == "return", OrderRequest.status == "approved")
         total = (
             await self._session.execute(

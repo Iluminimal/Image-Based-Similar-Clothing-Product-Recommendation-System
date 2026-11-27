@@ -1,7 +1,8 @@
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase
 
-# Constraint нэрийг тогтмол болгоно: Alembic autogenerate, downgrade тогтвортой байхын тулд.
+# Constraint-ийн нэрийг нэг дүрмээр өгнө. Ингэснээр Alembic-ийн autogenerate, downgrade тогтвортой
+# ажиллана.
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",

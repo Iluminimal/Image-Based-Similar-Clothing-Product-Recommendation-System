@@ -77,10 +77,11 @@ log = get_logger(__name__)
 
 
 class ProblemError(StarletteHTTPException):
-    """Service-үүдээс шиднэ, RFC 7807 хариу үүсгэнэ. Route алдааг гараар бүтээхгүй.
+    """Энэ алдааг service шиддэг бөгөөд RFC 7807 хариу болж хувирна. Route алдааны хариуг гараар
+    үүсгэхгүй.
 
-    Зориуд HTTPException: FastAPI хүсэлтийн body задлах үед гарсан бусад exception бүрийг ерөнхий
-    400 болгодог, харин "413 too large"-д ингэж болохгүй.
+    Зориуд HTTPException-оос удамшуулсан. FastAPI хүсэлтийн body задлах үед гарсан бусад бүх
+    exception-ийг ерөнхий 400 болгодог. Гэтэл "413 too large" алдааг 400 болгож болохгүй.
     """
 
     def __init__(
@@ -153,8 +154,8 @@ async def _handle_http_exception(request: Request, exc: StarletteHTTPException) 
     except ValueError:
         phrase = ""
     title = _STATUS_TITLES.get(exc.status_code) or phrase or "Алдаа"
-    # Starlette өөрийн анхдагч `detail`-ыг англи хэллэгээр ("Not Found") өгдөг: гарчиг аль хэдийн
-    # монголоор хэлж байгаа тул давтахгүй.
+    # Starlette анхдагч `detail`-ийг англиар ("Not Found") өгдөг. Гарчиг нь монголоор аль хэдийн
+    # хэлсэн тул англи бичвэрийг харуулахгүй.
     detail = str(exc.detail) if exc.detail and str(exc.detail) != phrase else None
     problem = ProblemDetail(title=title, status=exc.status_code, detail=detail)
     return problem_response(request, problem, dict(exc.headers or {}))

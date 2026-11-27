@@ -1,5 +1,6 @@
-"""Ingestion-ы зураг тус бүрийн ажил: нэг удаа decode хийж, thumbnail, blur placeholder,
-CLIP-ийн оролтын array гаргана. Worker process дотор ажилладаг тул бүх зүйл picklable байх ёстой."""
+"""Ingestion-д зураг бүр дээр хийх ажил: нэг удаа decode хийж, thumbnail, blur placeholder, CLIP-ийн
+оролтын array гаргана. Worker process дотор ажилладаг тул дамжуулах бүх объект picklable байх
+ёстой."""
 
 import base64
 import io
@@ -16,12 +17,13 @@ from angel.storage import Storage
 THUMBNAIL_SIZES = (400, 800)
 WEBP_QUALITY = 80
 BLUR_SIDE = 12
-# Хамгийн том thumbnail нь JPEG decoder хэр хэмжээнд жижигрүүлж болохыг тодорхойлно.
+# JPEG-ийг decode хийхдээ хэр хүртэл жижигрүүлж болохыг хамгийн том thumbnail тогтооно.
 _DECODE_MIN_SIDE = max(THUMBNAIL_SIZES)
 
 
 def image_key(source_id: int) -> str:
-    """Бүтээгдэхүүний зургийн storage key prefix. Хавтас томрохоос сэргийлж хэсэгчилсэн (shard)."""
+    """Барааны зургийн storage key-ийн эхлэл. Нэг folder-т хэт олон файл орохгүйн тулд дэд
+    folder-уудад (shard) хуваана."""
     return f"products/{source_id // 1000:03d}/{source_id}"
 
 
@@ -86,7 +88,8 @@ def build_thumbnails(image: Image.Image) -> Thumbnails:
 
 
 def process_image(job: ImageJob, storage: Storage) -> ImageResult:
-    """Муу оролтод exception шидэхгүй: уншигдахгүй зураг `error` болж буцна."""
+    """Муу зураг орсон ч exception шидэхгүй: уншигдахгүй зургийн алдааг үр дүнгийн `error` талбарт
+    бичнэ."""
     try:
         image = load_image(job.path, min_side=_DECODE_MIN_SIDE)
     except InvalidImageError as exc:

@@ -69,8 +69,8 @@ class AdminOrderPage(BaseModel):
 
 
 class AdminPaymentOut(BaseModel):
-    """Төлбөрийн бичлэг. QR зураг гэх мэт provider-ийн өгөгдөл энд гарахгүй. `charge_*` нь бодитоор
-    авсан дүн (минор нэгжээр) ба түгжсэн ханш."""
+    """Төлбөрийн бичлэг. QR зураг гэх мэт provider-ийн өгөгдөл энд гарахгүй. `charge_*` бол бодитоор
+    авсан дүн (бага нэгжээр) ба тогтоосон ханш."""
 
     provider: str
     provider_payment_id: str
@@ -84,7 +84,8 @@ class AdminPaymentOut(BaseModel):
 
 
 class AdminOrderEventOut(OrderEventOut):
-    """Ижил алхам, гэхдээ administrator харж болох бүх зүйлтэй: тэмдэглэл, хэн хийсэн."""
+    """Хэрэглэгчийн хардаг түүхийн алхамтай адил, гэхдээ админы харж болох бүх зүйлтэй: тэмдэглэл,
+    хэн хийсэн."""
 
     type: AdminOrderEventType  # type: ignore[assignment]
     data: dict[str, Any]
@@ -114,8 +115,8 @@ Reason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, m
 
 
 class ShipRequest(BaseModel):
-    """Хүргэлтийн захиалгад хоёулаа заавал. Дэлгүүрээс авах захиалгад хоёуланг нь орхино: энэ
-    үйлдэл "авахад бэлэн" гэсэн үг."""
+    """Хүргэлтийн захиалгад хоёуланг нь заавал бөглөнө. Дэлгүүрээс авах захиалгад хоёуланг нь хоосон
+    үлдээнэ: энэ үйлдэл "авахад бэлэн болсон" гэсэн үг."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -130,12 +131,12 @@ class CancelRequest(BaseModel):
 
 
 class RefundRequest(BaseModel):
-    """Үргэлж бүтэн дүн (төлбөрийн gateway-ийн дэмждэг зүйл)."""
+    """Үргэлж бүтэн дүнгээр буцаана (төлбөрийн gateway зөвхөн үүнийг дэмждэг)."""
 
     model_config = ConfigDict(extra="forbid")
 
     reason: Reason
-    # Бараа нөөцөд буцаана: хэзээ ч явагдаагүй захиалгад тийм, аль хэдийн илгээсэнд үгүй.
+    # Барааг нөөцөд буцаах эсэх: огт илгээгдээгүй захиалгад тийм, аль хэдийн илгээснийд үгүй.
     restock: bool
 
 

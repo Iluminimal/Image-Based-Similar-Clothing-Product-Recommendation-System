@@ -1,8 +1,8 @@
-"""ML pipeline-ийг энэ машин дээр benchmark хийж, default утгуудыг шийднэ.
+"""Энэ компьютер дээр ML pipeline-ийн хурдыг хэмжиж, анхдагч утгуудыг сонгоно.
 
-Хэмжих зүйлс: worker тоо бүрийн зураг decode/thumbnail хурд, MPS дээрх fp16 ба fp32-ийн тоон
-ойролцоо байдал, batch хэмжээ бүрийн хурд ба санах ой, CPU хурд, JPEG draft decoding нь
-embedding-ийг өөрчлөх эсэх, CLIP center-crop ба pad-to-square preprocessing-ийн чанар.
+Хэмжих зүйлс: worker-ийн тоо бүрд зураг decode, thumbnail хийх хурд; MPS дээр fp16, fp32-ийн үр дүн
+хэр ойрхон; batch хэмжээ бүрийн хурд, санах ой; CPU-ийн хурд; JPEG draft decoding embedding-ийг
+өөрчлөх эсэх; CLIP center-crop ба pad-to-square preprocessing-ийн чанар.
 
     cd apps/api && uv run python ../../scripts/benchmark_ml.py --n 2000
 """

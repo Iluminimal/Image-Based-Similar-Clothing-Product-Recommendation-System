@@ -1,7 +1,8 @@
 """Аппыг угсарна: тохиргоо, өгөгдлийн сан, Redis, ML загвар, дэвсгэрийн worker-ууд (lifespan),
 middleware, route-ууд.
 
-`create_app` нь factory учир тест өөрийн хиймэл embedder, төлбөрийн gateway, localizer дамжуулна.
+`create_app` нь factory функц тул тест өөрийн хиймэл embedder, төлбөрийн gateway, localizer өгч
+чадна.
 """
 
 import asyncio
@@ -94,8 +95,8 @@ async def _load_localizer(settings: Settings) -> GarmentLocalizer:
 
 
 async def _warm_up(embedder: EmbeddingService) -> None:
-    """Эхний inference kernel-ийг compile хийж, buffer хуваарилдаг тул үүнийг эхний хэрэглэгчийн
-    хүсэлт дээр биш, эндээс эхлүүлнэ."""
+    """Эхний inference үед kernel compile хийж, buffer хуваарилдаг тул удаан. Тиймээс үүнийг эхний
+    хэрэглэгчийн хүсэлт дээр биш, апп асахад урьдчилж хийнэ."""
     await embedder.aembed_images([Image.new("RGB", (64, 64), "white")])
     await embedder.aembed_texts(["warm up"])
 
@@ -103,7 +104,7 @@ async def _warm_up(embedder: EmbeddingService) -> None:
 async def _warm_up_database(
     embedder: EmbeddingService, sessions: async_sessionmaker[AsyncSession]
 ) -> None:
-    """Жинхэнэ нэг төстэй хайлт хийж, эхний connection-ийг нээгээд индексийг халаана."""
+    """Нэг жинхэнэ төстэй хайлт хийж, эхний connection-ийг нээгээд индексийг санах ойд ачаална."""
     vector = (await embedder.aembed_texts(["warm up"]))[0]
     async with sessions() as session, session.begin():
         await ProductRepository(session).search_similar(vector, limit=1)
@@ -115,10 +116,10 @@ def _classifier_factory(
     async def build() -> CategoryClassifier:
         async with sessions() as session, session.begin():
             categories = await CategoryRepository(session).searchable_article_types()
-        # Article type бүрт нэг label: бараа article type-аар шүүгддэг, мөн ижил текстэй хоёр
-        # prompt магадлалыг хоорондоо хуваачихна.
+        # Article type бүрд нэг label өгнө. Бараа article type-аар шүүгддэг. Мөн ижил бичвэртэй хоёр
+        # prompt байвал магадлалыг хоорондоо хуваачихна.
         unique: dict[str, Category] = {}
-        for category in categories:  # бараа олонтойг эхэнд нь, ингэснээр үндсэн эх нь үлдэнэ
+        for category in categories:  # бараа олонтой нь эхэнд тул нэр давхардвал тэр нь үлдэнэ
             unique.setdefault(category.name, category)
         labels = [CategoryLabel(c.name, c.path, c.name) for c in unique.values()]
         return await ZeroShotCategoryClassifier.build(embedder, labels)
@@ -142,7 +143,8 @@ def create_app(
         app.state.settings = settings
         app.state.engine = create_engine(settings.database_url)
         app.state.sessions = async_sessionmaker(app.state.engine, expire_on_commit=False)
-        # Cache, rate-limit дуудлага хурдан алдаа өгнө: Redis унасан үед хайлт удаашрахгүй.
+        # Cache, rate limit-ийн Redis дуудлага хурдан алдаа өгдөг тул Redis унасан үед ч хайлт
+        # удаашрахгүй.
         app.state.redis = Redis.from_url(
             settings.redis_url,
             socket_connect_timeout=settings.redis_op_timeout_seconds,
@@ -159,7 +161,7 @@ def create_app(
                 hint="set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET (or OAUTH_MODE=fake)",
             )
         if not settings.jwt_secret:
-            # Хөгжүүлэлтэд зүгээр; restart бүр хүн бүрийг гаргана.
+            # Хөгжүүлэлтэд асуудалгүй, гэхдээ restart хийх бүрд бүх хэрэглэгч гарна.
             log.warning(
                 "jwt_secret_generated", hint="set JWT_SECRET to keep sessions across restarts"
             )
@@ -171,8 +173,9 @@ def create_app(
                 "or PAYMENTS_MODE=offline",
             )
 
-        # Model-ийг эндээс нэг л удаа ачаална; ачаалагдтал /readyz улаан байна. Inference нь
-        # embedder-ийн өөрийн worker thread дээр ажиллана, event loop дээр хэзээ ч биш.
+        # Model-ийг зөвхөн энд, нэг удаа ачаална. Ачаалж дуустал /readyz бэлэн биш гэж хариулна.
+        # Inference-ийг embedder-ийн өөрийн worker thread дээр ажиллуулна, event loop дээр хэзээ ч
+        # ажиллуулахгүй.
         model = embedder or await _load_embedder(settings)
         await _warm_up(model)
         app.state.embedding_service = model
@@ -234,15 +237,17 @@ def create_app(
         redoc_url=None,
     )
 
-    # Хязгаар доторх upload санах ойд үлдэнэ: үгүй бол Starlette 1 MB-аас том зүйлийг түр файлд
-    # бичнэ, харин хэрэглэгчийн зургийг зөвшөөрөлгүй хаана ч хадгалж болохгүй.
+    # Зөвшөөрөгдсөн хэмжээний upload-ийг бүхэлд нь санах ойд байлгана. Эс бөгөөс Starlette 1 MB-аас
+    # том файлыг түр файлд бичнэ. Гэтэл хэрэглэгчийн зургийг зөвшөөрөлгүйгээр хаана ч хадгалж
+    # болохгүй.
     MultiPartParser.spool_max_size = settings.max_upload_bytes + 1
     app.add_middleware(
         BodySizeLimitMiddleware,
         max_file_bytes=settings.max_upload_bytes,
         api_prefix=settings.api_v1_prefix,
     )
-    # Сүүлд нэмсэн нь хамгийн гаднах: CORS preflight-ийг бусдаас өмнө хараад шууд хариулах ёстой.
+    # Хамгийн сүүлд нэмсэн middleware хамгийн гадна талд ажиллана: CORS preflight-ийг бусдаас
+    # түрүүлж хараад шууд хариулах ёстой.
     app.add_middleware(
         SecurityHeadersMiddleware,
         hsts=settings.cookie_secure,
@@ -262,8 +267,8 @@ def create_app(
     )
 
     register_exception_handlers(app)
-    # Барааны thumbnail (dev). Starlette эхний хүсэлт дээр хавтсыг шалгадаг тул ingest хийхээс
-    # өмнө ч байгаа эсэхийг баталгаажуулна.
+    # Барааны thumbnail. Starlette эхний хүсэлт ирэхэд folder байгаа эсэхийг шалгадаг тул ingest
+    # хийхээс өмнө ч folder-ийг урьдчилж үүсгэнэ.
     settings.media_dir.mkdir(parents=True, exist_ok=True)
     app.mount(settings.media_url_path, MediaFiles(directory=settings.media_dir), name="media")
     app.include_router(health.router)

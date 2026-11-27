@@ -1,9 +1,12 @@
-"""Google руу явж буцах нэвтрэлтийн үед ашиглах богино настай cookie.
+"""Google-ээр нэвтрэх үед ашиглах богино настай cookie.
 
-Буцаж ирэхдээ зөвхөн энэ browser үзүүлж чадах зүйлийг агуулна: `state` (өөр хүний эхлүүлсэн
-callback-ийг татгалзахын тулд), `nonce` (ID token-д уяагдана), PKCE verifier, мөн дараа очих
-газар. Гарын үсэгтэй token тул server дээр юу ч хадгалахгүй; httpOnly тул script verifier-ийг
-хэзээ ч харахгүй.
+Google-ээс буцаж ирэхэд нэвтрэлтийг эхлүүлсэн browser мөн эсэхийг үүгээр батална. Дотор нь:
+- `state`: өөр хүний эхлүүлсэн callback-ийг татгалзахад
+- `nonce`: ID token-той холбоход
+- PKCE verifier
+- дараа нь очих хуудас
+Энэ нь гарын үсэгтэй token тул server дээр юу ч хадгалахгүй. httpOnly тул script verifier-ийг харж
+чадахгүй.
 """
 
 import base64
@@ -86,8 +89,9 @@ def states_match(expected: str, presented: str | None) -> bool:
 
 
 def safe_next(value: str | None) -> str:
-    """Нэвтэрсний дараах очих газар: зөвхөн энэ сайтын зам, ингэснээр `?next=//evil.example` нь
-    login-ийг open redirect болгож чадахгүй. Вэб апп дахь `safeNext`-тэй адил."""
+    """Нэвтэрсний дараа очих хаяг: зөвхөн энэ сайтын зам байна. Тиймээс `?next=//evil.example` гэх
+    мэтээр login-ийг өөр сайт руу чиглүүлж (open redirect) чадахгүй. Вэб апп дахь `safeNext`-тэй
+    адил."""
     if (
         not value
         or len(value) > 500

@@ -6,7 +6,8 @@ from starlette.types import Scope
 class MediaFiles(StaticFiles):
     """Барааны зургийн static файл: browser, CDN нэг өдөр cache хийж болно.
 
-    Зөвхөн хөгжүүлэлтэд; production-д ижил key-үүдийг object storage/CDN-ээс үйлчилнэ.
+    Одоогийн production тохиргоонд ч API эдгээрийг өөрөө өгдөг (вэб `/media`-г дамжуулна). Дараа нь
+    ижил key-тэй файлуудыг object storage/CDN руу шилжүүлж болно.
     """
 
     async def get_response(self, path: str, scope: Scope) -> Response:

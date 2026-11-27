@@ -24,7 +24,7 @@ from angel.models.mixins import TimestampMixin
 
 ROLE_CUSTOMER = "customer"
 ROLE_ADMIN = "admin"
-# Агуулахын ажилтан: бараа, нөөц, захиалгын ачилтыг өөрийн эрхээр хариуцна.
+# Агуулахын ажилтан бараа, нөөц, захиалга илгээхийг өөрийн эрхээр хариуцна.
 ROLE_WAREHOUSE = "warehouse"
 STAFF_ROLES = (ROLE_ADMIN, ROLE_WAREHOUSE)
 
@@ -32,13 +32,13 @@ STAFF_ROLES = (ROLE_ADMIN, ROLE_WAREHOUSE)
 class User(TimestampMixin, Base):
     __tablename__ = "users"
     __table_args__ = (
-        # Email жижиг үсгээр хадгалагдана; constraint нь normalize мартсан тохиолдолд зөвхөн том
-        # жижиг үсгээр ялгагдах хоёр бүртгэл үүсэхийн оронд ил алдаа гаргана.
+        # Email-ийг жижиг үсгээр хадгална. Код normalize хийхээ мартвал constraint алдаа өгнө.
+        # Ингэснээр зөвхөн том, жижиг үсгээр ялгаатай хоёр account үүсэхгүй.
         CheckConstraint("email = lower(email)", name="email_lowercase"),
         # Утсыг E.164 (`+` ба 8-15 цифр, тэгээр эхлэхгүй) хэлбэрээр хадгална: нэг дугаар нэг
         # хэлбэртэй тул unique index үнэхээр "нэг утас нэг бүртгэл" гэсэн утгатай.
         CheckConstraint(r"phone ~ '^\+[1-9][0-9]{7,14}$'", name="phone_e164"),
-        # Утас эсвэл email, аль нэгийг дараа нь хасаж болно, гэхдээ хоёуланг нь хэзээ ч биш.
+        # Утас, email хоёрын аль нэгийг дараа нь хасаж болно, харин хоёуланг нь хасаж болохгүй.
         CheckConstraint("email IS NOT NULL OR phone IS NOT NULL", name="contact_present"),
         CheckConstraint(
             f"role IN ('{ROLE_CUSTOMER}', '{ROLE_ADMIN}', '{ROLE_WAREHOUSE}')", name="role_valid"
@@ -54,15 +54,15 @@ class User(TimestampMixin, Base):
     # тохируулагдана (Google хаягийг баталдаг). None: баталгаажаагүй; нууц үгээр нэвтэрч болно.
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     phone_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # Зөвхөн Google-ээр нэвтэрдэг (мөн Google холбохдоо нууц үгээ хассан) бүртгэлд None: нууц үгээр
-    # нэвтрэх нь тэдэнд хэзээ ч амжилтгүй.
+    # Зөвхөн Google-ээр нэвтэрдэг (эсвэл Google холбохдоо нууц үгээ хассан) account-д None: тэд нууц
+    # үгээр нэвтэрч чадахгүй.
     password_hash: Mapped[str | None] = mapped_column(String(255))
     full_name: Mapped[str] = mapped_column(String(120))
     # Google профайл зураг (https URL), header-т харуулахаар хадгална. None бол нэрийн үсэг.
     avatar_url: Mapped[str | None] = mapped_column(String(500))
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
-    # Админ хүсэлт бүрт database-аас уншина, access token-д хэзээ ч хуулахгүй, тиймээс эрхийг
-    # хураах нь тэр дороо хүчинтэй болно.
+    # Админ эсэхийг хүсэлт бүрд database-аас уншдаг, access token-д хуулдаггүй. Тиймээс эрхийг
+    # хураахад тэр даруй хүчинтэй болно.
     role: Mapped[str] = mapped_column(String(20), server_default=ROLE_CUSTOMER)
     # Ажилтны хоёр шатлалт нэвтрэлт. `totp_secret` шифрлэгдсэн (`core/secret_box.py`);
     # `totp_enabled_at` None бол тохируулж дуусаагүй. `totp_last_step` нь нэг кодыг дахин
@@ -134,9 +134,9 @@ class RefreshToken(TimestampMixin, Base):
 
 
 class OtpChallenge(Base):
-    """Утасны дугаар эсвэл email рүү илгээсэн нэг удаагийн код. Зөвхөн кодын HMAC-г хадгална.
-    Challenge нэг зорилготой, хугацаатай, цөөн удаа буруу таалтыг зөвшөөрч, эхний зөв оролдлогоор
-    ашиглагдаж дуусна."""
+    """Утасны дугаар эсвэл email рүү илгээсэн нэг удаагийн код. Зөвхөн кодын HMAC-ийг хадгална.
+    Challenge бүр нэг зорилготой, хугацаатай. Цөөн удаа л буруу оролдохыг зөвшөөрнө. Эхний зөв
+    оролдлогоор ашиглагдаж дуусна."""
 
     __tablename__ = "otp_challenges"
     __table_args__ = (
@@ -152,8 +152,8 @@ class OtpChallenge(Base):
     purpose: Mapped[str] = mapped_column(String(20))
     # Код илгээсэн E.164 дугаар эсвэл жижиг үсгээр бичсэн email.
     destination: Mapped[str] = mapped_column(String(320))
-    # Хэний бүртгэл хүссэн (солих/баталгаажуулах урсгал); login, нууц үг сэргээхэд None: хүн
-    # нэвтрээгүй тул бүртгэлийг destination-аар олно.
+    # Аль account хүссэн (солих, баталгаажуулах үед). Нэвтрэх, нууц үг сэргээх үед None: хүн
+    # нэвтрээгүй тул account-ыг destination-оор нь олно.
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     code_hash: Mapped[str] = mapped_column(String(64))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -167,7 +167,7 @@ class Address(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("char_length(country) = 2", name="country_iso_length"),
         Index("ix_addresses_user_id", "user_id"),
-        # Хэрэглэгч бүрт default хаяг дээд тал нь нэг, database өөрөө хангана.
+        # Хэрэглэгч нэгээс илүү default хаягтай байж болохгүйг database өөрөө баталгаажуулна.
         Index(
             "uq_addresses_one_default_per_user",
             "user_id",

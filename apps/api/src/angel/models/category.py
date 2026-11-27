@@ -6,9 +6,10 @@ from angel.models.mixins import TimestampMixin
 
 
 class Category(TimestampMixin, Base):
-    """Каталогийн мод: master category > sub category > article type (1-3 түвшин).
+    """Каталогийн ангиллын мод: master category > sub category > article type (1-3 түвшин).
 
-    Бараа навч (article type)-ийг зааж, өвөг эцгийг `parent_id`-ээр олно.
+    Бараа хамгийн доод ангилалд (article type) харьяалагдана. Дээд ангиллуудыг нь `parent_id`-ээр
+    олно.
     """
 
     __tablename__ = "categories"
@@ -21,5 +22,5 @@ class Category(TimestampMixin, Base):
     level: Mapped[int] = mapped_column(SmallInteger)
     name: Mapped[str] = mapped_column(String(100))
     slug: Mapped[str] = mapped_column(String(120))
-    # Бүтэн slug зам, жишээ нь "apparel/topwear/shirts". Бүх модонд давтагдашгүй.
+    # Бүтэн slug зам, жишээ нь "apparel/topwear/shirts". Бүх модон дотор давтагдахгүй.
     path: Mapped[str] = mapped_column(String(400), unique=True)

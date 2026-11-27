@@ -62,13 +62,14 @@ class Order(TimestampMixin, Base):
     shipping_cents: Mapped[int] = mapped_column(BigInteger)
     total_cents: Mapped[int] = mapped_column(BigInteger)
     shipping_method: Mapped[str] = mapped_column(String(20))
-    # Заагаагүй, хуулсан: хадгалсан хаягийг засах/устгах нь өмнөх захиалгыг өөрчилж болохгүй.
+    # Хадгалсан хаяг руу заахгүй, хуулбарыг нь хадгална: тэр хаягийг засах, устгахад өмнөх захиалга
+    # өөрчлөгдөх ёсгүй.
     shipping_address: Mapped[dict[str, Any]] = mapped_column(JSONB)
     contact_email: Mapped[str] = mapped_column(String(320))
 
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # Хүргэлт: илгээмж явах, хүрэх үед администратор тохируулна.
+    # Хүргэлт: захиалгыг илгээх, хүргэх үед агуулахын ажилтан бөглөнө.
     carrier: Mapped[str | None] = mapped_column(String(40))
     tracking_number: Mapped[str | None] = mapped_column(String(100))
     shipped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -94,7 +95,8 @@ OPEN_REQUEST_STATUSES = ("requested", "approved", "received")
 
 
 class OrderRequest(TimestampMixin, Base):
-    """Худалдан авагчийн цуцлах (илгээгээгүй) эсвэл буцаах (хүргэгдсэн) хүсэлт, бүтэн захиалгаар.
+    """Худалдан авагчийн бүтэн захиалгад гаргах хүсэлт: цуцлах (илгээгээгүй үед) эсвэл буцаах
+    (хүргэгдсэний дараа).
 
     cancel: requested -> completed (зөвшөөрмөгц мөнгө буцна) | declined | withdrawn
     return: requested -> approved -> received -> completed (мөнгө буцна) | declined | withdrawn
@@ -114,7 +116,7 @@ class OrderRequest(TimestampMixin, Base):
             unique=True,
             postgresql_where=text("status IN ('requested', 'approved', 'received')"),
         ),
-        # Ажилтны самбар, tab, тоо: зөвхөн нээлттэйг нь хайна.
+        # Ажилтны самбар, tab, тоолол зөвхөн нээлттэй хүсэлтийг хайдаг.
         Index(
             "ix_order_requests_open_status",
             "status",
@@ -216,7 +218,8 @@ class Payment(TimestampMixin, Base):
     amount_cents: Mapped[int] = mapped_column(BigInteger)
     currency: Mapped[str] = mapped_column(String(3))
     # Gateway-ээр бодитоор авах дүн. Дэлгүүр зөвхөн төгрөгөөр ажилладаг: checkout өөр валютаар
-    # авдаг gateway-г татгалздаг тул `charge_currency` = `currency`, `exchange_rate` = 1.
+    # төлбөр авдаг gateway-г зөвшөөрдөггүй. Тиймээс `charge_currency` = `currency`, `exchange_rate`
+    # = 1.
     charge_currency: Mapped[str] = mapped_column(String(3))
     charge_minor: Mapped[int] = mapped_column(BigInteger)
     exchange_rate: Mapped[Decimal] = mapped_column(Numeric(14, 6))
@@ -227,8 +230,9 @@ class Payment(TimestampMixin, Base):
 
 
 class ProcessedPaymentEvent(TimestampMixin, Base):
-    """Боловсруулсан төлбөрийн event бүрийн id (QPay-д payment_id). Төлөв өөрчилсөн transaction-д
-    нь хамт бичдэг тул мэдэгдэл, шалгалт хэдэн ч удаа давтагдсан event яг нэг л удаа хэрэгжинэ."""
+    """Боловсруулсан төлбөрийн event бүрийн id (QPay-д payment_id). Захиалгын төлөв өөрчилдөг
+    transaction дотор хамт бичдэг. Тиймээс мэдэгдэл, шалгалт хэдэн ч удаа давтагдсан нэг event
+    ганцхан удаа хэрэгжинэ."""
 
     __tablename__ = "payment_events"
 

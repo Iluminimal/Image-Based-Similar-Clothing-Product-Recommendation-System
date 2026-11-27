@@ -1,4 +1,4 @@
-"""Administrator захиалгад юу хийж чадах вэ, нэг жижиг state machine болгон.
+"""Захиалгын төлөв яаж өөрчлөгдөх вэ (жижиг state machine):
 
     pending --cancel--> cancelled
     pending --(payment)--> paid --ship--> shipped --deliver--> delivered
@@ -8,10 +8,9 @@
 Буцаах хүсэлтийг админ зөвшөөрч, агуулах барааг хүлээн авч, дараа нь админ төлбөрийг буцаана.
 Нээлттэй хүсэлттэй захиалгыг илгээхгүй. Төлбөр буцаахад нээлттэй хүсэлт хаагдана.
 
-Үйлдэл бүр захиалгын мөрийн түгжээг авч (хоёр administrator, эсвэл administrator ба webhook-ийг нэг
-нэгээр нь шийднэ), захиалга үйлдэлд тохирох төлөвт байгааг шалгаж (үгүй бол 409), захиалгыг
-өөрчилнө. Мөн нэг transaction дотор `OrderEvent` бичиж, хэрэглэгчид илгээх имэйлийг дараалалд
-(outbox) оруулна."""
+Үйлдэл бүр захиалгын мөрийг түгжинэ, ингэснээр хоёр админ, эсвэл админ ба webhook дараалж ажиллана.
+Дараа нь захиалгын төлөв тухайн үйлдэлд тохирохыг шалгаад (үгүй бол 409) өөрчилнө. Нэг transaction
+дотор `OrderEvent` бичиж, хэрэглэгчид очих имэйлийг outbox дараалалд оруулна."""
 
 from datetime import UTC, datetime
 from http import HTTPStatus
@@ -59,8 +58,8 @@ from angel.storage import Storage
 
 log = get_logger(__name__)
 
-# Цуцлах хүсэлтийг зөвшөөрч буцаасан мөнгөний шалтгааны код (захиалгын түүх, журналд): web
-# хэрэглэгчийн хэлээр харуулна.
+# Цуцлах хүсэлтийг зөвшөөрч мөнгө буцаасны шалтгааны код (захиалгын түүх, журналд хадгална). Web
+# үүнийг хэрэглэгчийн хэлээр харуулна.
 _CANCEL_APPROVED_REASON = "cancel_request"
 
 
@@ -158,8 +157,8 @@ class OrderFulfillmentService:
         return await self._read(number)
 
     async def cancel(self, number: str, admin: User, request: CancelRequest) -> AdminOrderOut:
-        """Төлөгдөөгүй захиалгыг цуцална: нөөц буцна, эхлээд provider дээр payment intent
-        цуцлагдана (expiry sweeper-тэй адил)."""
+        """Төлөгдөөгүй захиалгыг цуцалж, нөөцийг буцаана. Эхлээд provider дээрх payment intent-ийг
+        цуцална (expiry sweeper-тэй адил)."""
         async with self._session.begin():
             order = await self._lock_plain(number)
             self._require(order, ("pending",), "cancel")
@@ -278,9 +277,9 @@ class OrderFulfillmentService:
     async def _refund_locked(
         self, order: Order, admin: User, *, reason: str, restock: bool
     ) -> Email:
-        """Түгжсэн захиалгын төлбөрийг буцаана. Provider-ийг transaction дотор дуудна: амжилтгүй бол
-        юу ч өөрчлөгдөхгүй, idempotency key нь давтахыг аюулгүй болгоно. Дуудагч буцаасан имэйлийг
-        ижил transaction-д дараалалд оруулна."""
+        """Түгжсэн захиалгын төлбөрийг буцаана. Provider-ийг transaction дотор дууддаг: амжилтгүй
+        бол юу ч өөрчлөгдөхгүй, idempotency key-тэй тул давтахад аюулгүй. Буцаалтын имэйлийг
+        дуудсан код ижил transaction дотор дараалалд оруулна."""
         if self._gateway is None:
             raise ProblemError(
                 HTTPStatus.SERVICE_UNAVAILABLE,
@@ -311,7 +310,8 @@ class OrderFulfillmentService:
         payment.status = "refunded"
         payment.provider_data = None
         payment.last_error = "admin_refund"
-        # Төлөв солигдоход захиалагдсан тоо өөрчлөгдөнө: барааг үлдэгдэлд нэмэхгүй ч мөрийг түгжинэ.
+        # Төлөв өөрчлөгдөхөд захиалагдсан барааны тоо өөрчлөгддөг. Тиймээс барааг үлдэгдэлд нэмэхгүй
+        # байсан ч мөрийг нь түгжинэ.
         products = await self._lock_products(order)
         if restock:
             self._restock(order, products)
@@ -363,7 +363,8 @@ class OrderFulfillmentService:
 
     @staticmethod
     def _request(order: Order, request_id: int, allowed: tuple[str, ...]) -> OrderRequest:
-        """Хуучирсан дэлгэцээс өөр хүсэлтэд шийдвэр гарахгүйн тулд id-гаар нь сонгоно."""
+        """Хуучирсан дэлгэцээс өөр хүсэлт дээр шийдвэр гаргахаас сэргийлж хүсэлтийг id-аар нь
+        сонгоно."""
         asked = next((r for r in order.requests if r.id == request_id), None)
         if asked is None or asked.status not in allowed:
             raise _request_conflict()
@@ -377,8 +378,8 @@ class OrderFulfillmentService:
         self._audit.record(admin, f"order.{action}", "order", order.number, data)
 
     async def _lock_products(self, order: Order) -> dict[int, Product]:
-        """Захиалгын барааны мөрүүдийг түгжинэ (checkout-той адил id-н дарааллаар, deadlock-гүй):
-        захиалагдсан тоог өөрчлөх үйлдэл тооллоготой давхцахгүй, ээлжээр явна."""
+        """Захиалгын барааны мөрүүдийг түгжинэ (checkout-той адил id-ийн дарааллаар, deadlock-гүй).
+        Захиалагдсан тоог өөрчилдөг үйлдэл тооллоготой давхцахгүй, ээлжлэн явна."""
         ids = sorted({item.product_id for item in order.items})
         return await ProductRepository(self._session).get_many(ids, for_update=True)
 
@@ -423,7 +424,7 @@ def _not_found(number: str) -> ProblemError:
     )
 
 
-# Үйлдэл, төлөвийн монгол нэр (алдааны мэссэжид): `_require`-ийн `action` англи түлхүүр хэвээр.
+# Алдааны мессежид орох үйлдэл, төлвийн монгол нэрс. `_require`-ийн `action` нь англи key хэвээр.
 _ACTIONS = {
     "ship": "илгээх",
     "mark as delivered": "хүргэгдсэн гэж тэмдэглэх",

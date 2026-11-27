@@ -54,10 +54,10 @@ from angel.storage import Storage
 
 log = get_logger(__name__)
 
-# Эндээс үүсгэсэн барааны зураг нь dataset-ийн `products/NNN/<id>` key-үүдээс тусдаа байрлана.
+# Энд нэмсэн барааны зураг dataset-ийн `products/NNN/<id>` key-үүдээс тусад нь хадгалагдана.
 ADMIN_IMAGE_PREFIX = "products/admin/"
-# Хайлтын pipeline болон ingestion-тэй ижил decode хэмжээ: хадгалсан vector харьцуулах боломжтой
-# байхын тулд.
+# Хайлт болон ingestion-тэй ижил хэмжээгээр decode хийнэ. Ингэснээр хадгалсан vector-уудыг харьцуулж
+# болно.
 DECODE_MIN_SIDE = 800
 
 
@@ -327,11 +327,13 @@ class AdminProductService:
         return to_admin_product_out(product, self._storage, committed=committed, ordered=ordered)
 
     async def delete(self, product_id: int, *, actor: User) -> None:
-        """Хэзээ ч захиалагдаагүй барааг бүрмөсөн устгана (андуурч нэмсэн гэх мэт). Захиалгад
-        орсон бол захиалгын түүх бараа руугаа заадаг тул 409: оронд нь зарахаа болино.
+        """Хэзээ ч захиалагдаагүй барааг бүрмөсөн устгана (жишээ нь андуурч нэмсэн бол). Захиалгад
+        орсон барааг устгахгүй, 409 алдаа өгнө, учир нь захиалгын түүх тэр бараа руу заадаг. Ийм
+        барааг зарахаа больж болно.
 
-        Барааны мөрийг түгждэг (checkout ч мөн түгждэг) тул шалгалт ба устгалын хооронд шинэ
-        захиалга орохгүй; ямар нэг шалтгаанаар орвол өгөгдлийн сангийн `RESTRICT` татгалзана."""
+        Барааны мөрийг түгждэг, checkout ч мөн түгждэг. Тиймээс шалгах, устгах хоёрын хооронд шинэ
+        захиалга орж чадахгүй. Хэрэв ямар нэг байдлаар орвол өгөгдлийн сангийн `RESTRICT` устгахыг
+        зөвшөөрөхгүй."""
         try:
             async with self._session.begin():
                 product = await self._products.get_any(product_id, for_update=True)
@@ -344,15 +346,16 @@ class AdminProductService:
                 await self._products.delete(product_id)
         except IntegrityError as error:
             raise _has_orders() from error
-        # Мөр устсаны дараа л файлыг устгана: устгалт амжилтгүй бол бараа зураггүй үлдэхгүй.
-        # Зураг солихтой адил зөвхөн эндээс upload хийсэн файлыг устгана; dataset-ийнхыг үлдээнэ.
+        # Файлыг зөвхөн мөр устсаны дараа устгана: ингэснээр устгах нь амжилтгүй болсон ч бараа
+        # зураггүй үлдэхгүй. Зураг солихтой адил зөвхөн манай хэсгээс upload хийсэн файлыг устгана,
+        # dataset-ийн зургийг үлдээнэ.
         if image_key.startswith(ADMIN_IMAGE_PREFIX):
             await self._discard(image_key)
         await self._cache.invalidate_catalogue()
         log.info("product_deleted", product_id=product_id, actor_id=actor.id)
 
     async def _holds(self, product_id: int) -> tuple[int, bool]:
-        """(захиалагдсан, илгээгээгүй тоо; хэзээ нэгэн цагт захиалагдсан эсэх)"""
+        """(захиалагдсан боловч илгээгээгүй тоо; өмнө нь захиалагдсан эсэх)"""
         ordered = await self._orders.ordered_product_ids([product_id])
         return await self._committed(product_id), bool(ordered)
 
@@ -360,7 +363,8 @@ class AdminProductService:
         return (await self._orders.committed_units([product_id])).get(product_id, 0)
 
     def _count_shelf(self, product: Product, on_hand: int, committed: int, actor: User) -> None:
-        """Зарах боломжтой = агуулахад байгаа - захиалагдсан. Дуудагч мөрийг түгжсэн байна."""
+        """Зарах боломжтой тоо = агуулахад байгаа - захиалагдсан. Дуудсан код мөрийг түгжсэн байх
+        ёстой."""
         if on_hand < committed:
             raise ProblemError(
                 HTTPStatus.CONFLICT,

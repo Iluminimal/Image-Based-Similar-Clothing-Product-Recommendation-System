@@ -90,7 +90,8 @@ class RefreshTokenRepository:
         user_agent: str | None = None,
         ip: str | None = None,
     ) -> RefreshToken:
-        """`last_used_at` нь `created_at`-тай адил database-ийн цаг: хоёр цаг зөрөхгүй."""
+        """`last_used_at`-ийг ч `created_at` шиг database-ийн цагаар бичнэ, тиймээс хоёр өөр цаг
+        холилдохгүй."""
         token = RefreshToken(
             user_id=user_id,
             family_id=family_id,
@@ -120,14 +121,14 @@ class RefreshTokenRepository:
         return result.scalar_one_or_none()
 
     async def _lock_family(self, family_id: uuid.UUID) -> None:
-        # Мөрийн түгжээ хангалтгүй: нэг нэвтрэлтийн хоёр token бие биенийхээ мөрийг шинэчлэх гэж
-        # deadlock болно, мөн дөнгөж нэмж буй мөр нь гаралтын UPDATE-д харагдахгүй.
+        # Мөрийг түгжих нь хангалтгүй. Нэг нэвтрэлтийн хоёр token бие биеийнхээ мөрийг шинэчлэх гээд
+        # deadlock болж болно. Мөн дөнгөж нэмэгдэж буй мөр гарах үйлдлийн UPDATE-д харагдахгүй.
         await self._session.execute(
             select(func.pg_advisory_xact_lock(func.hashtextextended(str(family_id), 0)))
         )
 
     async def rotated_after(self, token: RefreshToken, used_at: datetime) -> bool:
-        """`token`-ийг сольсноос хойш энэ нэвтрэлт цааш явсан уу."""
+        """`token`-ийг сольсны дараа энэ нэвтрэлт цаашаа үргэлжилсэн эсэх."""
         result = await self._session.execute(
             select(RefreshToken.id)
             .where(
@@ -221,9 +222,10 @@ class RefreshTokenRepository:
         )
 
     async def purge_expired_before(self, before: datetime, now: datetime, limit: int) -> int:
-        """`before`-оос өмнө дууссан token-уудын нэг багц. Амьд нэвтрэлтийн эхний мөр үлдэнэ:
-        "хэзээнээс нэвтэрсэн" гэдэг үүнээс гардаг. Дууссан token дахин ирэхэд ямар ч байсан
-        татгалздаг тул хулгайг илрүүлэх чадвар буурахгүй."""
+        """`before`-оос өмнө хугацаа нь дууссан token-уудаас нэг багцыг устгаж, тоог нь буцаана.
+        Гэхдээ идэвхтэй нэвтрэлтийн эхний мөрийг үлдээнэ: "хэзээнээс нэвтэрсэн"-ийг үүнээс
+        мэддэг. Хугацаа нь дууссан token дахин ирэхэд ямар ч байсан татгалздаг тул хулгайг
+        илрүүлэх чадвар буурахгүй."""
         first, live = aliased(RefreshToken), aliased(RefreshToken)
         begins_a_live_login = and_(
             ~exists().where(first.family_id == RefreshToken.family_id, first.id < RefreshToken.id),
@@ -266,7 +268,7 @@ class AddressRepository:
         return list(result.scalars())
 
     async def get(self, user_id: int, address_id: int) -> Address | None:
-        """Эзэмшигчээр хязгаарлана: өөр хүний id нь байхгүй id-аас ялгагдахгүй."""
+        """Зөвхөн эзэмшигчийнх нь дотроос хайна: өөр хүний id, байхгүй id хоёрыг ялгах боломжгүй."""
         result = await self._session.execute(
             select(Address)
             .where(Address.id == address_id, Address.user_id == user_id)

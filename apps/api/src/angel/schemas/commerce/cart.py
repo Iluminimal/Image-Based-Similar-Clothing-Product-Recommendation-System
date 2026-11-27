@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from angel.schemas.catalog.product import ProductOut
 
 Size = Annotated[str, StringConstraints(strip_whitespace=True, max_length=16)]
-# Тохируулсан дээд хэмжээг (CART_MAX_QUANTITY) service мөрдүүлнэ; энд зөвхөн оролтыг хязгаарлана.
+# Дээд хэмжээг (CART_MAX_QUANTITY) service шалгана. Энд зөвхөн оролтыг хязгаарлана.
 Quantity = Annotated[int, Field(ge=1, le=99)]
 
 
@@ -35,11 +35,12 @@ class CartLineOut(BaseModel):
     quantity: int
     unit_price_cents: int
     line_total_cents: int
-    # Одоо энэ мөрөөс захиалж болох дээд тоо (нөөц ба мөрийн хязгаар). UI өөрийн stepper-ийг үүгээр
-    # хязгаарлана; яг үлдэгдлийг ил гаргахгүй.
+    # Одоо энэ мөрөөс захиалж болох хамгийн их тоо (нөөц болон мөрийн хязгаараас). UI тоо нэмэх
+    # товчоо үүгээр хязгаарлана. Яг үлдэгдлийг харуулахгүй.
     max_quantity: int
     issue: CartIssue | None = None
-    # Мөр сагсанд нэмэгдэх үеийн нэгж үнэ; одоогийн үнээс өөр бол үнэ өөрчлөгдсөн. Хуучин мөрд null.
+    # Мөрийг сагсанд нэмэх үеийн нэгж үнэ. Одоогийн үнээс өөр бол үнэ өөрчлөгдсөн гэсэн үг. Хуучин
+    # мөрд null.
     price_when_added_cents: int | None = None
 
 
@@ -55,8 +56,8 @@ ReorderReason = Literal["unavailable", "out_of_stock", "size", "bag_full", "redu
 
 
 class ReorderSkipped(BaseModel):
-    """Өмнөх захиалгын мөр, сагсанд бүрэн нэмэгдээгүй: шалтгаан нь `reduced` бол цөөн ширхэг
-    нэмэгдсэн, бусад үед огт нэмэгдээгүй."""
+    """Өмнөх захиалгын сагсанд бүрэн нэмэгдээгүй мөр. Шалтгаан нь `reduced` бол цөөн ширхэг
+    нэмэгдсэн, бусад шалтгаанд огт нэмэгдээгүй."""
 
     name: str
     reason: ReorderReason

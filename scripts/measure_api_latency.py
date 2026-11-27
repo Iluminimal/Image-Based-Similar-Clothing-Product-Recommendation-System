@@ -1,13 +1,13 @@
-"""API-ийн end-to-end latency: жинхэнэ апп (lifespan, middleware, multipart parsing, JSON
-serialization, Redis cache) ingest хийсэн каталог дээр in-process ажиллаж, сонгосон device дээр
-жинхэнэ model-тэй. Spec-ийн зорилттой (зургаар хайлт p95 < ~400 ms, төстэй бүтээгдэхүүн
-p95 < 50 ms) харьцуулна.
+"""API-ийн бүтэн (end-to-end) latency-г хэмжинэ. Жинхэнэ апп (lifespan, middleware, multipart
+parsing, JSON serialization, Redis cache) ingest хийсэн каталог дээр, сонгосон device дээрх
+жинхэнэ model-тэй нэг процесс дотор ажиллана. Дүнг spec-ийн зорилттой харьцуулна (зургаар хайлт
+p95 < ~400 ms, төстэй бараа p95 < 50 ms).
 
     cd apps/api && uv run python ../../scripts/measure_api_latency.py --device cpu
     cd apps/api && uv run python ../../scripts/measure_api_latency.py --device mps
 
-"cold" гэдэг нь Redis cache-д бичлэг байгаагүй, "cached" нь байсан гэсэн үг. Энэ ажлын үүсгэсэн
-cache-үүдийг дараа нь устгана. Ажлын хугацаанд rate limiting унтраалттай.
+"cold" бол Redis cache-д бичлэг байгаагүй, "cached" бол байсан хэмжилт. Хэмжилтийн үүсгэсэн
+cache-ийг дараа нь устгана. Хэмжих үед rate limiting унтраалттай.
 """
 
 from __future__ import annotations
@@ -118,7 +118,7 @@ async def main_async(args: argparse.Namespace) -> int:
 
 
 def collage(paths: list[Path], width: int) -> bytes:
-    """Нэг мөрөнд зэрэгцүүлсэн бүтээгдэхүүний зургууд (олон хувцастай зургийн орлуулагч)."""
+    """Хэд хэдэн барааны зургийг нэг эгнээнд нааж хийсэн зураг (олон хувцастай зургийн оронд)."""
     cell = width // len(paths)
     canvas = Image.new("RGB", (cell * len(paths), cell * 4 // 3), (240, 240, 240))
     for slot, path in enumerate(paths):
@@ -183,9 +183,8 @@ async def run(
     report.check("  END TO END", filtered, TARGET_IMAGE_P95_MS)
     print()
 
-    # Олон хувцастай зураг: гурван бүтээгдэхүүний зургийг нэг эгнээнд нааж (collage), хувцас бүрийн
-    # үр дүнг нэг хүсэлтээр авна. `LOCALIZER=yolo` үед detection + batch embed + хувцас тутмын
-    # хайлт.
+    # Олон хувцастай зураг: гурван барааны зургийг нэг эгнээнд нааж (collage), хувцас бүрийн үр дүнг
+    # нэг хүсэлтээр авна. `LOCALIZER=yolo` үед detection, batch embed, хувцас бүрийн хайлт орно.
     collages = [collage(paths[i : i + 3], 1280) for i in range(0, len(paths) - 2, 3)]
     garment_wall, garment_count = [], []
     for index, data in enumerate(collages):
@@ -219,7 +218,8 @@ async def run(
     report.check("  END TO END", detect_wall, TARGET_DETECT_P95_MS)
     print()
 
-    # Live давталт явж байхад жинхэнэ хайлт удаашрах уу: хайлтуудыг frame-ийн давталттай зэрэг.
+    # Live preview давтагдаж байх үед жинхэнэ хайлт удааширдаг эсэх: хайлтуудыг кадрын давталттай
+    # зэрэг явуулна.
     stop_live = asyncio.Event()
 
     async def live_preview() -> None:

@@ -1,9 +1,10 @@
-"""Back-office-ийн API. Хэсэг бүрийн өмнө нэг хамгаалалт: эхлээд rate limit (admin хэсэгт token
-таамаглахыг удаашруулна), дараа нь аль нэг ажилтан мөн эсэхийг шалгана, юу ч cache хийхгүй.
+"""Back-office-ийн API. Бүх хэсэг ижил хамгаалалттай: эхлээд rate limit шалгана (token таах
+оролдлогыг удаашруулна), дараа нь ажилтан мөн эсэхийг шалгана. Хариуг cache хийхгүй.
 
-Аль role юу хийхийг endpoint бүр өөрөө тодорхойлно: бараа, нөөц, захиалгын ачилт (ship/deliver)
-нь агуулахын ажилтных (`WarehouseDep`); хэрэглэгч, сэтгэгдэл, статистик, захиалгын цуцлалт,
-буцаалт нь админых (`AdminDep`); бараа, захиалга унших нь аль ч ажилтных (`StaffDep`)."""
+Ямар role юу хийхийг endpoint бүр өөрөө тодорхойлно:
+- Агуулахын ажилтан (`WarehouseDep`): бараа, нөөц өөрчлөх; захиалга илгээх, хүргэх (ship/deliver).
+- Админ (`AdminDep`): хэрэглэгч, сэтгэгдэл, статистик; захиалга цуцлах, төлбөр буцаах.
+- Аль ч ажилтан (`StaffDep`): бараа, захиалга харах."""
 
 from fastapi import APIRouter, Depends
 
@@ -37,6 +38,6 @@ router = APIRouter(
 # Бараа, захиалгад endpoint бүр өөрийн role-оо тодорхойлно (дээрх тайлбар).
 for section in (products, orders, fulfillment):
     router.include_router(section.router)
-# Хэрэглэгч, статистик, сэтгэгдэл бүхлээрээ админых: агуулахын ажилтан хүрэхгүй.
+# Хэрэглэгч, статистик, сэтгэгдлийн хэсэг бүхэлдээ админых: агуулахын ажилтан нэвтэрч чадахгүй.
 for section in (audit, customers, export, stats, reviews):
     router.include_router(section.router, dependencies=[Depends(get_current_admin)])

@@ -42,9 +42,9 @@ class OtpLoginService:
         self._users = UserRepository(session)
 
     async def request_code(self, raw_destination: str) -> None:
-        """Хүчинтэй хаягийн хувьд бүртгэл байгаа эсэхээс үл хамааран үргэлж амжилттай: нэвтрэх,
-        бүртгүүлэх нь ижил алхам тул нуух зүйл байхгүй. Ажилтны хаяг руу код илгээхгүй (тэд зөвхөн
-        нууц үгээр нэвтэрнэ), гэхдээ хариу нь ижил харагдана."""
+        """Хаяг зөв бол account байгаа эсэхээс үл хамааран үргэлж амжилттай: нэвтрэх, бүртгүүлэх
+        хоёр нэг алхам тул нуух зүйл байхгүй. Ажилтны хаяг руу код илгээхгүй (тэд зөвхөн нууц
+        үгээр нэвтэрнэ), гэхдээ хариу нь ижил харагдана."""
         destination = normalize_destination(raw_destination, self._settings.default_phone_region)
         async with self._session.begin():
             user = await self._find(destination)
@@ -61,8 +61,8 @@ class OtpLoginService:
     ) -> IssuedSession:
         destination = normalize_destination(raw_destination, self._settings.default_phone_region)
         await self._otp.verify("login", destination, code)
-        # Код зарцуулагдсан. Хоёр дахь хүсэлт зэрэг ижил бүртгэл үүсгэвэл нэг insert хожигдоно: тэр
-        # зүгээр л бүртгэлийг дахин хайна.
+        # Код ашиглагдлаа. Хоёр дахь хүсэлт зэрэг ижил account үүсгэвэл нэгнийх нь insert амжилтгүй
+        # болно: тэр нь account-ыг дахин хайна.
         for attempt in (1, 2):
             try:
                 return await self._sign_in_verified(destination, guest_cart_token)
@@ -80,8 +80,8 @@ class OtpLoginService:
         async with self._session.begin():
             user = await self._find(destination)
             if user is not None and user.is_staff:
-                # Код зөв байсан ч (жишээ нь тогтмол dev код) ажилтан кодоор нэвтрэхгүй, нууц үгэнд
-                # нь хүрэхгүй. Хариу буруу кодтой адил.
+                # Код зөв байсан ч (жишээ нь тогтмол dev код) ажилтныг кодоор нэвтрүүлэхгүй, нууц
+                # үгийг нь ч хөндөхгүй. Хариу нь буруу код оруулсантай адил.
                 log.warning("otp_login_refused_for_staff", user_id=user.id)
                 raise invalid_code()
             if user is None:
@@ -121,9 +121,10 @@ class OtpLoginService:
             user.phone_verified_at = user.phone_verified_at or now
         else:
             if user.email_verified_at is None:
-                # Энэ хаягийг эзэмшдэгээ хэн ч нотлоогүй тул нууц үгээр түрүүлж бүртгүүлсэн хүн
-                # булаан авагч байж болно. Код одоо эзэн энд байгааг нотолно: нууц үгийг устгаад
-                # хуучин session-уудыг дуусга (Google-ээр нэвтрэхтэй ижил дүрэм).
+                # Энэ хаягийг эзэмшдэгээ хэн ч батлаагүй байсан тул нууц үгээр түрүүлж бүртгүүлсэн
+                # нь эзэн биш байж болно. Харин код одоо жинхэнэ эзэн энд байгааг батална. Тиймээс
+                # нууц үгийг устгаж, хуучин session-уудыг дуусгана (Google-ээр нэвтрэхтэй ижил
+                # дүрэм).
                 if user.password_hash is not None:
                     log.info("otp_password_removed", user_id=user.id)
                     user.password_hash = None

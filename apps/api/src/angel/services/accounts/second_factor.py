@@ -1,4 +1,4 @@
-"""Нэвтрэх үеийн хоёр дахь хүчин зүйлийг шалгаж "зарцуулах" цорын ганц газар."""
+"""Нэвтрэх үеийн хоёр дахь кодыг шалгаж, "ашигласан" болгодог цорын ганц газар."""
 
 import time
 
@@ -8,9 +8,10 @@ from angel.models import User
 
 
 def consume_second_factor(user: User, given: str, master_key: str) -> bool:
-    """Authenticator-ийн код эсвэл нөөц код зөв бол True. Хоёулаа нэг удаагийнх: TOTP-ийн алхмыг
-    тэмдэглэж, нөөц кодыг устгана. Дуудагч `user` мөрийг түгжсэн transaction дотор байх ёстой,
-    эс бөгөөс зэрэг ирсэн хоёр хүсэлт нэг кодыг хоёр удаа ашиглаж чадна."""
+    """Authenticator апп-ын код эсвэл нөөц код зөв бол True. Хоёулаа нэг л удаа ашиглагдана:
+    TOTP-ийн алхмыг тэмдэглэж, ашигласан нөөц кодыг устгана. Дуудсан код `user` мөрийг түгжсэн
+    transaction дотор байх ёстой. Эс бөгөөс зэрэг ирсэн хоёр хүсэлт нэг кодыг хоёр удаа ашиглаж
+    чадна."""
     code = given.strip().replace(" ", "")
     if len(code) == DIGITS and code.isdigit():
         secret = unseal(master_key, user.totp_secret) if user.totp_secret else None

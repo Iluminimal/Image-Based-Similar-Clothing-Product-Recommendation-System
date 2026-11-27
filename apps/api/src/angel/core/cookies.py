@@ -1,12 +1,13 @@
 """API-ийн тавьдаг cookie-ууд.
 
-* `lk_refresh`: refresh token. httpOnly (script уншиж чадахгүй), SameSite=Lax, auth endpoint-уудаар
-  хязгаарласан тул хүсэлт болгонд дагалдахгүй.
-* `lk_session`: refresh cookie байх хугацаанд "1". Нууц биш, httpOnly биш: вэб аппын edge proxy
-  API дуудахгүйгээр нэвтрээгүй зочныг redirect хийх боломжтой. Өөрөө ямар эрх олгохгүй.
-* `lk_cart`: зочин сагсны санамсаргүй id. httpOnly, API-д хязгаарласан.
-* `lk_oauth`: үргэлжилж буй Google нэвтрэлтийн гарын үсэгтэй state (10 минут, httpOnly, Google
-  endpoint-уудаар хязгаарласан). Lax тул Google-ийн redirect-тэй хамт буцаж ирнэ.
+* `lk_refresh`: refresh token. httpOnly (script уншиж чадахгүй), SameSite=Lax. Зөвхөн auth
+  endpoint-ууд руу илгээгддэг тул хүсэлт бүрд дагалдахгүй.
+* `lk_session`: refresh cookie байгаа үед "1" утгатай. Нууц биш, httpOnly биш. Вэбийн edge proxy
+  үүнийг хараад, API дуудалгүйгээр нэвтрээгүй зочныг redirect хийнэ. Энэ cookie өөрөө ямар ч эрх
+  өгөхгүй.
+* `lk_cart`: зочны сагсны санамсаргүй id. httpOnly, зөвхөн API руу илгээгдэнэ.
+* `lk_oauth`: дуусаагүй байгаа Google нэвтрэлтийн гарын үсэгтэй state (10 минут, httpOnly, зөвхөн
+  Google endpoint-ууд руу). Lax тул Google-ийн redirect-тэй хамт буцаж ирнэ.
 """
 
 from fastapi import Response

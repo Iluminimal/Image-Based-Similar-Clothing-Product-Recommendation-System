@@ -1,5 +1,6 @@
-"""Browser-ийн Content-Security-Policy зөрчлийн мэдээлэл хүлээн авах. Нэвтрэлтгүй (browser өөрөө
-илгээдэг), тиймээс: бие нь жижиг, rate limit-тэй, юу ч хадгалахгүй, зөвхөн log-д хураангуй бичнэ."""
+"""Browser-оос ирэх Content-Security-Policy зөрчлийн мэдээллийг хүлээн авна. Browser өөрөө илгээдэг
+тул нэвтрэлт шаардахгүй. Тиймээс хүсэлтийн хэмжээг бага байлгаж, rate limit тавьсан. Юу ч
+хадгалахгүй, зөвхөн log-д товч бичнэ."""
 
 import json
 from typing import Any
@@ -19,7 +20,8 @@ MAX_FIELD = 200
 
 
 def _clip(value: object) -> str | None:
-    """Log-д аюулгүй текст: URL-ийн query, fragment (token агуулж болно)-ийг хасаж, богиносгоно."""
+    """Текстийг log-д бичихэд аюулгүй болгоно: URL-ийн query, fragment-ийг (token агуулж болно)
+    хасаж, богиносгоно."""
     if value is None or value == "":
         return None
     text = str(value)
@@ -73,7 +75,8 @@ async def csp_report(request: Request) -> Response:
     try:
         payload = json.loads(body)
     except ValueError:
-        # Эвдэрхий мэдээллийг чимээгүй хаяна: browser дахин илгээхгүй, алдаа харуулах хэрэггүй.
+        # Эвдэрсэн мэдээллийг алдаа буцаалгүй орхино: browser дахин илгээхгүй тул алдаа мэдэгдэх
+        # хэрэггүй.
         return Response(status_code=204)
     for summary in _summaries(payload):
         log.warning("csp_violation", **summary)

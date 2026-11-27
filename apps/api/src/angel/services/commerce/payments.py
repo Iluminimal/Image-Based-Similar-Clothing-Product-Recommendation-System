@@ -1,8 +1,8 @@
-"""Төлбөр шийдвэрлэх: provider-ийн баталгаажсан төлбөрийг захиалгын төлвийн өөрчлөлт болгодог
-цорын ганц газар.
+"""Төлбөрийг шийдэх: provider-ийн баталгаажуулсан төлбөрөөр захиалгын төлвийг өөрчилдөг цорын ганц
+газар.
 
-QPay-ийн мэдэгдэл, худалдан авагчийн "Төлбөрөө шалгах", offline горимын simulate endpoint бүгд
-үүнийг дуудна, тиймээс development-д ажилладаг код production-д ажилладаг код байна."""
+QPay-ийн мэдэгдэл, "Төлбөрөө шалгах", offline горимын simulate endpoint бүгд үүнийг дууддаг. Тиймээс
+development-д ажилладаг код production-д ажиллах кодтой яг ижил."""
 
 from datetime import UTC, datetime
 
@@ -32,13 +32,13 @@ class PaymentSettlement:
         self._orders = OrderRepository(session)
 
     async def handle(self, event: PaymentEvent) -> None:
-        """Нэг баталгаажсан төлбөрийг яг нэг удаа хэрэглэнэ.
+        """Баталгаажсан нэг төлбөрийг яг нэг удаа хэрэгжүүлнэ.
 
-        Event id төлвийн өөрчлөлттэй нэг transaction-д хадгалагдана: crash хоёуланг rollback
-        хийж дараагийн шалгалт дахин хэрэглэнэ, амжилтын дараах давталт id-г олно. Мөнгийг буцаах
-        ёстой бол эхлээд "буцаах ёстой" (`refund_pending`) гэж хадгалж, дараа нь provider-ийг
-        дуудна: дуудлага амжилтгүй болсон ч өр мартагдахгүй. Тэр үед `PaymentProviderError`
-        шиднэ; дараагийн мэдэгдэл болон sweep дахин оролдоно."""
+        Event id-г төлөв өөрчлөхтэй нэг transaction-д хадгална. Тиймээс crash болбол хоёулаа буцаж,
+        дараагийн шалгалт дахин хийнэ. Амжилттай болсны дараа давтагдвал id нь аль хэдийн байгаа.
+        Мөнгийг буцаах ёстой бол эхлээд "буцаах ёстой" (`refund_pending`) гэж хадгалаад, дараа нь
+        provider-ийг дуудна. Ингэснээр дуудлага амжилтгүй болсон ч буцаах мөнгө мартагдахгүй. Тэр
+        үед `PaymentProviderError` шиднэ, дараагийн мэдэгдэл болон sweep дахин оролдоно."""
         async with self._session.begin():
             first_time = await self._orders.record_event(event.id, event.kind)
             payment = await self._orders.get_payment_by_provider_id(event.intent_id)
@@ -59,9 +59,9 @@ class PaymentSettlement:
             await self.refund_owed(order_id)
 
     async def reconcile(self, intent_id: str) -> bool:
-        """Provider "энэ төлөгдсөн" гэсэн ч мэдэгдэл ирээгүй байж болно: өөрөө асууж, төлөгдсөн
-        бол тэр даруй шийднэ. Алдааг шиддэггүй (дуудагчийн урсгал өөрийн хариугаа өгнө, sweep
-        дахин оролдоно); захиалгыг шийдсэн бол True."""
+        """Provider-т төлөгдсөн ч манайд мэдэгдэл ирээгүй байж болно. Тиймээс өөрсдөө асууж,
+        төлөгдсөн бол тэр даруй шийднэ. Алдаа шидэхгүй (дуудсан код өөрийн хариугаа өгнө, sweep
+        дахин оролдоно). Захиалгыг шийдсэн бол True."""
         try:
             event = await self._gateway.check(intent_id)
             if event is None:
@@ -74,9 +74,10 @@ class PaymentSettlement:
         return True
 
     async def refund_owed(self, order_id: int) -> bool:
-        """`refund_pending` төлбөрийг буцаана. Захиалгын мөрийг түгжсэн байхад provider-ийг
-        дуудна (зэрэг ирсэн хоёр оролдлого хоёр удаа буцаахгүй); idempotency key давтахыг аюулгүй
-        болгоно. Буцаасан бол True, өр байхгүй бол False; амжилтгүй бол `PaymentProviderError`."""
+        """`refund_pending` төлбөрийг буцаана. Захиалгын мөрийг түгжсэн хэвээрээ provider-ийг
+        дуудна, ингэснээр зэрэг ирсэн хоёр оролдлого хоёр удаа буцаахгүй. Idempotency key-тэй тул
+        давтахад аюулгүй. Буцаасан бол True, буцаах мөнгө байхгүй бол False; амжилтгүй бол
+        `PaymentProviderError`."""
         failure: PaymentProviderError | None = None
         async with self._session.begin():
             order = await self._orders.get_for_update(order_id)
@@ -91,7 +92,8 @@ class PaymentSettlement:
                 )
             except PaymentProviderError as exc:
                 log.error("refund_failed_will_retry", order=order.number, error=str(exc))
-                payment.updated_at = func.now()  # сүүлд оролдсон цаг: sweep эндээс хүлээнэ
+                # Сүүлд оролдсон цаг: sweep дахин оролдох хугацааг үүнээс тоолно.
+                payment.updated_at = func.now()
                 failure = exc
             else:
                 payment.status = "refunded"
@@ -108,12 +110,12 @@ class PaymentSettlement:
         if payment.status in ("succeeded", "refunded", "refund_pending"):
             return None
         if order.status == "cancelled":
-            # Нөөцийг буцаасны дараа төлөгдсөн (дууссан, эсвэл шинэ checkout-оор солигдсон). Бараа
-            # алга болсон байж болох тул оронд нь мөнгийг буцаана.
+            # Нөөцийг аль хэдийн буцаасны дараа (хугацаа дууссан эсвэл шинэ checkout-оор солигдсон)
+            # төлбөр ирсэн. Бараа дууссан байж болзошгүй тул мөнгийг буцаана.
             _owe_refund(payment, "order_cancelled")
             log.warning("payment_after_cancel", order=order.number)
             return None
-        # Захиалгын дүнтэй биш, gateway-ээр авахаар түгжсэн дүнтэй (`charge_minor`) харьцуулна.
+        # Захиалгын дүнтэй биш, gateway-ээр авахаар тогтоосон дүнтэй (`charge_minor`) тулгана.
         if event.amount != payment.charge_minor or event.currency != payment.charge_currency:
             log.error(
                 "payment_amount_mismatch",
@@ -133,7 +135,8 @@ class PaymentSettlement:
         self._orders.add_event(order.id, "paid", {"amount_cents": payment.amount_cents})
         carts = CartRepository(self._session)
         cart = await carts.find(user_id=order.user_id)
-        if cart is not None:  # худалдаж авсан мөрүүд cart-аас гарна; түүнээс хойш нэмсэн нь үлдэнэ
+        # Худалдаж авсан мөрүүд сагснаас хасагдана; захиалгын дараа нэмсэн мөрүүд үлдэнэ.
+        if cart is not None:
             await carts.remove_lines(cart.id, {(i.product_id, i.size) for i in order.items})
         await self._session.flush()
         return Email(

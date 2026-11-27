@@ -20,7 +20,8 @@ from angel.repositories.system.outbox import OutboxRepository
 log = get_logger(__name__)
 
 BATCH = 1000
-# Асааснаас хойш эхний цэвэрлэгээ хүртэл: dev-д сервер байнга дахин асдаг ч нэг удаа ажиллана.
+# Асснаас хойш эхний цэвэрлэгээ хүртэл хүлээх хугацаа: dev-д сервер байнга дахин асдаг ч цэвэрлэгээ
+# нэг удаа ч гэсэн ажиллана.
 FIRST_RUN_SECONDS = 60
 
 
@@ -30,7 +31,7 @@ class Housekeeper:
         self._settings = settings
 
     async def run_once(self) -> dict[str, int]:
-        """Юунаас хэдийг устгаснаа буцаана."""
+        """Төрөл бүрээс хэдийг устгасныг буцаана."""
         now = datetime.now(UTC)
         settings = self._settings
         otp_before = now - timedelta(hours=settings.otp_retention_hours)

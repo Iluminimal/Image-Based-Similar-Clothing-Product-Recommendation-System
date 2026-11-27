@@ -79,8 +79,8 @@ class AddressIn(AddressBase):
 
 
 class AddressUpdate(BaseModel):
-    """PATCH: зөвхөн илгээсэн талбарууд өөрчлөгдөнө. Аймаг/дүүргийн хослолыг service нэгтгэсэн
-    хаяг дээр шалгана."""
+    """PATCH: зөвхөн илгээсэн талбарууд өөрчлөгдөнө. Аймаг, дүүрэг тохирч байгаа эсэхийг service
+    хуучин, шинэ утгыг нэгтгэсний дараа шалгана."""
 
     model_config = ConfigDict(extra="forbid")
 

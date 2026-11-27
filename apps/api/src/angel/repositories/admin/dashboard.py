@@ -1,5 +1,5 @@
-"""Admin dashboard болон хэрэглэгчийн жагсаалтын зөвхөн унших aggregate-ууд. Шинэ хүснэгт
-байхгүй: бүгд захиалга, захиалгын мөр, бараа, хэрэглэгчийн дээрх sum, count."""
+"""Admin dashboard болон хэрэглэгчийн жагсаалтад хэрэгтэй тоо, нийлбэрүүд (зөвхөн уншина). Тусдаа
+хүснэгт байхгүй: бүгдийг захиалга, захиалгын мөр, бараа, хэрэглэгчээс sum, count хийж гаргана."""
 
 from datetime import date, datetime
 from typing import Any
@@ -18,7 +18,8 @@ REVENUE_STATUSES = ("paid", "shipped", "delivered")
 # Худалдан авсан захиалгууд (төлбөрийг нь буцаасан захиалга ч худалдан авалтад тооцогдоно).
 BOUGHT_STATUSES = (*REVENUE_STATUSES, "refunded")
 DELETED_EMAIL = "%@deleted.invalid"
-# Зөвхөн утасны бүртгэлд email байхгүй: NOT LIKE ганцаараа NULL өгч, тэднийг хасчихна.
+# Зөвхөн утсаар бүртгүүлсэн account-д email байхгүй. Ганцхан NOT LIKE бичвэл үр дүн нь NULL болж,
+# тэд жагсаалтаас хасагдана.
 _NOT_DELETED = or_(User.email.is_(None), User.email.not_like(DELETED_EMAIL))
 
 
@@ -27,7 +28,7 @@ def _paid_between(start: datetime, end: datetime) -> list[ColumnElement[bool]]:
 
 
 def _local_day(column: InstrumentedAttribute[Any], zone: ZoneInfo) -> Function[Any]:
-    """Тухайн агшин `zone`-ы аль өдөрт унах вэ."""
+    """Тухайн агшин `zone` цагийн бүсээр аль өдөрт орох вэ."""
     return func.date_trunc("day", func.timezone(zone.key, column))
 
 
@@ -104,8 +105,8 @@ class DashboardRepository:
         return {row[0].date(): int(row[1]) for row in rows.all()}
 
     async def funnel(self, start: datetime, end: datetime) -> dict[str, int]:
-        """Хугацаанд үүссэн захиалгуудаас аль шатанд хүрснийг (шат бүрийн цаг тэмдэглэгдсэн эсэхээр)
-        тоолно."""
+        """Тухайн хугацаанд үүссэн захиалгуудаас хэд нь шат бүрд хүрснийг тоолно (шатны цаг
+        тэмдэглэгдсэн эсэхээр)."""
         row = (
             await self._session.execute(
                 select(
@@ -224,8 +225,8 @@ class DashboardRepository:
         return [(r[0], r[1], r[2], r[3], int(r[4]), int(r[5])) for r in rows.all()]
 
     async def low_stock(self, threshold: int, limit: int) -> tuple[list[Product], int, int]:
-        """Нөөц нь багассан (гэхдээ дуусаагүй) зарагдаж буй бараа, тэдгээрийн тоо, мөн нөөц нь
-        бүр дууссан барааны тоо."""
+        """Нөөц багассан (гэхдээ дуусаагүй) зарагдаж буй бараанууд, тэдний тоо, мөн нөөц дууссан
+        барааны тоо."""
         on_sale = Product.is_active.is_(True)
         low = Product.stock_quantity.between(1, threshold)
         products = await self._session.execute(

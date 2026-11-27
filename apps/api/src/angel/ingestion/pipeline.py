@@ -1,8 +1,8 @@
-"""Ingestion pipeline: цэвэрлэсэн бүтээгдэхүүн -> thumbnail + embedding -> bulk upsert.
+"""Ingestion pipeline: цэвэрлэсэн бараа -> thumbnail + embedding -> bulk upsert.
 
-Цорын ганц төлөв нь database. Бүтээгдэхүүний мөр одоогийн `embedding_version`-тэй байх, хоёр
-thumbnail байх үед "дууссан" гэж үзнэ. Тиймээс таслагдсан ажил дараагийн batch-аас үргэлжилж,
-дууссан ажлыг дахин ажиллуулахад юу ч хийгдэхгүй.
+Явцыг зөвхөн database-аас мэднэ. Барааны мөр одоогийн `embedding_version`-тэй, хоёр thumbnail нь
+бэлэн бол тэр бараа дууссанд тооцогдоно. Тиймээс тасарсан ажил үлдсэн batch-уудаас үргэлжилнэ.
+Дууссан ажлыг дахин ажиллуулахад юу ч хийхгүй.
 """
 
 from __future__ import annotations
@@ -76,7 +76,7 @@ def plan_work(
     reembed: bool = False,
     regenerate_thumbnails: bool = False,
 ) -> list[WorkItem]:
-    """Бүтээгдэхүүн бүрт юу дутаж байгааг шийднэ. `storage.exists`-ээс бусад нь side effect-гүй."""
+    """Бараа бүрд юу дутууг тогтооно. `storage.exists` дуудахаас өөр side effect-гүй."""
     work: list[WorkItem] = []
     for product in products:
         needs_embedding = reembed or existing_versions.get(product.source_id) != version
@@ -107,10 +107,11 @@ def _run_job(job: ImageJob) -> ImageResult:
 def iter_results(
     jobs: Sequence[ImageJob], *, batch_size: int, workers: int, storage: Storage
 ) -> Iterator[list[ImageResult]]:
-    """Үр дүнг batch-аар дарааллаар нь буцаана.
+    """Үр дүнг batch-аар, дарааллаар нь буцаана.
 
-    Worker process-той үед дуудагч одоогийн batch-ийг embed хийж бичих хооронд дараагийн batch
-    аль хэдийн decode хийгдэж байна. Нэг дор хамгийн ихдээ хоёр batch pixel array байна (8 GB RAM).
+    Worker process ашиглах үед одоогийн batch-ийг embed хийж бичих зуур дараагийн batch-ийг decode
+    хийж байдаг. 8 GB RAM-д багтаахын тулд санах ойд нэг дор хамгийн ихдээ хоёр batch-ийн pixel
+    array байна.
     """
     batches = [jobs[i : i + batch_size] for i in range(0, len(jobs), batch_size)]
     if workers == 0:
@@ -125,7 +126,7 @@ def iter_results(
         initargs=(storage,),
     )
     try:
-        # `map` бүх task-ийг шууд илгээнэ; зөвхөн үр дүнг нь хойшлуулан авна.
+        # `map` бүх ажлыг шууд илгээдэг, зөвхөн үр дүнг нь дарааллаар нь хүлээж авна.
         current = executor.map(_run_job, batches[0], chunksize=4) if batches else iter(())
         for index in range(len(batches)):
             upcoming = (
@@ -147,7 +148,8 @@ CategoryKey = tuple[str, str, str]  # (master, sub, article type)
 async def ensure_categories(
     connection: AsyncConnection, products: Sequence[CleanProduct]
 ) -> dict[CategoryKey, int]:
-    """master > sub > article-type модыг upsert хийж, гурвал бүрийн навч (leaf) id-г буцаана."""
+    """master > sub > article-type гэсэн ангиллын модыг upsert хийж, гурвалсан хослол бүрийн хамгийн
+    доод (leaf) ангиллын id-г буцаана."""
     nodes: dict[str, tuple[str | None, int, str]] = {}  # path -> (parent path, level, name)
     leaf_paths: dict[CategoryKey, str] = {}
     for p in products:
@@ -254,7 +256,8 @@ async def ingest_products(
     imported: dict[int, NDArray[np.float32]] | None = None,
     on_progress: Progress | None = None,
 ) -> IngestStats:
-    """`products`-ийг embed (эсвэл import), thumbnail хийж upsert хийнэ. Дахин ажиллуулж болно."""
+    """`products`-ийг embed хийх (эсвэл бэлэн embedding import хийх), thumbnail үүсгэх, upsert хийх.
+    Дахин ажиллуулж болно."""
     if (embedder is None) == (imported is None):
         raise ValueError("pass exactly one of `embedder` or `imported`")
     stats = IngestStats(considered=len(products))
@@ -362,7 +365,8 @@ def export_embeddings(
     on_progress: Progress | None = None,
     storage: Storage,
 ) -> IngestStats:
-    """Database-гүйгээр embed хийж, үргэлжлүүлж болох parquet shard бичнэ (Colab дээр)."""
+    """Database-гүйгээр embed хийж parquet shard бичнэ (Colab-д зориулсан). Тасарвал үргэлжлүүлж
+    болно."""
     done = embedding_store.existing_ids(out_dir, embedder.version)
     todo = [p for p in products if p.source_id not in done]
     stats = IngestStats(considered=len(products), skipped=len(products) - len(todo))

@@ -19,16 +19,16 @@ async def release_order(
 ) -> bool:
     """Pending захиалгыг цуцалж, нөөцөлсөн барааг үлдэгдэлд буцаана.
 
-    Дуудагч захиалгын мөрийн түгжээг (`OrderRepository.get_for_update`) барьж, transaction
-    дотор ажиллана. Захиалга pending биш болсон бол юу ч хийлгүй False буцаана: replay, дахин
-    хүргэгдсэн webhook, expiry sweeper гурвуулаа ижил захиалгад ирж болно."""
+    Дуудсан код захиалгын мөрийг түгжсэн (`OrderRepository.get_for_update`), transaction дотор байх
+    ёстой. Захиалга pending биш болсон бол юу ч хийхгүйгээр False буцаана: давтагдсан хүсэлт, дахин
+    ирсэн webhook, expiry sweeper гурвуулаа нэг захиалга дээр ирж болно."""
     if order.status != "pending":
         return False
     quantities: dict[int, int] = defaultdict(int)
     for item in order.items:
         quantities[item.product_id] += item.quantity
-    # Мөрүүдийг бусад газартай адил id-н дарааллаар түгжинэ, ингэвэл зэрэг checkout deadlock-д
-    # орохгүй.
+    # Мөрүүдийг бусад газрын адил id-ийн дарааллаар түгжинэ. Ингэснээр зэрэг явсан checkout
+    # deadlock-д орохгүй.
     products = await ProductRepository(session).get_many(list(quantities), for_update=True)
     for product_id, quantity in quantities.items():
         products[product_id].stock_quantity += quantity

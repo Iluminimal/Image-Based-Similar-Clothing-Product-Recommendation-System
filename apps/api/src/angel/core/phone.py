@@ -10,8 +10,8 @@ class InvalidPhoneError(ValueError):
 
 
 def normalize_phone(raw: str, default_region: str) -> str:
-    """`raw`-ийн E.164 хэлбэр. Улсын кодгүй бичсэн дугаарыг `default_region` (ISO 3166 код,
-    жишээ нь "US")-оор тайлна. Буруу бол `InvalidPhoneError` шиднэ."""
+    """`raw` дугаарыг E.164 хэлбэрт оруулна. Улсын кодгүй бичсэн дугаарыг `default_region` улсынх
+    гэж үзнэ (ISO 3166 код, жишээ нь "US"). Буруу дугаар бол `InvalidPhoneError` шиднэ."""
     try:
         number = phonenumbers.parse(raw.strip(), default_region.upper())
     except NumberParseException as error:
@@ -22,8 +22,8 @@ def normalize_phone(raw: str, default_region: str) -> str:
 
 
 def mask_phone(e164: str) -> str:
-    """ "+14155550123" -> "+1•••••••0123": эзэн нь дугаараа таньж чадна, гэхдээ дахин ашиглахад
-    хүрэлцэхгүй. Log болон дугаарыг буцааж харуулдаг дэлгэцэнд хэрэглэнэ."""
+    """ "+14155550123" -> "+1•••••••0123": эзэн нь дугаараа танина, харин бусад хүн энэ хэлбэрээр
+    дугаарыг нь ашиглаж чадахгүй. Log болон дугаарыг буцааж харуулдаг дэлгэцэд хэрэглэнэ."""
     if len(e164) <= 5:
         return "•" * len(e164)
     return f"{e164[:2]}{'•' * (len(e164) - 6)}{e164[-4:]}"

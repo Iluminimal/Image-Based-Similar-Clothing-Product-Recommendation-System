@@ -1,7 +1,7 @@
 """Орчны хувьсагчаас уншдаг бүх тохиргоо.
 
-`APP_ENV=prod` үед хөгжүүлэлтийн орлуулагч (fake, offline, console) тохируулсан эсвэл нууц утга
-дутуу бол апп асахаас татгалзана. Шинэ тохиргоо нэмбэл `.env.example`-ийг хамт шинэчилнэ.
+`APP_ENV=prod` үед туршилтын горим (fake, offline, console) сонгосон эсвэл нууц утга дутуу бол апп
+асахгүй. Шинэ тохиргоо нэмбэл `.env.example`-ийг хамт шинэчилнэ.
 """
 
 from functools import lru_cache
@@ -14,8 +14,9 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # API-г үргэлж apps/api-аас эхлүүлнэ (Makefile-ийг хар); repo-ийн үндсэн .env нь docker
-    # compose-той хуваалцдаг, apps/api/.env нь заавал биш локал давхарлалт.
+    # API-г үргэлж apps/api folder-оос асаана (Makefile-ийг үзнэ үү). Repo-ийн үндсэн .env-ийг API
+    # болон docker compose хоёул уншдаг. apps/api/.env заавал биш: түүнд бичсэн утга үндсэн
+    # .env-ийнхийг дарна.
     model_config = SettingsConfigDict(
         env_file=("../../.env", ".env"),
         env_file_encoding="utf-8",
@@ -33,25 +34,28 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://angel:angel@localhost:5433/angel"
     redis_url: str = "redis://localhost:6379/0"
 
-    # Барааны зураг (thumbnail). LocalStorage эндээ бичнэ; API `media_url_path`-аар үйлчилнэ.
-    # Харьцангуй зам нь apps/api-д (API үргэлж ажилладаг газар) тулгуурлана.
+    # Барааны жижиг зураг (thumbnail). LocalStorage энд бичиж, API `media_url_path` хаягаар өгнө.
+    # Харьцангуй замыг apps/api folder-оос тооцно (API үргэлж тэндээс ажилладаг).
     media_dir: Path = Path("../../data/media")
     media_url_path: str = "/media"
     media_base_url: str = "http://localhost:8000/media"
 
-    # FashionCLIP. `embedding_resize_mode` ба model revision нь embedding-ийн утгыг тодорхойлно:
-    # аль нэгийг солиход каталогийг дахин embed хийх ёстой (ingest үүнийг илрүүлнэ).
-    # `fake` нь CI-н end-to-end тестэд зориулсан тогтмол орлуулагч (model татахгүй); хувцасны
-    # талаар юу ч мэдэхгүй тул production хүлээн авахгүй.
+    # FashionCLIP. `embedding_resize_mode` болон model revision өөрчлөгдвөл embedding-ийн утга
+    # өөрчлөгдөнө. Тиймээс аль нэгийг солибол бүх барааг дахин embed хийх ёстой (ingest үүнийг
+    # анзаарна).
+    # `fake` бол CI-ийн end-to-end тестэд зориулсан хиймэл model. Юу ч татахгүй, хувцас таньдаггүй
+    # тул production-д хориотой.
     embedder: Literal["fashion-clip", "fake"] = "fashion-clip"
     embedding_device: Literal["auto", "mps", "cpu", "cuda"] = "auto"
     embedding_fp16: bool = False
     embedding_resize_mode: Literal["crop", "pad"] = "pad"
 
-    # Хувцасны хэсэг олох (localizer). `yolo` нь Fashionpedia-д fine-tune хийсэн YOLOv8m-ээр
-    # зураг дээрх хувцас, гутал, цүнхийг тусад нь олж, хэрэглэгч сонгосон хэсгийг хайна. `whole` нь
-    # detection хийхгүй бүтэн зургаар хайна (detector-ийн baseline). `fake` нь CI-н end-to-end
-    # тестэд зориулсан: зургийг дээд, доод хоёр хагас болгон "олно" (prod хүлээн авахгүй).
+    # Хувцасны хэсэг олох хэрэгсэл (localizer):
+    # - `yolo`: Fashionpedia дээр fine-tune хийсэн YOLOv8m. Зураг дээрх хувцас, гутал, цүнхийг тусад
+    #   нь олно. Хэрэглэгчийн сонгосон хэсгээр хайна.
+    # - `whole`: хэсэг олохгүй, бүтэн зургаар хайна (detector-ийг харьцуулах суурь).
+    # - `fake`: CI-ийн end-to-end тестэд зориулсан. Зургийг дээд, доод хоёр хуваагаад "олсон" гэж
+    #   үзнэ. Production-д хориотой.
     localizer: Literal["yolo", "whole", "fake"] = "yolo"
     localizer_device: Literal["auto", "mps", "cpu", "cuda"] = "auto"
     # Detection-ийн итгэлийн доод хязгаар, нэг зурагт буцаах хэсгийн дээд тоо, хайрцгийн хамгийн
@@ -62,60 +66,71 @@ class Settings(BaseSettings):
     yolo_padding: float = Field(default=0.05, ge=0.0, le=0.5)
 
     # --- хайлт ----------------------------------------------------------------------------
-    # Upload: хэмжээ, зарласан төрөл, жинхэнэ формат, pixel тоогоор шалгана (decompression bomb).
+    # Оруулсан файлыг хэмжээ, зарласан төрөл, жинхэнэ формат, pixel-ийн тоогоор нь шалгана
+    # (decompression bomb-оос хамгаална).
     max_upload_bytes: int = 8 * 1024 * 1024
     max_upload_pixels: int = 25_000_000
     # Клиент `limit` зааж өгөөгүй үед буцаах үр дүнгийн тоо.
     search_default_limit: int = 24
-    # Hybrid хайлт дахь текст embedding-ийн жин (зураг 1 - жин авна). docs/search-api.md-д
-    # хэмжсэн: 0.5 өнгийг бараг өөрчилдөггүй, ~0.75-аас дээш бол хувцасны төрөл алдагдана.
+    # Hybrid хайлтад текстийн embedding-ийн жин (зургийн жин нь 1-ээс үүнийг хассантай тэнцүү).
+    # Хэмжилтийн дүн docs/search-api.md-д: 0.5 үед өнгө бараг өөрчлөгддөггүй, ~0.75-аас их бол
+    # хувцасны төрөл алдагдана.
     hybrid_text_weight: float = 0.65
     # Зургаар хайхад хэдэн zero-shot ангиллын таамаг буцаах вэ.
     detected_categories: int = 3
 
-    # Redis cache. Embedding version нь key бүрийн нэг хэсэг тул дахин embed хийхэд хүчингүй болно.
+    # Redis cache. Key бүрд embedding version ордог тул дахин embed хийхэд хуучин cache
+    # ашиглагдахгүй.
     text_embedding_cache_ttl_seconds: int = 24 * 3600
     similar_cache_ttl_seconds: int = 300
     catalog_filters_cache_ttl_seconds: int = 600
 
-    # Rate limit: клиент бүрт "<хүсэлтийн тоо>/<цонхны секунд>", тогтмол цонх, Redis-д.
+    # Rate limit-ийг client бүрт "<хүсэлтийн тоо>/<хугацаа секундээр>" гэж бичнэ. Тогтмол цонхоор
+    # тоолж, Redis-д хадгална.
     rate_limit_enabled: bool = True
     rate_limit_prefix: str = "rl"
     rate_limit_image: str = "20/60"
-    # Камерын live preview-ийн кадр (~2-3/сек). Хайлтаас тусдаа bucket: live нь хайлтыг таслахгүй.
+    # Камерын live preview секундэд 2-3 кадр илгээдэг. Үүнийг хайлтаас тусад нь тоолно: тэгэхгүй бол
+    # live preview хайлтын хязгаарыг дуусгана.
     rate_limit_detect: str = "300/60"
     rate_limit_text: str = "60/60"
     rate_limit_similar: str = "120/60"
-    # Итгэмжлэгдсэн reverse proxy-ийн ард клиентийн хаяг нь X-Forwarded-For-ийн эхний утга.
+    # Итгэж болох reverse proxy-ийн ард байвал client-ийн хаягийг X-Forwarded-For-ийн эхний утгаас
+    # авна.
     trust_proxy_headers: bool = False
 
     # --- нэвтрэлт -------------------------------------------------------------------------
-    # Access token-ы HS256 гарын үсгийн түлхүүр. Prod-д заавал (>= 32 тэмдэгт); бусад үед хоосон
-    # бол процесс бүрт шинээр үүсгэнэ, restart хийхэд хүн бүр гарна.
+    # Access token-ы гарын үсгийн түлхүүр (HS256). Prod орчинд заавал өгнө (32+ тэмдэгт). Бусад
+    # орчинд хоосон бол процесс асах бүрд шинэ түлхүүр үүсэх тул restart хийхэд бүх хэрэглэгч гарна.
     jwt_secret: str = ""
     access_token_ttl_seconds: int = 15 * 60
     refresh_token_ttl_days: int = 30
-    # Админ, агуулахын ажилтны нэвтрэлт ашиглаагүй бол энэ хугацаанд л хүчинтэй (ердийнхөөс богино).
+    # Админ, агуулахын ажилтан энэ хугацаанд идэвхгүй байвал нэвтрэлт нь дуусна (ердийн
+    # хэрэглэгчийнхээс богино).
     staff_refresh_ttl_hours: int = 12
-    # Refresh, guest-cart cookie. Prod-д Secure заавал асна; dev энгийн http дээр ажиллана.
+    # Refresh болон зочны сагсны cookie. Prod орчинд Secure заавал асаалттай. Dev орчин энгийн http
+    # дээр ажиллана.
     cookie_secure: bool = False
     rate_limit_register: str = "5/3600"
     rate_limit_login: str = "10/300"
     rate_limit_login_email: str = "5/300"
-    # Мөн email тутмын өдрийн хязгаар: удаан таамаглалыг барина, хязгаарт хүрэхэд эзэнд мэдэгдэнэ.
+    # Нэг email-д өдрийн хязгаар бас бий. Энэ нь нууц үгийг удаанаар таах оролдлогыг зогсооно.
+    # Хязгаарт хүрвэл account-ын эзэнд мэдэгдэнэ.
     rate_limit_login_email_daily: str = "20/86400"
     rate_limit_refresh: str = "60/60"
     rate_limit_admin: str = "120/60"
     rate_limit_oauth: str = "30/300"
     rate_limit_review: str = "20/3600"
     rate_limit_order_request: str = "10/3600"
-    # Нэг удаагийн код авах/оруулах оролдлого, клиентийн хаяг тутамд. Утасны дугаар, email тутмын
-    # хязгаар нь `otp_resend_seconds`, `otp_max_sends_per_hour`, `otp_max_attempts`.
+    # Нэг client-ээс код авах, оруулах оролдлогын хязгаар. Нэг утас эсвэл email-ийн хязгаарыг
+    # `otp_resend_seconds`, `otp_max_sends_per_hour`, `otp_max_attempts` тогтооно.
     rate_limit_otp_send: str = "10/600"
     rate_limit_otp_verify: str = "30/600"
-    # Төлбөр шалгах ("Төлбөрөө шалгах" товч ба QPay-ийн мэдэгдэл): provider руу дуудлага хийдэг.
+    # Төлбөр шалгах хүсэлтийн хязгаар ("Төлбөрөө шалгах" товч, QPay-ийн мэдэгдэл). Шалгах бүрд
+    # provider руу хүсэлт явдаг.
     rate_limit_payment_check: str = "30/60"
-    # Browser-ийн CSP зөрчлийн мэдээлэл (нэвтрэлтгүй endpoint): дэндүү олон мэдээлэл log дүүргэхгүй.
+    # Browser-ийн CSP зөрчлийн мэдээллийн хязгаар. Нэвтрэлтгүй endpoint тул хэт олон мэдээлэл
+    # log-ийг дүүргэхээс сэргийлнэ.
     rate_limit_csp_report: str = "30/60"
 
     # --- нэг удаагийн код (утас/email-ээр нэвтрэх, баталгаажуулах, солих, нууц үг сэргээх) -
@@ -123,13 +138,13 @@ class Settings(BaseSettings):
     otp_max_attempts: int = 5
     otp_resend_seconds: int = 60
     otp_max_sends_per_hour: int = 5
-    # End-to-end тест, demo-д зориулсан тогтмол код: challenge бүр энэ кодтой болно. Prod хүлээн
-    # авахгүй. Хоосон бол санамсаргүй код.
+    # End-to-end тест, demo-д зориулсан: утга өгвөл бүх код энэ утгатай болно. Prod орчинд хориотой.
+    # Хоосон бол код санамсаргүй гарна.
     otp_dev_code: str = ""
-    # True бол ажилтан хоёр шатлалт нэвтрэлт тохируулах хүртэл back-office-ийн API хаалттай.
-    # `APP_ENV=prod` үед үргэлж True.
+    # True бол ажилтан хоёр шатлалт нэвтрэлт тохируулах хүртэл back-office-ийн API-г ашиглаж
+    # чадахгүй. `APP_ENV=prod` үед үргэлж True.
     staff_2fa_required: bool = False
-    # Улсын кодгүй бичсэн дугаарыг энэ бүс (ISO 3166 alpha-2)-ээр тайлна.
+    # Улсын кодгүй бичсэн дугаарыг энэ улсынх гэж үзнэ (ISO 3166 alpha-2).
     default_phone_region: str = "MN"
     # `console`: SMS-г API log-д бичнэ (хөгжүүлэлт). `twilio`: Twilio-оор илгээнэ.
     sms_mode: Literal["console", "twilio"] = "console"
@@ -147,15 +162,15 @@ class Settings(BaseSettings):
     mail_from: str = ""
 
     # --- Google-ээр нэвтрэх ---------------------------------------------------------------
-    # `google`: жинхэнэ урсгал (client id, secret хэрэгтэй). `fake`: `login_hint`-ээр заасан хүнийг
-    # нэвтрүүлдэг процесс доторх орлуулагч, тест/CI-д; prod хүлээн авахгүй.
+    # `google`: жинхэнэ урсгал (client id, secret хэрэгтэй). `fake`: тест, CI-д зориулсан хиймэл
+    # хувилбар. Google руу хандалгүй, `login_hint`-д заасан хүнийг нэвтрүүлнэ. Prod орчинд хориотой.
     oauth_mode: Literal["google", "fake"] = "google"
     google_client_id: str = ""
     google_client_secret: str = ""
-    # Google console-д бүртгэсэн. Вэб origin дээр байгаа (Next /api/v1-г API руу proxy хийнэ) тул
-    # callback-ийн тавьсан session cookie first-party болно.
+    # Энэ хаягийг Google console-д бүртгэнэ. Энэ нь вэбийн хаяг, харин Next /api/v1-ийг API руу
+    # дамжуулна. Тиймээс callback-ийн тавьсан session cookie first-party болно.
     google_redirect_uri: str = "http://localhost:3000/api/v1/auth/google/callback"
-    # Callback дараа нь browser-ийг хаана илгээх вэ (амжилтгүй бол /login руу).
+    # Callback дууссаны дараа browser-ийг энэ сайт руу буцаана (амжилтгүй бол /login руу).
     web_base_url: str = "http://localhost:3000"
 
     # --- сагс ба checkout -----------------------------------------------------------------
@@ -175,10 +190,11 @@ class Settings(BaseSettings):
     # Захиалга үүсэхэд барааг нөөцөлнө; төлөхгүй бол энэ хугацааны дараа бараа чөлөөлөгдөнө.
     order_pending_ttl_minutes: int = 30
     order_sweep_interval_seconds: int = 60
-    # Амжилтгүй буцаалтыг sweep дахин оролдохын өмнөх завсарлага: provider-ийг минут тутам
-    # дуудахгүй. Шинэ мэдэгдэл эсвэл "Төлбөрөө шалгах" нь хүлээлгүй оролдоно.
+    # Төлбөр буцаалт амжилтгүй болбол sweep энэ хугацааны дараа дахин оролдоно. Ингэснээр provider
+    # руу минут тутам хандахгүй. Харин шинэ мэдэгдэл ирэх эсвэл "Төлбөрөө шалгах" дарахад хүлээлгүй
+    # оролдоно.
     refund_retry_minutes: int = 15
-    # Үлдэгдэл нь энэ тоо ба түүнээс бага бараа "үлдэгдэл багатай" гэж тооцогдоно (самбарууд).
+    # Үлдэгдэл нь энэ тоо ба түүнээс бага барааг самбарууд "үлдэгдэл багатай" гэж тооцно.
     low_stock_threshold: int = 5
     # Төлөгдсөнөөс хойш энэ цагаас удаан илгээгдээгүй захиалгыг агуулахын самбар
     # "хугацаа хэтэрсэн" гэж тэмдэглэнэ.
@@ -186,26 +202,30 @@ class Settings(BaseSettings):
     # Хүргэгдсэнээс (дэлгүүрээс авснаас) хойш буцаах хүсэлт гаргах хоног. Дэлгүүрийн бодлого:
     # нийтлэхээс өмнө хэрэглэгчийн эрхийн хууль тогтоомжтой тулгана.
     return_window_days: int = Field(default=14, ge=1, le=365)
-    # Dashboard, тайлан, агуулахын "өнөөдөр"-ийн өдрийн хил (IANA нэр).
+    # Dashboard, тайлан, агуулахын самбар дээрх "өнөөдөр" хаанаас эхлэхийг энэ цагийн бүс тогтооно
+    # (IANA нэр).
     shop_timezone: str = "Asia/Ulaanbaatar"
 
     # --- мэдэгдлийн имэйлийн дараалал ба хуучин өгөгдөл --------------------------------------
     # Outbox-ийн worker энэ хугацаа тутам шинэ болон дахин оролдох имэйлийг хайна.
     outbox_poll_seconds: float = Field(default=5, gt=0)
-    # Хуучин өгөгдөл цэвэрлэгч хэр олон ажиллах вэ. Доорх хугацаанууд дэлгүүрийн бодлого.
+    # Хуучин өгөгдөл цэвэрлэгч хэдий хугацаа тутам ажиллах вэ. Доорх хадгалах хугацаануудыг дэлгүүр
+    # өөрөө тогтооно.
     housekeeping_interval_seconds: int = Field(default=3600, ge=60)
-    # Нэг удаагийн кодын бичлэг. Илгээх хязгаар сүүлийн 1 цагийг тоолдог тул 2-оос багагүй.
+    # Нэг удаагийн кодын бичлэгийг хэдэн цаг хадгалах вэ. Илгээх хязгаар сүүлийн 1 цагийг тоолдог
+    # тул 2-оос бага байж болохгүй.
     otp_retention_hours: int = Field(default=24, ge=2)
-    # Refresh token дууссанаас хойш (IP, төхөөрөмж агуулдаг).
+    # Хугацаа нь дууссан refresh token-ыг хэдэн хоног хадгалах вэ (IP, төхөөрөмжийн мэдээлэл
+    # агуулдаг).
     refresh_token_retention_days: int = Field(default=30, ge=1)
-    # Аюулгүй байдлын үйл явдал; танил төхөөрөмжийг ч энэ хугацаанд санана.
+    # Аюулгүй байдлын үйл явдлыг хэдэн хоног хадгалах вэ. Танил төхөөрөмжийг ч ийм хугацаанд санана.
     security_event_retention_days: int = Field(default=180, ge=30)
     email_sent_retention_days: int = Field(default=7, ge=1)
     email_failed_retention_days: int = Field(default=30, ge=1)
 
     # --- төлбөр ---------------------------------------------------------------------------
-    # `qpay`: QPay-ийн QR төлбөр (dev-д sandbox). `offline`: provider-гүйгээр бүх урсгалыг турших
-    # процесс доторх gateway; prod хүлээн авахгүй.
+    # `qpay`: QPay-ийн QR төлбөр (dev-д sandbox). `offline`: QPay-гүйгээр бүх урсгалыг турших хиймэл
+    # gateway (апп дотроо ажиллана). Prod орчинд хориотой.
     payments_mode: Literal["qpay", "offline"] = "qpay"
     qpay_base_url: str = "https://merchant-sandbox.qpay.mn"
     qpay_client_id: str = ""
@@ -221,7 +241,8 @@ class Settings(BaseSettings):
 
     # /readyz дахь нэг dependency шалгалтын дээд хугацаа.
     readiness_timeout_seconds: float = 2.0
-    # Cache, rate-limit дуудлага хурдан бууж өгнө: удаан Redis хайлтыг удаашруулж болохгүй.
+    # Cache, rate limit-ийн Redis дуудлага богино timeout-той: Redis удаашрахад хайлт удаашрах
+    # ёсгүй.
     redis_op_timeout_seconds: float = 0.5
 
     @property

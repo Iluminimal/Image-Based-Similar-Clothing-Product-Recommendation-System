@@ -90,7 +90,7 @@ class RegionBox(BaseModel):
 
 
 class RegionOut(BaseModel):
-    """Зураг дээр олдсон нэг хувцас (эсвэл гутал, цүнх). Хайлт сонгосон хэсгээрээ явна."""
+    """Зураг дээрээс олдсон нэг хувцас (эсвэл гутал, цүнх). Хайлт сонгосон хэсгээр хийгдэнэ."""
 
     box: RegionBox
     label: Annotated[str | None, Field(description="Detector class; null for the whole image.")]
@@ -144,8 +144,8 @@ class GarmentSearchResponse(BaseModel):
 
 class SearchResponse(BaseModel):
     results: list[SearchHit]
-    # Зураг юу харуулж буйг таамагласан хамгийн магадлалтай нь эхэнд. Текст эсвэл төстэй барааны
-    # хайлтад хоосон.
+    # Зураг дээр юу байгааг таамагласан ангиллууд, хамгийн магадлалтай нь эхэнд. Текстээр болон
+    # төстэй бараа хайхад хоосон.
     detected: list[DetectedCategory] = []
     # Зурагт олдсон хэсгүүд (хамгийн тод нь эхэнд) ба хайлт аль хэсгээр явсан нь (`regions` дахь
     # индекс). Текст эсвэл төстэй барааны хайлтад хоосон.

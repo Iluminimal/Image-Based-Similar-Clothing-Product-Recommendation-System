@@ -1,9 +1,9 @@
-"""Нэг удаагийн код: утасны дугаар эсвэл email руу илгээгдэж, нэг зорилгод, хэдэн минут, хэдэн
-таамаглалын хугацаанд хүчинтэй.
+"""Нэг удаагийн код: утасны дугаар эсвэл email рүү илгээнэ. Нэг зорилгод, хэдхэн минутын хугацаанд,
+цөөн удаагийн оролдлогод хүчинтэй.
 
-Кодын зөвхөн HMAC хадгалагдана. Алхам бүр database дээр (Redis биш) ажиллана, тиймээс cache
-алдагдсан ч код хууль бусаар нэвтрэхгүй; `issue` / `verify` тус бүр өөрийн transaction-тай:
-буруу таамаглал хүсэлт нь амжилтгүй болсон ч тоологдоно."""
+Кодын зөвхөн HMAC-ийг хадгална. Бүх алхам database дээр (Redis биш) явдаг тул cache алдагдсан ч
+кодыг хууль бусаар ашиглаж нэвтрэхгүй. `issue`, `verify` тус бүр өөрийн transaction-тай: тиймээс
+хүсэлт амжилтгүй болсон ч буруу оролдлого тоологдоно."""
 
 import hashlib
 import hmac
@@ -59,12 +59,13 @@ _SUBJECTS: dict[str, str] = {
 
 
 def is_phone(destination: str) -> bool:
-    """Хэвийн болгосон хүлээн авагч нь E.164 дугаар (`+`-ээр эхэлнэ) эсвэл жижиг үсгийн email."""
+    """Стандарт хэлбэрт оруулсан хүлээн авагч: E.164 дугаар (`+`-ээр эхэлнэ) эсвэл жижиг үсгээр
+    бичсэн email."""
     return destination.startswith("+")
 
 
 def normalize_destination(raw: str, default_region: str) -> str:
-    """Хүний бичсэний каноник хэлбэр: E.164 дугаар эсвэл жижиг үсгийн email."""
+    """Хүний бичсэнийг стандарт хэлбэрт оруулна: E.164 дугаар эсвэл жижиг үсгийн email."""
     text = raw.strip()
     try:
         if "@" in text:
@@ -136,16 +137,17 @@ class OtpService:
         user_id: int | None = None,
         deliver: bool = True,
     ) -> None:
-        """Код үүсгээд илгээнэ. `deliver=False` нь challenge-ийг бүртгэнэ, гэхдээ юу ч илгээхгүй:
-        мэдэгдээгүй хаяг дээрх "нууц үг мартсан"-д, энэ нь мэдэгдсэнтэй яг ижил харагдах
-        ёстой."""
+        """Код үүсгээд илгээнэ. `deliver=False` бол challenge-ийг бүртгэх ч юу ч илгээхгүй.
+        Бүртгэлгүй хаяг дээрх "нууц үгээ мартсан"-д хэрэглэнэ: энэ нь бүртгэлтэй хаягийнхтай яг
+        ижил харагдах ёстой."""
         now = datetime.now(UTC)
         code = self._settings.otp_dev_code or f"{secrets.randbelow(10**6):06d}"
         resend = self._settings.otp_resend_seconds
         async with self._session.begin():
             last = await self._otps.latest(purpose, destination)
             if last is not None:
-                # created_at нь database-ийн цаг: бага зэргийн сөрөг нас нь зөвхөн цагийн зөрүү.
+                # created_at бол database-ийн цаг. Насны бага зэргийн сөрөг утга зөвхөн хоёр цагийн
+                # зөрүү.
                 age = max(0.0, (now - last.created_at).total_seconds())
                 wait = math.ceil(resend - age)
                 if wait > 0:
@@ -174,8 +176,9 @@ class OtpService:
         *,
         user_id: int | None = None,
     ) -> int | None:
-        """Кодыг шалгаад дуусгана. Challenge-ийг хэнд олгосон user id-г буцаана (login, reset-д
-        None). `user_id` нь challenge-ийг хүсэж буй нэвтэрсэн хүнтэй холбоно."""
+        """Кодыг шалгаад ашигласан болгоно. Challenge-ийг хэнд олгосон user id-г буцаана (login,
+        reset үед None). `user_id` өгвөл challenge тэр нэвтэрсэн хэрэглэгчийнх мөн эсэхийг
+        шалгана."""
         now = datetime.now(UTC)
         failure: ProblemError | None = None
         owner: int | None = None
@@ -203,7 +206,7 @@ class OtpService:
             else:
                 row.consumed_at = now
                 owner = row.user_id
-        # Блокийн дараа шиднэ, ингэвэл тоологдсон оролдлого commit хийгдсэн байна.
+        # Алдааг блокийн дараа шиднэ: ингэснээр тоологдсон оролдлого commit хийгдсэн байна.
         if failure is not None:
             log.info("otp_rejected", purpose=purpose, reason=failure.type)
             raise failure

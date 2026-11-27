@@ -70,7 +70,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk_order_events")),
     )
     op.create_index("ix_order_events_order_id", "order_events", ["order_id"], unique=False)
-    # Одоо байгаа захиалгад байх ёстой түүхийг нөхөж өгнө.
+    # Өмнөх захиалгуудын дутуу байгаа түүхийг (үүссэн, төлсөн, цуцалсан) нөхөж бичнэ.
     op.execute(
         """
         INSERT INTO order_events (order_id, type, data, created_at, updated_at)
@@ -89,8 +89,8 @@ def downgrade() -> None:
     """Schema-г өмнөх төлөвт буцаана."""
     op.drop_index("ix_order_events_order_id", table_name="order_events")
     op.drop_table("order_events")
-    # Хуучин schema-д биелүүлэлт байхгүй: илгээсэн, хүргэсэн захиалга төлөгдсөн байсан,
-    # төлбөрийг нь буцаасан захиалга хэзээ ч үүсээгүй гэсэн үг.
+    # Хуучин schema-д илгээсэн, хүргэсэн, төлбөр буцаасан гэсэн төлөв байхгүй. Тиймээс илгээсэн,
+    # хүргэсэн захиалгыг `paid`, төлбөрийг нь буцаасныг `cancelled` болгоно.
     op.execute("UPDATE orders SET status = 'paid' WHERE status IN ('shipped', 'delivered')")
     op.execute(
         "UPDATE orders SET status = 'cancelled', "

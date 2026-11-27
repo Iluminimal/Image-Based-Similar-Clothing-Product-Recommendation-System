@@ -59,13 +59,14 @@ class Product(TimestampMixin, Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
-    # Эх dataset дахь id: ingestion-ий idempotency key. Дараа нь админаар үүсгэсэн бараанд NULL.
+    # Эх dataset дахь id: ingestion давхардуулахгүйн тулд ашиглах key (idempotency key). Гараар
+    # нэмсэн бараанд NULL.
     source_id: Mapped[int | None] = mapped_column(Integer, unique=True)
     slug: Mapped[str] = mapped_column(String(200), unique=True)
     name: Mapped[str] = mapped_column(String(300))
 
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id", ondelete="RESTRICT"))
-    # Зориуд denormalize: шүүлттэй vector хайлт join шаардаж болохгүй.
+    # Зориуд denormalize хийсэн: шүүлттэй vector хайлтад join хэрэггүй байх ёстой.
     gender: Mapped[str] = mapped_column(String(20))
     master_category: Mapped[str] = mapped_column(String(100))
     sub_category: Mapped[str] = mapped_column(String(100))
@@ -75,12 +76,14 @@ class Product(TimestampMixin, Base):
     usage: Mapped[str | None] = mapped_column(String(50))
     year: Mapped[int | None] = mapped_column(SmallInteger)
 
-    # Мөнгийг бүхэл бага нэгжээр (төгрөг x 100; нэр нь `_cents`): float-ийн дугуйруулалтгүй.
+    # Мөнгийг бүхэл тоогоор, бага нэгжээр хадгална (төгрөг x 100; баганын нэр `_cents`-ээр төгсөнө).
+    # float ашиглахгүй тул дугуйлалтын алдаа гарахгүй.
     price_cents: Mapped[int] = mapped_column(BigInteger)
     currency: Mapped[str] = mapped_column(String(3), server_default="MNT")
     stock_quantity: Mapped[int] = mapped_column(Integer, server_default="0")
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
-    # Нийтлэгдсэн review-тэй нийцүүлж, тэдгээрийг өөрчилдөг transaction-д нь хамт шинэчилнэ.
+    # Нийтлэгдсэн review-үүдтэй тохирч байх ёстой тул review өөрчлөх transaction дотор хамт
+    # шинэчилнэ.
     rating_average: Mapped[Decimal] = mapped_column(Numeric(3, 2), server_default="0")
     rating_count: Mapped[int] = mapped_column(Integer, server_default="0")
 

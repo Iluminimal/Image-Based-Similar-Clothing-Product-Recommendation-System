@@ -31,7 +31,8 @@ class OtpRepository:
         return challenge
 
     async def latest(self, purpose: str, destination: str) -> OtpChallenge | None:
-        """Хамгийн сүүлийн challenge, ашигласан эсэхээс үл хамаарна (resend cooldown-д)."""
+        """Хамгийн сүүлийн challenge (ашигласан эсэхээс үл хамаарна). Дахин илгээхээс өмнө хүлээх
+        хугацааг тооцоход хэрэглэнэ."""
         result = await self._session.execute(
             select(OtpChallenge)
             .where(OtpChallenge.purpose == purpose, OtpChallenge.destination == destination)
@@ -82,7 +83,8 @@ class OtpRepository:
         return int(result.rowcount)  # type: ignore[attr-defined]
 
     async def delete_for_account(self, user_id: int, destinations: list[str]) -> None:
-        """Бүртгэл устгахад: нэвтрэх, нууц үг сэргээх код бүртгэлийн id-гүй, зөвхөн хаягтай."""
+        """Account устгахад хэрэглэнэ: нэвтрэх, нууц үг сэргээх код account-ын id-гүй, зөвхөн
+        хаягтай хадгалагддаг."""
         await self._session.execute(
             delete(OtpChallenge).where(
                 or_(OtpChallenge.user_id == user_id, OtpChallenge.destination.in_(destinations))

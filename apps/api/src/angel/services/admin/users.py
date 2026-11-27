@@ -17,11 +17,12 @@ async def provision_staff(
     full_name: str,
     role: str = ROLE_ADMIN,
 ) -> tuple[User, bool]:
-    """Ажилтан (админ эсвэл агуулахын ажилтан) үүсгэнэ, эсвэл энэ email-тэй бүртгэл аль хэдийн
-    байвал түүнийг `role`-д оноож дэвшүүлнэ.
+    """Ажилтан (админ эсвэл агуулахын ажилтан) үүсгэнэ. Энэ email-тэй account байвал түүнд `role`
+    өгч ажилтан болгоно.
 
-    Хэрэглэгч болон шинээр үүссэн эсэхийг буцаана. Одоо байгаа бүртгэл нууц үг өгөөгүй бол
-    хуучнаа хадгална. Бүртгүүлэх замаар ажилтан хэзээ ч үүсэхгүй: энэ бол цорын ганц зам."""
+    Хэрэглэгч болон шинээр үүссэн эсэхийг буцаана. Одоо байгаа account-д шинэ нууц үг өгөөгүй бол
+    хуучнаа хадгална. Бүртгүүлэх замаар ажилтан хэзээ ч үүсэхгүй, ажилтан үүсгэх цорын ганц зам энэ.
+    """
     if role not in STAFF_ROLES:
         raise ValueError(f"{role!r} is not a staff role")
     email = email.strip().lower()
@@ -45,7 +46,8 @@ async def provision_staff(
             # Ажилтан кодоор ч, Google-ээр ч нэвтэрдэггүй: нууц үггүй бол хаанаас ч орохгүй.
             raise ValueError(f"{email} has no password: run without --keep-password to set one")
         if user.role != role or password_hash is not None:
-            # Өмнөх нэвтрэлтүүд (кодоор, Google-ээр үүссэн эсвэл өөр хүнийх) шинэ эрхийг өвлөхгүй.
+            # Өмнөх нэвтрэлтүүд (кодоор, Google-ээр үүссэн эсвэл өөр хүнийх) шинэ эрхийг өвлөх
+            # ёсгүй.
             await RefreshTokenRepository(session).revoke_all_for_user(user.id, datetime.now(UTC))
         user.email_verified_at = user.email_verified_at or datetime.now(UTC)
         user.role = role

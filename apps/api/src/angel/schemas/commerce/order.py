@@ -76,11 +76,11 @@ class CheckoutRequest(BaseModel):
 
     address_id: Annotated[int, Field(ge=1, le=2**63 - 1)]
     shipping_method: ShippingMethodId
-    # Захиалгын email хаашаа явах вэ. Бүртгэлд email байхгүй (утасны дугаараар бүртгүүлсэн) үед л
-    # заавал; үгүй бол бүртгэлийн email-ийг хэрэглэнэ.
+    # Захиалгын имэйлийг очих хаяг. Account-д email байхгүй (утсаар бүртгүүлсэн) үед л заавал; бусад
+    # үед account-ын email-ийг хэрэглэнэ.
     contact_email: EmailStr | None = None
-    # Худалдан авагчийн дэлгэц дээр харсан нийт дүн. Серверийн бодсон дүнтэй зөрвөл захиалга
-    # үүсгэхгүй (409 price-changed): зөвшөөрөөгүй үнээр захиалахгүй. Web үргэлж илгээнэ.
+    # Худалдан авагчийн дэлгэц дээр харсан нийт дүн. Серверийн тооцсон дүнтэй зөрвөл захиалга
+    # үүсгэхгүй (409 price-changed): зөвшөөрөөгүй үнээр захиалга хийхгүй. Web үүнийг үргэлж илгээнэ.
     expected_total_cents: Annotated[int, Field(ge=0, le=2**63 - 1)] | None = None
 
     @field_validator("contact_email", mode="after")
@@ -105,7 +105,7 @@ class OrderEventOut(BaseModel):
 
     type: OrderEventType
     at: datetime
-    # Зөвхөн харуулахад аюулгүй зүйл: тээвэрлэгч ба tracking дугаар, цуцалсан шалтгаан, хүсэлтийн
+    # Зөвхөн харуулахад аюулгүй мэдээлэл: тээвэрлэгч, tracking дугаар, цуцалсан шалтгаан, хүсэлтийн
     # төрөл.
     data: dict[str, Any]
 
@@ -135,7 +135,7 @@ class OrderRequestOut(BaseModel):
     status: RequestStatus
     reason: RequestReason
     details: str | None
-    # Ажилтны хэрэглэгчид бичсэн тайлбар (татгалзсан бол үргэлж байна).
+    # Ажилтнаас хэрэглэгчид бичсэн тайлбар (татгалзсан бол үргэлж байна).
     decision_note: str | None
     created_at: datetime
     decided_at: datetime | None
@@ -198,8 +198,8 @@ class OrderOut(BaseModel):
     return_deadline: datetime | None = None
     # Зөвшөөрөгдсөн буцаалтын барааг хүргэж өгөх хаяг.
     return_address: str | None = None
-    # Төлбөр хүлээж буй (pending) захиалгад л: төлөхгүй бол нөөц энэ хугацаанд буцна ба QR-г
-    # дахин харуулж төлбөрийг үргэлжлүүлнэ.
+    # Зөвхөн төлбөр хүлээж буй (pending) захиалгад: энэ хугацаанд төлөхгүй бол нөөц буцна. Тэр
+    # хүртэл QR-ыг дахин харуулж, төлбөрөө үргэлжлүүлж болно.
     expires_at: datetime | None = None
     qpay: QPayCheckoutOut | None = None
 
@@ -226,8 +226,8 @@ class OrderPage(BaseModel):
 
 
 class PaymentOut(BaseModel):
-    """Browser төлбөр авахад хэрэгтэй зүйл. `qpay`: QR болон банкны холбоосыг харуулж, дараа нь
-    `check-payment`-аар баталгаажуулна. `offline` (development): simulate endpoint-ийг дуудна."""
+    """Browser-т төлбөр хийхэд хэрэгтэй мэдээлэл. `qpay`: QR болон банкны холбоосыг харуулж, дараа
+    нь `check-payment`-аар баталгаажуулна. `offline` (development): simulate endpoint-ийг дуудна."""
 
     provider: Literal["qpay", "offline"]
     # Захиалга төлбөр үүсгэхээс өмнө цуцлагдсан бол None.
@@ -236,8 +236,9 @@ class PaymentOut(BaseModel):
 
 
 class PaymentMethodOut(BaseModel):
-    """Checkout ямар аргаар төлүүлэх вэ, захиалга үүсэхээс өмнө (хуудас зөв алхмыг харуулна).
-    `provider` None бол төлбөр тохируулаагүй. `charge_currency` нь бодитоор авах валют."""
+    """Захиалга үүсэхээс өмнө checkout ямар аргаар төлбөр авахыг мэдэгдэнэ (хуудас зөв алхам
+    харуулахын тулд). `provider` None бол төлбөр тохируулаагүй. `charge_currency` бол бодитоор
+    авах валют."""
 
     provider: Literal["qpay", "offline"] | None
     charge_currency: str

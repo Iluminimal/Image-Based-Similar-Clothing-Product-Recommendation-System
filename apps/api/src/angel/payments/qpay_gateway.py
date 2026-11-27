@@ -1,11 +1,12 @@
-"""QPay Merchant API v2 (https://developer.qpay.mn): нэхэмжлэх үүсгэж QR кодоор төлбөр авна.
+"""QPay Merchant API v2 (https://developer.qpay.mn): нэхэмжлэх үүсгэж, QR кодоор төлбөр авна.
 
-Урсгал: token авна → захиалга бүрд нэхэмжлэх (QR зураг, банкны апп-ын холбоос) → худалдан авагч
-банкны апп-аараа төлнө → QPay `callback_url` руу мэдэгдэнэ → бид `payment/check`-ээр баталгаажуулна.
-Callback-д гарын үсэг байдаггүй тул түүнд хэзээ ч итгэхгүй, зөвхөн шалгах дохио болгоно.
+Урсгал: token авна → захиалга бүрд нэхэмжлэх үүсгэнэ (QR зураг, банкны апп-ын холбоос) → худалдан
+авагч банкны апп-аараа төлнө → QPay `callback_url` руу мэдэгдэнэ → бид `payment/check`-ээр
+баталгаажуулна. Callback-д гарын үсэг байдаггүй тул түүнд хэзээ ч итгэхгүй, зөвхөн "шалгах хэрэгтэй"
+гэсэн дохио болгоно.
 
-QPay зөвхөн төгрөгөөр (MNT) мөнгө авна. Дүнг минор нэгжээр (төгрөг x 100) хүлээн авч, бүхэл
-төгрөгөөр илгээнэ.
+QPay зөвхөн төгрөгөөр (MNT) мөнгө авна. Дүнг бага нэгжээр (төгрөг x 100) хүлээн авч, бүхэл төгрөгөөр
+илгээнэ.
 """
 
 import asyncio
@@ -20,9 +21,11 @@ from angel.payments.gateway import IntentInfo, PaymentEvent, PaymentMode, Paymen
 
 log = get_logger(__name__)
 
-# Token дуусахаас өмнө ийм зайтайгаар шинэчилнэ: замд байх хүсэлт хуучин token-оор очихгүй.
+# Token-ы хугацаа дуусахаас ийм хугацааны өмнө шинэчилнэ. Ингэснээр замд яваа хүсэлт хугацаа нь
+# дууссан token-той очихгүй.
 _TOKEN_MARGIN_SECONDS = 60
-# QPay token-ийг ийм хариугаар татгалздаг (баримт: 401 эсвэл 403 бол token-оо хаяад нэг удаа давт).
+# QPay хүчингүй token-д ийм хариу өгдөг. QPay-ийн баримтын дагуу 401, 403 ирвэл token-оо хаяж, нэг
+# удаа давтана.
 _TOKEN_REJECTED = {401, 403}
 # `expires_in`-ийг QPay заримдаа үлдсэн секундээр биш unix timestamp-аар өгдөг.
 _EPOCH_THRESHOLD = 1_000_000_000
@@ -71,7 +74,7 @@ class QPayGateway:
         tugrik = amount // 100
         body = {
             "invoice_code": self._invoice_code,
-            # Нэхэмжлэх бүрд давтагдашгүй байх ёстой: захиалга бүрд нэг нэхэмжлэх.
+            # Нэхэмжлэх бүрд давтагдахгүй байх ёстой. Захиалга бүрд нэг нэхэмжлэх.
             "sender_invoice_no": order_number,
             "invoice_receiver_code": self._receiver_code,
             "invoice_description": f"Angel {order_number}",
@@ -135,10 +138,12 @@ class QPayGateway:
         try:
             await self._request("DELETE", f"/v2/invoice/{intent_id}")
         except _ClientError as exc:
-            # Дээрх шалгалтаас хойш төлөгдсөн бол QPay устгахаас татгалзана: дахин шалгана.
+            # Дээр шалгаснаас хойш төлөгдсөн бол QPay нэхэмжлэхийг устгуулахгүй, тиймээс дахин
+            # шалгана.
             if await self.check(intent_id) is not None:
                 return "succeeded"
-            # Аль хэдийн цуцлагдсан эсвэл олдохгүй нэхэмжлэх: төлөгдөх боломжгүй тул цуцлагдсан.
+            # Аль хэдийн цуцлагдсан эсвэл олдохгүй нэхэмжлэх төлөгдөх боломжгүй тул цуцлагдсанд
+            # тооцно.
             log.info("qpay_invoice_already_closed", invoice_id=intent_id, status=exc.status)
         return "canceled"
 
@@ -149,7 +154,8 @@ class QPayGateway:
         payment_id = event.id.removeprefix("qpay_")
         note = {"note": f"Angel refund {idempotency_key}"[:1000]}
         try:
-            # Картын гүйлгээ буцаалтаар, бусад нь (банкны апп) цуцлалтаар буцна.
+            # Эхлээд refund-аар (картын гүйлгээ) оролдоно. QPay татгалзвал cancel-аар буцаана
+            # (банкны апп-аар төлсөн бол).
             await self._request("DELETE", f"/v2/payment/refund/{payment_id}", json=note)
         except _ClientError:
             await self._request("DELETE", f"/v2/payment/cancel/{payment_id}", json=note)
@@ -169,8 +175,9 @@ class QPayGateway:
             except httpx.HTTPError as exc:
                 raise PaymentProviderError(f"QPay unreachable: {type(exc).__name__}") from exc
             if response.status_code in _TOKEN_REJECTED and attempt == 1:
-                # Token хүчингүй (401) эсвэл эрх хүрэхгүй (403): QPay-ийн зөвлөмжөөр хаяж, шинээр
-                # аваад нэг удаа давтана. Давтсан ч татгалзвал credential, эрхийг шалгах хэрэгтэй.
+                # Token хүчингүй (401) эсвэл эрх хүрэхгүй (403) бол QPay-ийн зөвлөмжөөр token-оо
+                # хаяж, шинийг аваад нэг удаа давтана. Дахиад татгалзвал credential, эрхээ шалгах
+                # хэрэгтэй.
                 self._access = None
                 self._refresh = None
                 continue

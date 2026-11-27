@@ -32,7 +32,7 @@ MAX_NAME_LENGTH = 120
 
 
 class OAuthFailure(Exception):
-    """Нэвтрэх хуудсанд дуусах ёстой нэвтрэлт. `reason` нь тэнд харагдах `?error=` код."""
+    """Login хуудсанд дуусах амжилтгүй нэвтрэлт. `reason` бол тэнд харуулах `?error=` код."""
 
     def __init__(self, reason: str) -> None:
         super().__init__(reason)
@@ -123,7 +123,7 @@ class OAuthService:
                         )
                     )
         except IntegrityError:
-            # Нэг хүн хоёр удаа зэрэг нэвтэрч хожигдсон: дахин оролдоход хангалттай.
+            # Нэг хүн хоёр удаа зэрэг нэвтрэхэд нөгөө нь түрүүлсэн: дахин оролдоход хангалттай.
             log.warning("oauth_race")
             raise OAuthFailure("google_failed") from None
         return SignInResult(issued, flow.next_path)
@@ -145,9 +145,9 @@ class OAuthService:
             # Юу ч холбохгүй, өөрчлөхгүй: ажилтан зөвхөн нууц үгээр нэвтэрнэ.
             raise OAuthFailure("google_failed")
         else:
-            # Google энэ email-ийг баталгаажуулдаг, харин нууц үгээр үүссэн бүртгэлийн хаягийг хэн ч
-            # баталгаажуулаагүй тул түрүүлж бүртгүүлсэн хүн эзэн биш байж болно. Нууц үгийг устга:
-            # эзэн одоо Google-ээр нэвтэрнэ, булаан авагч нэвтэрч чадахгүй.
+            # Google энэ email-ийг баталгаажуулсан. Харин нууц үгээр үүсгэсэн account-ын хаягийг хэн
+            # ч баталгаажуулаагүй тул түрүүлж бүртгүүлсэн хүн эзэн нь биш байж болно. Тиймээс нууц
+            # үгийг устгана: эзэн одоо Google-ээр нэвтэрнэ, булаан авсан хүн нэвтэрч чадахгүй.
             if user.password_hash is not None:
                 log.info("oauth_password_removed", user_id=user.id)
                 user.password_hash = None

@@ -110,7 +110,8 @@ def read_all(directory: Path, expected_version: str) -> Iterator[EmbeddingBatch]
 
 
 def load_index(directory: Path, expected_version: str) -> dict[int, NDArray[np.float32]]:
-    """Бүх embedding-ийг source id-аар (44k бүтээгдэхүүнд ~90 MB). Давхардвал сүүлийн shard."""
+    """Бүх embedding-ийг source id-аар нь уншина (44k бараанд ~90 MB). Нэг id давхардвал сүүлийн
+    shard-ынхыг авна."""
     index: dict[int, NDArray[np.float32]] = {}
     for batch in read_all(directory, expected_version):
         for source_id, vector in zip(batch.source_ids.tolist(), batch.vectors, strict=True):

@@ -1,21 +1,21 @@
-"""Visual search-ийн хайлтын чанар: mean average precision (mAP) болон бусад metric.
+"""Visual search-ийн чанарыг хэмжинэ: mean average precision (mAP) болон бусад metric.
 
     cd apps/api && uv run python ../../scripts/evaluate_map.py              # бүх каталог, exact
-    cd apps/api && uv run python ../../scripts/evaluate_map.py --mode image  # жинхэнэ upload зам
+    cd apps/api && uv run python ../../scripts/evaluate_map.py --mode image # жинхэнэ upload-ийн зам
 
-Query нь каталогийн нэг бүтээгдэхүүн; хайлт түүнд хамгийн ойр бүтээгдэхүүнүүдийг буцаана (query
-өөрийгөө оруулахгүй, эс бөгөөс үргэлж rank 1 болно). Буцсан бүтээгдэхүүн query-тэй ижил label-тэй
-бол *relevant*. Kaggle dataset-ийн label-аас гурван түвшний хатуу байдал авна:
+Query болгож каталогийн нэг барааг авна. Хайлт түүнд хамгийн ойр бараануудыг буцаана (query бараа
+өөрийгөө оруулахгүй, эс бөгөөс үргэлж 1-р байрт гарна). Буцсан бараа query-тэй ижил label-тэй бол
+*relevant*. Kaggle dataset-ийн label-аар гурван түвшинд шалгана:
 
     category   ижил article type                       (Tshirts, Heels, ...)
     colour     ижил article type, base colour
     strict     ижил article type, base colour, gender
 
-`--mode stored` (default) нь database-д байгаа embedding-ийг query болгож, матрицын үржвэрээр яг
-ойр бүтээгдэхүүнийг олно. Тиймээс `--n 0` (бүх бүтээгдэхүүн) үед тоо нарийн, түүвэрлэх хэрэггүй.
-`--mode image` нь query бүрийн эх зургийг жинхэнэ pipeline (decode, preprocess, FashionCLIP) болон
-жинхэнэ HNSW хайлтаар upload шиг явуулна (`--phone` нь эхлээд зургийг утасны 1280 px болгоно).
-Baseline болгож санамсаргүй эрэмбийг мөн харуулна.
+`--mode stored` (анхдагч) database-д байгаа embedding-ийг query болгож, матрицын үржвэрээр яг
+хамгийн ойр бараануудыг олно. Тиймээс `--n 0` (бүх бараа) үед тоо яг гарна, түүвэрлэх хэрэггүй.
+`--mode image` query бүрийн эх зургийг upload шиг жинхэнэ pipeline (decode, preprocess, FashionCLIP)
+болон жинхэнэ HNSW хайлтаар явуулна (`--phone` өгвөл эхлээд зургийг утасныхтай адил 1280 px
+болгоно). Харьцуулах суурь болгож санамсаргүй эрэмбийн дүнг мөн харуулна.
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ from angel.repositories.catalog.products import DEFAULT_EF_SEARCH, ProductReposi
 
 
 class Catalogue:
-    """Бүтээгдэхүүн бүрийн id, label, embedding. Нэг л удаа уншина."""
+    """Бараа бүрийн id, label, embedding. Нэг л удаа уншина."""
 
     def __init__(self, rows: list[Any]) -> None:
         self.ids = np.array([r.id for r in rows], dtype=np.int64)
@@ -81,7 +81,7 @@ async def load_catalogue(engine: Any) -> Catalogue:
 async def hnsw_neighbours(
     catalogue: Catalogue, args: argparse.Namespace, queries: NDArray[np.int64]
 ) -> NDArray[np.int64]:
-    """Жинхэнэ зам: query-ийн өөрийн зураг pipeline-аар орж, жинхэнэ HNSW хайлт хийгдэнэ."""
+    """Жинхэнэ зам: query барааны өөрийн зураг pipeline-аар орж, жинхэнэ HNSW хайлт хийгдэнэ."""
     settings = get_settings()
     dataset = (args.dataset or settings.dataset_dir or Path()).expanduser()
     engine = create_engine(settings.database_url)

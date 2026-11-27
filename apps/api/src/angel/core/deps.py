@@ -1,6 +1,6 @@
-"""FastAPI-ийн dependency-үүд: хүсэлт бүрд service-ийг угсарч, нэвтрэлт ба эрхийг шалгана.
+"""FastAPI-ийн dependency-үүд. Хүсэлт бүрд service үүсгэж, нэвтрэлт, эрхийг шалгана.
 
-Route нь эндхийн `...Dep` төрлийг л заана, ингэснээр эрхийн шалгалт нэг газар байна.
+Route зөвхөн эндхийн `...Dep` төрлийг ашигладаг тул эрхийн шалгалт бүгд нэг дор байна.
 """
 
 from collections.abc import AsyncIterator, Awaitable, Callable
@@ -243,8 +243,9 @@ def _unauthenticated(detail: str) -> ProblemError:
 
 
 def get_optional_user_id(request: Request, credentials: BearerDep) -> int | None:
-    """Нэвтэрсэн хэрэглэгчийн id, зочин бол None. Token байгаа ч буруу/хугацаа дууссан бол 401,
-    "зочин" гэж чимээгүй тооцохгүй: клиент refresh хийх ёстой, сагсаа алдах ёсгүй."""
+    """Нэвтэрсэн хэрэглэгчийн id, зочин бол None. Token илгээсэн мөртлөө буруу эсвэл хугацаа нь
+    дууссан бол 401 өгнө. Ийм үед "зочин" гэж чимээгүй тооцохгүй: client token-оо refresh хийх
+    ёстой, тэгэхгүй бол сагс нь алга болсон мэт харагдана."""
     if credentials is None:
         return None
     user_id = decode_access_token(credentials.credentials, request.app.state.jwt_secret)
@@ -264,9 +265,9 @@ CurrentUserDep = Annotated[int, Depends(get_current_user_id)]
 
 
 def require_roles(*roles: str, title: str, detail: str) -> Callable[..., Awaitable[User]]:
-    """Заасан role-той нэвтэрсэн хэрэглэгчийг шаардах dependency үүсгэнэ. Role-ийг хүсэлт бүрт
-    database-аас уншдаг (token-д байхгүй) тул эрхийг хураах, хэрэглэгчийг идэвхгүй болгох нь тэр
-    дороо хүчинтэй болно."""
+    """Зөвхөн заасан role-той хэрэглэгчийг оруулах dependency үүсгэнэ. Role-ийг token-д хийдэггүй,
+    хүсэлт бүрд database-аас уншдаг. Тиймээс эрхийг хураах эсвэл account-ыг идэвхгүй болгоход тэр
+    даруй хүчинтэй болно."""
 
     async def dependency(
         user_id: CurrentUserDep, session: SessionDep, settings: SettingsDep
@@ -301,7 +302,7 @@ get_current_warehouse = require_roles(
     title="Зөвхөн агуулахын ажилтан",
     detail="Энэ үйлдлийг зөвхөн агуулахын ажилтан хийнэ.",
 )
-# Аль ч ажилтан: админ самбарын нэвтрэх хаалга ба зөвхөн харах (read-only) endpoint-ууд.
+# Аль ч ажилтан: админ самбарт нэвтрэх болон зөвхөн харах (read-only) endpoint-ууд.
 get_current_staff = require_roles(
     *STAFF_ROLES,
     title="Зөвхөн ажилтан",
@@ -314,9 +315,9 @@ StaffDep = Annotated[User, Depends(get_current_staff)]
 
 
 async def forbid_staff_shopping(user_id: OptionalUserDep, session: SessionDep) -> None:
-    """Админ, агуулахын ажилтан бол back-office-ийн хэрэглэгч: сагс, захиалга, хадгалсан бараа,
-    хүргэлтийн хаяг ашиглах эрхгүй.
-    Зочин болон энгийн хэрэглэгчид нөлөөлөхгүй. Role-ийг `require_roles`-тай адил DB-ээс уншина."""
+    """Админ, агуулахын ажилтны account зөвхөн back-office-д зориулагдсан: сагс, захиалга, хадгалсан
+    бараа, хүргэлтийн хаяг ашиглаж чадахгүй.
+    Зочин, энгийн хэрэглэгчид нөлөөлөхгүй. Role-ийг `require_roles`-тай адил DB-ээс уншина."""
     if user_id is None:
         return
     async with session.begin():
@@ -335,8 +336,8 @@ ShoppingGuard = Annotated[None, Depends(forbid_staff_shopping)]
 
 
 def get_cart_owner(request: Request, user_id: OptionalUserDep) -> CartOwner:
-    """Энэ хүсэлт хэний сагсыг уншихыг тодорхойлно: хэрэглэгчийнх, үгүй бол зочны cookie-ийнх
-    (байхгүй байж болно)."""
+    """Хэний сагсыг уншихыг тогтооно: нэвтэрсэн бол хэрэглэгчийнх, үгүй бол зочны cookie-д заасан
+    сагс (cookie байхгүй ч байж болно)."""
     return CartOwner(user_id=user_id, guest_token=request.cookies.get(CART_COOKIE))
 
 
@@ -361,7 +362,7 @@ CartWriterDep = Annotated[CartOwner, Depends(get_cart_writer)]
 
 
 def no_store(response: Response) -> None:
-    """Хувийн мэдээлэл хуваалцсан cache-д хэзээ ч үлдэж болохгүй."""
+    """Хувийн мэдээлэл олон хүнд үйлчилдэг (shared) cache-д хэзээ ч үлдэх ёсгүй."""
     response.headers["Cache-Control"] = "no-store"
 
 
@@ -369,8 +370,9 @@ def no_store(response: Response) -> None:
 
 
 def get_code_mailer(request: Request) -> Mailer:
-    """Нэг удаагийн кодод л: шууд илгээж, алдааг шиднэ (хүрээгүй бол хэрэглэгч мэдэх ёстой, 503).
-    Бусад бүх мэдэгдэл outbox-оор явна (`services/system/outbox.py`)."""
+    """Зөвхөн нэг удаагийн кодод хэрэглэнэ: шууд илгээж, амжилтгүй бол алдаа өгнө (503). Учир нь код
+    хүрээгүйг хэрэглэгч мэдэх ёстой. Бусад бүх мэдэгдэл outbox-оор явна
+    (`services/system/outbox.py`)."""
     mailer: Mailer = request.app.state.mailer
     return mailer
 

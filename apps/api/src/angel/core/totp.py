@@ -32,8 +32,9 @@ def code_at(secret: str, step: int) -> str:
 
 
 def matching_step(secret: str, code: str, at: float, *, after: int | None = None) -> int | None:
-    """Кодтой таарах цагийн алхам, эсвэл None. `after` буюу өмнө хэрэглэсэн алхам ба түүнээс
-    өмнөхийг хүлээн авахгүй: харж авсан кодыг дахин ашиглах боломжгүй."""
+    """Код таарсан цагийн алхмыг буцаана, таарахгүй бол None. `after` (өмнө ашигласан) алхам болон
+    түүнээс өмнөх алхмын кодыг хүлээн авахгүй. Тиймээс хэн нэгний харж авсан кодыг дахин ашиглах
+    боломжгүй."""
     current = int(at // STEP_SECONDS)
     for step in range(current - WINDOW, current + WINDOW + 1):
         if after is not None and step <= after:

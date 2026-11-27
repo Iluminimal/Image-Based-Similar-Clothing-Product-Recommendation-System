@@ -45,7 +45,8 @@ class OutboxEmail(TimestampMixin, Base):
     body: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(10), server_default="pending")
     attempts: Mapped[int] = mapped_column(SmallInteger, server_default="0")
-    # Worker энэ цагаас өмнө авахгүй: дахин оролдох хуваарь, мөн илгээж буй worker-ийн түр эзэмшил.
+    # Worker энэ цаг болохоос өмнө уг мөрийг авахгүй. Дахин оролдох цагийг товлоход ч, илгээж байгаа
+    # worker мөрийг түр эзэмшихэд ч үүнийг ашиглана.
     next_attempt_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

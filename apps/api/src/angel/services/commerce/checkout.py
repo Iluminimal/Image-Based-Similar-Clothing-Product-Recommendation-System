@@ -1,17 +1,17 @@
-"""Checkout: cart-ыг нөөцийг барьдаг pending захиалга болгоод төлбөрийг эхлүүлнэ.
+"""Checkout: сагсыг нөөц эзлэх pending захиалга болгоод төлбөрийг эхлүүлнэ.
 
-Захиалга гурван богино transaction-аар үүснэ, төлбөрийн provider-ийн дуудлага тэдгээрийн хооронд
-байх бөгөөд transaction дотор хэзээ ч биш (сүлжээ хүлээдэг transaction сүлжээ дуустал мөрийн
-түгжээг барина):
+Захиалгыг гурван богино transaction-оор үүсгэнэ. Төлбөрийн provider руу хийх дуудлагыг тэдгээрийн
+хооронд хийнэ, transaction дотор хэзээ ч хийхгүй: сүлжээ хүлээж буй transaction хариу иртэл мөрийн
+түгжээг барьсаар байдаг.
 
-1. idempotency key-г хайж, хэрэглэгчийн хуучин төлөгдөөгүй захиалгуудыг олох;
-2. тэдгээр захиалгын төлбөрийг provider дээр цуцлах (transaction-гүй);
-3. нэг transaction: нөөцийн мөрүүдийг id-н дарааллаар түгжиж, cart-ыг дахин шалгаж, нөөцийг
-   хасаж, захиалгыг үнийн snapshot-тай бичих;
-4. төлбөр үүсгэж (transaction-гүй), дараа нь хадгалах.
+1. idempotency key-г хайж, хэрэглэгчийн өмнөх төлөгдөөгүй захиалгуудыг олно;
+2. тэдгээрийн төлбөрийг provider дээр цуцална (transaction-гүй);
+3. нэг transaction: нөөцийн мөрүүдийг id-ийн дарааллаар түгжиж, сагсыг дахин шалгаж, нөөцийг хасаж,
+   захиалгыг үнийн snapshot-той нь бичнэ;
+4. төлбөр үүсгэж (transaction-гүй), дараа нь хадгална.
 
-Хүсэлтийг давтахад (ижил `Idempotency-Key`) дутуу үлдсэн алхамаас үргэлжилнэ, тиймээс аль ч
-үед timeout болсон client хүсэлтээ дахин илгээхэд хангалттай."""
+Хүсэлтийг ижил `Idempotency-Key`-тэй давтвал дутуу үлдсэн алхмаас үргэлжилнэ. Тиймээс хаана ч
+timeout болсон client хүсэлтээ дахин илгээхэд л болно."""
 
 import contextlib
 import hashlib
@@ -84,8 +84,8 @@ def new_order_number() -> str:
 
 
 def request_hash(request: CheckoutRequest) -> str:
-    """Захиалга юу болохыг тодорхойлдог талбарууд. `expected_total_cents` орохгүй: энэ нь шинэ
-    захиалгыг тодорхойлдоггүй, зөвхөн зөвшөөрлийн шалгалт."""
+    """Захиалгыг тодорхойлдог талбарууд. `expected_total_cents` орохгүй: энэ шинэ захиалгыг
+    тодорхойлдоггүй, зөвхөн хэрэглэгчийн зөвшөөрсөн дүнг шалгахад хэрэгтэй."""
     fields = request.model_dump_json(include={"address_id", "shipping_method", "contact_email"})
     return hashlib.sha256(fields.encode()).hexdigest()
 
@@ -148,10 +148,10 @@ class CheckoutService:
 
         order_id = await self._existing_order_id(user_id, request, idempotency_key)
         if order_id is None:
-            # Хэрэглэгчийн төлөгдөөгүй захиалгуудыг нөөцийг нь шинэ захиалгад өгөхөөс өмнө provider
-            # дээр цуцлах ёстой, үгүй бол хоёулаа төлөгдөж болно. Үүнд сүлжээний дуудлага хэрэгтэй
-            # тул transaction-уудын хооронд хийнэ; хэрэв ижил хэрэглэгчийн өөр checkout энэ хооронд
-            # шинэ төлөгдөөгүй захиалга нэмсэн бол дахин нэг тойрно.
+            # Хэрэглэгчийн өмнөх төлөгдөөгүй захиалгуудын нөөцийг шинэ захиалгад өгөхөөс өмнө
+            # provider дээр тэдний төлбөрийг цуцлах ёстой, эс бөгөөс хоёулаа төлөгдөж болно. Энэ нь
+            # сүлжээний дуудлага тул transaction-уудын хооронд хийнэ. Энэ хооронд тэр хэрэглэгчийн
+            # өөр checkout шинэ төлөгдөөгүй захиалга нэмсэн бол дахин нэг тойрно.
             cancelled: set[int] = set()
             for _ in range(MAX_ATTEMPTS):
                 placed = await self._place_order(user_id, request, idempotency_key, cancelled)
@@ -160,7 +160,8 @@ class CheckoutService:
                     break
                 for old_id, intent_id in placed.items():
                     if await self._cancel_payment(gateway, intent_id) == "succeeded":
-                        # Хуучин захиалга төлөгдчихсөн: тэр даруй шийдээд шинийг үүсгэхгүй.
+                        # Хуучин захиалга аль хэдийн төлөгдсөн байна: түүнийг шийдэж, шинэ захиалга
+                        # үүсгэхгүй.
                         if self._settlement is not None:
                             await self._settlement.reconcile(intent_id)
                         raise ProblemError(
@@ -213,8 +214,8 @@ class CheckoutService:
             )
 
     async def check_payment(self, user_id: int, number: str) -> OrderOut:
-        """Худалдан авагч "Төлбөрөө шалгах" дарсан эсвэл хуудас руу буцаж ирсэн: provider-оос
-        төлвийг асуугаад төлөгдсөн бол захиалгыг шийднэ. Олон дахин дуудахад аюулгүй."""
+        """Худалдан авагч "Төлбөрөө шалгах" дарсан эсвэл хуудас руу буцаж ирсэн үед provider-оос
+        төлвийг асууна. Төлөгдсөн бол захиалгыг төлөгдсөн болгоно. Олон удаа дуудахад аюулгүй."""
         gateway = self._require_gateway()
         async with self._session.begin():
             order = await self._orders.get_for_user(user_id, number)
@@ -233,7 +234,8 @@ class CheckoutService:
                     type_=PAYMENT_PROVIDER_TYPE,
                 ) from exc
             if event is not None:
-                # Буцаалт амжилтгүй бол өр нь хадгалагдсан: sweep дахин оролдоно.
+                # Төлбөр буцаалт амжилтгүй болсон ч буцаах мөнгө бүртгэлтэй үлдэнэ: sweep дахин
+                # оролдоно.
                 with contextlib.suppress(PaymentProviderError):
                     await self._settlement.handle(event)
         async with self._session.begin():
@@ -263,11 +265,11 @@ class CheckoutService:
         idempotency_key: str,
         cancelled: set[int],
     ) -> int | dict[int, str]:
-        """Захиалгын id, эсвэл үргэлжлэхээсөө өмнө provider дээр төлбөрийг нь цуцлах ёстой
-        төлөгдөөгүй захиалгуудын {order id: payment id} (тэр үед юу ч өөрчлөгдөхгүй)."""
+        """Захиалгын id-г буцаана. Эсвэл эхлээд provider дээр төлбөрийг нь цуцлах ёстой төлөгдөөгүй
+        захиалгуудыг {order id: payment id} хэлбэрээр буцаана (энэ үед юу ч өөрчлөхгүй)."""
         async with self._session.begin():
             await self._lock_user(user_id)
-            # Ижил key-тэй зэрэг ирсэн хүсэлт сүүлийн харцаас хойш дуусч болсон.
+            # Ижил key-тэй зэрэг ирсэн хүсэлт бид сүүлд шалгаснаас хойш дуусчихжээ.
             existing = await self._orders.get_by_idempotency_key(user_id, idempotency_key)
             if existing is not None:
                 _require_same_request(existing, request)
@@ -280,8 +282,8 @@ class CheckoutService:
                 if order.payment is not None and order.id not in cancelled
             }
             if uncancelled:
-                # Хуучин нэхэмжлэхийг цуцлахаас ӨМНӨ дүнг шалгана: татгалзах хүсэлт худалдан
-                # авагчийн төлж болох QR-ыг хүчингүй болгож болохгүй.
+                # Хуучин нэхэмжлэхийг цуцлахаас ӨМНӨ дүнг шалгана: татгалзах гэж буй хүсэлт худалдан
+                # авагчийн төлж болох QR-ыг хүчингүй болгох ёсгүй.
                 await self._check_total_early(user_id, request)
                 return uncancelled
 
@@ -426,7 +428,7 @@ class CheckoutService:
             order = await self._orders.get_by_id(order_id)
             assert order is not None
             if order.status == "cancelled":
-                # Ижил түлхүүрээр давтсан хүсэлт, гэхдээ захиалга хугацаа нь дууссан (эсвэл
+                # Ижил key-тэй давтсан хүсэлт, гэхдээ тэр захиалгын хугацаа дууссан (эсвэл
                 # цуцлагдсан): шинэ оролдлого хийх ёстой.
                 raise ProblemError(
                     HTTPStatus.CONFLICT,
@@ -461,12 +463,12 @@ class CheckoutService:
     async def _create_payment(
         self, order_id: int, number: str, total: int, currency: str, gateway: PaymentGateway
     ) -> None:
-        """Захиалгын төлбөрийг provider дээр үүсгэж хадгална, захиалга тутамд яг нэг удаа.
+        """Захиалгын төлбөрийг provider дээр үүсгээд хадгална. Захиалга бүрд яг нэг удаа.
 
-        QPay ижил дугаартай хоёр дахь нэхэмжлэхийг татгалздаг тул давхар товшилтын зэрэг хүсэлтүүд
-        энд захиалгын advisory lock дээр дараалж хүлээнэ: хоёр дахь нь хадгалагдсан төлбөрийг олж
-        шинээр үүсгэхгүй. Түгжээ зөвхөн энэ захиалгынх, захиалгын мөрийг сүлжээ хүлээх хооронд
-        түгжихгүй (expiry, админ саатахгүй)."""
+        QPay ижил дугаартай хоёр дахь нэхэмжлэхийг зөвшөөрдөггүй. Тиймээс давхар товшилтоос зэрэг
+        ирсэн хүсэлтүүд энд захиалгын advisory lock дээр дараалж хүлээнэ: хоёр дахь нь хадгалсан
+        төлбөрийг олж, шинийг үүсгэхгүй. Энэ түгжээ зөвхөн энэ захиалгынх. Сүлжээ хүлээх хооронд
+        захиалгын мөрийг түгжихгүй (expiry, админы ажил саатахгүй)."""
         intent: IntentInfo | None = None
         failure: PaymentProviderError | None = None
         still_open = False
@@ -478,8 +480,8 @@ class CheckoutService:
             order = await self._orders.get_by_id(order_id)
             if order is None or order.status != "pending" or order.payment is not None:
                 return  # өөр хүсэлт аль хэдийн үүсгэсэн, эсвэл захиалга хаагдсан
-            # Дэлгүүр төгрөгөөр үнэлдэг тул хөрвүүлэлт байхгүй: худалдан авагчид харуулсан дүн яг
-            # provider-т илгээгдэнэ. Provider өөр валют шаардвал тохиргоо буруу.
+            # Дэлгүүр төгрөгөөр үнэ тогтоодог тул хөрвүүлэхгүй: худалдан авагчид харуулсан дүнг яг
+            # тэр хэвээр нь provider руу илгээнэ. Provider өөр валют шаардвал тохиргоо буруу.
             charge_currency = gateway.charge_currency or currency
             charge_minor = total
             if charge_currency != currency:
@@ -525,12 +527,13 @@ class CheckoutService:
                 type_=PAYMENT_PROVIDER_TYPE,
             ) from failure
         if intent is not None and not still_open:
-            # Төлбөр үүсэж байх хооронд захиалга хаагдсан (дууссан, солигдсон): нэхэмжлэхийг хаа.
+            # Төлбөр үүсэж байх хооронд захиалга хаагдсан (хугацаа дууссан, солигдсон): нэхэмжлэхийг
+            # цуцална.
             with contextlib.suppress(PaymentProviderError):
                 await gateway.cancel_intent(intent.id)
 
     async def _abort(self, order_id: int) -> None:
-        """Provider төлбөр үүсгэхээс татгалзсан: нөөцийг буцаа."""
+        """Provider төлбөр үүсгэхээс татгалзсан тул нөөцийг буцаана."""
         async with self._session.begin():
             order = await self._orders.get_for_update(order_id)
             if order is not None and order.payment is None:
@@ -548,8 +551,8 @@ class CheckoutService:
             ) from exc
 
     async def _lock_user(self, user_id: int) -> None:
-        """Нэг хэрэглэгчийн checkout-ууд нэг нэгээр ажиллана (commit дээр чөлөөлөгдөнө). Өөр
-        хэрэглэгчид энд хоорондоо хүлээхгүй."""
+        """Нэг хэрэглэгчийн checkout-ууд дараалж ажиллана (түгжээ commit хийхэд чөлөөлөгдөнө). Өөр
+        хэрэглэгчид бие биеэ энд хүлээхгүй."""
         await self._session.execute(
             text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
             {"key": f"checkout:{user_id}"},

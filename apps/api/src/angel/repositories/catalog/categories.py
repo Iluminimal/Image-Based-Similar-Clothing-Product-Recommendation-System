@@ -20,7 +20,7 @@ class FilterOptions:
 
 @dataclass(frozen=True)
 class LeafCategory:
-    """Article type болон түүний өвөг ангиллын нэрс (бараа эдгээрийг хуулж авдаг)."""
+    """Article type болон дээд ангиллуудынх нь нэрс (бараа эдгээрийг өөр дээрээ хуулж хадгалдаг)."""
 
     id: int
     path: str
@@ -40,7 +40,8 @@ class CategoryRepository:
         return list(result.scalars())
 
     async def leaf_categories(self, category_id: int | None = None) -> list[LeafCategory]:
-        """Бүх article type (түвшин 3), идэвхтэй бараагүй ч. Admin-ы ангилал сонгогчид."""
+        """Бүх article type (3-р түвшин), идэвхтэй бараагүйг нь ч оруулна. Бараа нэмэх, засах
+        маягтын ангилал сонгогчид зориулсан."""
         sub = aliased(Category)
         master = aliased(Category)
         statement = (

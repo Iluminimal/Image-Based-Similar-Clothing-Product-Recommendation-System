@@ -1,4 +1,4 @@
-"""User-Agent header-ээс browser-ийн богино, хүнд ойлгомжтой нэр: "Chrome on macOS"."""
+"""User-Agent header-ээс browser-ийн богино, ойлгомжтой нэр гаргана: "Chrome on macOS"."""
 
 # Дараалал чухал: Edge, Opera ч "Chrome" гэж бичдэг, Chrome ч "Safari" гэж бичдэг.
 _BROWSERS = (
@@ -34,7 +34,7 @@ def describe_device(user_agent: str | None) -> str:
 
 def mask_ip(ip: str | None) -> str | None:
     """Үйл явдлын журналд харуулах IP: сүүлийн хэсгийг нууцална ("203.0.113.x", "2001:db8:1::").
-    Бүтэн хаяг хэзээ ч API-аар гарахгүй: төхөөрөмж, хотыг танихад энэ хангалттай."""
+    Бүтэн хаяг API-аар хэзээ ч гарахгүй: төхөөрөмж, хотыг танихад энэ хангалттай."""
     if not ip:
         return None
     if ":" in ip:

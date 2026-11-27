@@ -16,12 +16,13 @@ def _b64(data: bytes) -> str:
 
 
 class FakeOAuth:
-    """Google-гүй Google, тест болон CI-д зориулсан (`OAUTH_MODE=fake`, prod хүлээн авахгүй).
+    """Google руу хандалгүйгээр Google нэвтрэлтийг дуурайна. Тест, CI-д зориулсан
+    (`OAUTH_MODE=fake`, production-д хориотой).
 
-    "Нэвтрэх" нь зөвшөөрлийн дэлгэцийг алгасна: authorization URL нь callback өөрөө бөгөөд хэн
-    нэвтэрснийг агуулсан code-той. `login_hint` нь email-ийг сонгоно (default
-    `fake-google-user@example.com`); `unverified:<email>` гэвэл баталгаажаагүй email болох ба
-    service үүнийг татгалзах ёстой.
+    Зөвшөөрөл асуух дэлгэц гарахгүй: authorization URL нь шууд callback хаяг бөгөөд хэн нэвтэрснийг
+    агуулсан code-той. Ямар email-ээр нэвтрэхийг `login_hint`-ээр сонгоно (анхдагч нь
+    `fake-google-user@example.com`). `unverified:<email>` гэвэл баталгаажаагүй email болно, service
+    үүнийг татгалзах ёстой.
     """
 
     name = "google"
@@ -35,7 +36,8 @@ class FakeOAuth:
         hint, _, picture = (login_hint or DEFAULT_EMAIL).partition(PICTURE_MARK)
         verified = not hint.startswith(UNVERIFIED_PREFIX)
         email = hint.removeprefix(UNVERIFIED_PREFIX).lower()
-        # Email бүрт тогтвортой subject, Google-ийнх шиг: нэг хүн үргэлж нэг хэрэглэгчээр нэвтэрнэ.
+        # Google-ийнх шиг: нэг email-д subject үргэлж ижил тул нэг хүн үргэлж нэг account-аар
+        # нэвтэрнэ.
         subject = "fake-" + hashlib.sha256(email.encode()).hexdigest()[:20]
         name = email.split("@")[0].replace(".", " ").replace("-", " ").title()
         claims = {

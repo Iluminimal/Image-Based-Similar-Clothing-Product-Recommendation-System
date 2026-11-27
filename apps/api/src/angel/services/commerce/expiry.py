@@ -1,6 +1,6 @@
-"""Дэвсгэрт ажилладаг цэвэрлэгээ: төлөгдөөгүй захиалга нөөцөө буцаана, орхигдсон зочны cart
-устана. Хэд хэдэн API process зэрэг ажиллуулахад аюулгүй: захиалга бүрийг мөрийн түгжээн дор,
-зөвхөн pending хэвээр байвал шийднэ, төлбөрийг хоёр удаа цуцлах нь хор хөнөөлгүй."""
+"""Дэвсгэрт ажилладаг цэвэрлэгээ: төлөгдөөгүй захиалгын нөөцийг буцааж, орхигдсон зочны сагсыг
+устгана. Хэд хэдэн API process зэрэг ажиллуулсан ч аюулгүй: захиалга бүрийг мөрийг нь түгжсэн
+үед, pending хэвээр байвал л хаана. Төлбөрийг хоёр удаа цуцлахад хор хөнөөлгүй."""
 
 import asyncio
 from datetime import UTC, datetime, timedelta
@@ -35,8 +35,8 @@ class OrderExpirer:
         self._settings = settings
 
     async def run_once(self) -> int:
-        """TTL-ээс хуучин pending захиалгыг бүгдийг шийдэж, буцаах ёстой төлбөрийг дахин
-        оролдоно. Хэдэн захиалгын нөөцийг чөлөөлснийг буцаана."""
+        """TTL-ээс хуучин бүх pending захиалгыг хааж, буцаах ёстой төлбөрийг дахин оролдоно. Нөөцийг
+        нь чөлөөлсөн захиалгын тоог буцаана."""
         released = await self._expire_overdue()
         await self._retry_refunds()
         async with self._sessions() as session, session.begin():
@@ -104,7 +104,8 @@ class OrderExpirer:
                 log.warning("order_expiry_deferred", order_id=order_id, error=str(exc))
                 return False  # дараагийн sweep дээр дахин оролдоно
             if outcome == "succeeded":
-                # Эцэстээ төлөгдсөн. Мэдэгдэл алдагдсан байж болох тул энд өөрсдөө шийднэ.
+                # Захиалга аль хэдийн төлөгдсөн байна. Мэдэгдэл алдагдсан байж болох тул энд өөрсдөө
+                # төлөгдсөн болгоно.
                 async with self._sessions() as session:
                     await self._settlement(session, self._gateway).reconcile(intent_id)
                 return False

@@ -60,8 +60,8 @@ def build_category_tree(categories: list[Category]) -> list[CategoryNode]:
     return roots
 
 
-# Look-ийг гүйцээх дэд ангилал: юутай хамт өмсдөг вэ. Жагсаалтад байхгүй дэд ангилал (дотуур хувцас,
-# оймс, үнэртэн...) нь look үүсгэхгүй. Дарааллаар нь хамгийн тохиромжтойгоос.
+# "Хослуулах бараа": аль дэд ангиллын барааг юутай хамт өмсдөг вэ. Жагсаалтад байхгүй дэд ангилалд
+# (дотуур хувцас, оймс, үнэртэн...) хослол санал болгохгүй. Хамгийн тохирохоос нь эхэлж жагсаасан.
 COMPLEMENTS: dict[str, tuple[str, ...]] = {
     "Topwear": ("Bottomwear", "Shoes", "Bags", "Watches", "Belts"),
     "Bottomwear": ("Topwear", "Shoes", "Belts", "Bags", "Watches"),
@@ -78,17 +78,18 @@ COMPLEMENTS: dict[str, tuple[str, ...]] = {
     "Eyewear": ("Topwear", "Bottomwear", "Shoes"),
     "Wallets": ("Topwear", "Bottomwear", "Shoes"),
 }
-# Нэг дэд ангилалаас дээд тал нь ингэх бараа (look олон төрлөөс бүрдэнэ).
+# Нэг дэд ангиллаас хамгийн ихдээ ийм тооны бараа (хослол олон төрлөөс бүрдэнэ).
 PER_COMPLEMENT = 2
 
 
 def outfit_genders(gender: str) -> tuple[str, ...]:
-    """Look-д таарах хүйс: Unisex бүхэнд, бусад нь өөрийн хүйс ба Unisex."""
+    """Хослолд тохирох хүйс: Unisex бараанд бүх хүйс, бусад бараанд өөрийн хүйс болон Unisex."""
     return ("Men", "Women", "Boys", "Girls", "Unisex") if gender == "Unisex" else (gender, "Unisex")
 
 
 def interleave(groups: list[list[Product]], limit: int) -> list[Product]:
-    """Бүлэг бүрээс ээлжлэн нэг нэгийг аваад `limit` хүртэл. Нэг ангилал look-ийг эзлэхгүй."""
+    """Бүлэг бүрээс ээлжлэн нэг нэгийг авч, `limit` хүртэл цуглуулна. Ингэснээр нэг ангилал бүх
+    хослолыг эзлэхгүй."""
     out: list[Product] = []
     for rank in range(max((len(g) for g in groups), default=0)):
         for group in groups:
@@ -130,8 +131,9 @@ class CatalogService:
                 understood=(meaning.filters, meaning.text) if meaning else None,
             )
             if total == 0 and query.q:
-                # Яг таарах зүйл алга: үсгийн алдаатай бичсэн байж магадгүй. Эхлээд хоёр үсэг
-                # солигдсон гэж үзнэ (яг таг тулгадаг тул нарийн), дараа нь ойролцоо (trigram).
+                # Яг таарах бараа алга, үсгийн алдаатай бичсэн байж магадгүй. Эхлээд хоёр үсэг
+                # байраа сольсон гэж үзэж шалгана (яг таг тулгадаг тул нарийн), дараа нь ойролцоо
+                # хайлт (trigram) хийнэ.
                 if respelled := swapped_spellings(query.q):
                     products, total = await repository.list_products(
                         filters=filters,
@@ -163,15 +165,15 @@ class CatalogService:
         self, text: str | None, filters: SearchFilters
     ) -> ListingInterpretation | None:
         """Монгол үгтэй хайлтыг шүүлтүүр болгоно. `filters()` өөрийн transaction нээдэг тул
-        жагсаалтын transaction-аас өмнө дуудна."""
+        жагсаалтын transaction эхлэхээс өмнө дуудна."""
         if not text:
             return None
         vocabulary = Vocabulary.from_catalog(await self.filters())
         return interpret_listing_query(text, vocabulary=vocabulary, filters=filters)
 
     async def _navigation_filters(self, query: ProductListQuery) -> SearchFilters | None:
-        """Query-ийн filter-үүд, `department` болон `category`-г тодорхойлсон байдлаар, эсвэл бүх
-        барааг хасвал None (department болон давхцахгүй gender-ийг зэрэг заасан үед)."""
+        """`department`, `category`-г тооцсон query-ийн filter-үүд. Ямар ч бараа таарах боломжгүй
+        бол None (жишээ нь department-д хамаарахгүй gender зэрэг заасан)."""
         filters = to_search_filters(query)
         if query.department is not None:
             department = DEPARTMENT_BY_SLUG.get(query.department)
@@ -206,8 +208,8 @@ class CatalogService:
         return to_product_out(product, self._storage)
 
     async def complete_the_look(self, product_id: int, limit: int) -> list[ProductOut]:
-        """Энэ бараатай хамт өмсөх бараа: нэмэлт дэд ангилал бүрээс хамгийн их зарагдсан нь,
-        ангилал хооронд ээлжлэн. Нөөцгүй, идэвхгүй бараа, барааг өөрийг нь оруулахгүй."""
+        """Энэ бараатай хамт өмсөх бараанууд: нэмэлт дэд ангилал бүрээс хамгийн их зарагдсан
+        бараануудыг ээлжлэн авна. Нөөцгүй, идэвхгүй бараа болон энэ барааг өөрийг нь оруулахгүй."""
         async with self._session.begin():
             repository = ProductRepository(self._session)
             product = await repository.get_by_id(product_id)
@@ -244,8 +246,8 @@ class CatalogService:
         )
 
     async def filters(self) -> CatalogFilters:
-        """Зөвхөн бараа нэмэгдэх эсвэл өнгө нь солигдоход өөрчлөгддөг, тиймээс хэдэн минутын
-        cache хэрэглэгчид мэдэгдэхгүй бөгөөд хуудас бүрт хэд хэдэн DISTINCT scan хэмнэнэ."""
+        """Зөвхөн бараа нэмэгдэх, өнгө нь солигдоход л өөрчлөгддөг. Тиймээс хэдэн минутын cache
+        хэрэглэгчид анзаарагдахгүй, харин хуудас бүрт хэд хэдэн DISTINCT scan хэмнэнэ."""
         cached = await self._cache.get_catalog_filters()
         if cached is not None:
             return cached
@@ -267,8 +269,8 @@ class CatalogService:
         return result
 
     async def taxonomy(self) -> TaxonomySnapshot:
-        """Тоотой department-ууд болон зангилаа бүрийн ард буй id-нууд. Тоо нь зөвхөн catalogue
-        өөрчлөгдөхөд өөрчлөгддөг тул filter сонголттой хамт cache хийнэ."""
+        """Department-ууд ба тэдгээрийн барааны тоо, мөн цэс бүрд хамаарах ангиллын id-ууд. Тоо
+        зөвхөн catalogue өөрчлөгдөхөд өөрчлөгддөг тул filter-ийн сонголтуудтай хамт cache хийнэ."""
         cached = await self._cache.get_taxonomy()
         if cached is not None:
             return cached

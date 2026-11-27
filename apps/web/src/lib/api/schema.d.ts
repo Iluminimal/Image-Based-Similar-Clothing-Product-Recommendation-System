@@ -1763,8 +1763,8 @@ export interface components {
         };
         /**
          * AddressUpdate
-         * @description PATCH: зөвхөн илгээсэн талбарууд өөрчлөгдөнө. Аймаг/дүүргийн хослолыг service нэгтгэсэн
-         *     хаяг дээр шалгана.
+         * @description PATCH: зөвхөн илгээсэн талбарууд өөрчлөгдөнө. Аймаг, дүүрэг тохирч байгаа эсэхийг service
+         *     хуучин, шинэ утгыг нэгтгэсний дараа шалгана.
          */
         AddressUpdate: {
             /** City */
@@ -1877,7 +1877,8 @@ export interface components {
         };
         /**
          * AdminOrderEventOut
-         * @description Ижил алхам, гэхдээ administrator харж болох бүх зүйлтэй: тэмдэглэл, хэн хийсэн.
+         * @description Хэрэглэгчийн хардаг түүхийн алхамтай адил, гэхдээ админы харж болох бүх зүйлтэй: тэмдэглэл,
+         *     хэн хийсэн.
          */
         AdminOrderEventOut: {
             /**
@@ -2054,8 +2055,8 @@ export interface components {
         };
         /**
          * AdminPaymentOut
-         * @description Төлбөрийн бичлэг. QR зураг гэх мэт provider-ийн өгөгдөл энд гарахгүй. `charge_*` нь бодитоор
-         *     авсан дүн (минор нэгжээр) ба түгжсэн ханш.
+         * @description Төлбөрийн бичлэг. QR зураг гэх мэт provider-ийн өгөгдөл энд гарахгүй. `charge_*` бол бодитоор
+         *     авсан дүн (бага нэгжээр) ба тогтоосон ханш.
          */
         AdminPaymentOut: {
             /** Amount Cents */
@@ -2079,8 +2080,8 @@ export interface components {
         };
         /**
          * AdminProductCreateForm
-         * @description Multipart form: барааны зураг болон дэлгэрэнгүй мэдээлэл. Зургаас thumbnail-ууд болон
-         *     visual search-ийн эрэмбэлэх embedding гарна.
+         * @description Multipart form: барааны зураг болон дэлгэрэнгүй мэдээлэл. Зургаас thumbnail-ууд болон visual
+         *     search-д эрэмбэлэхэд хэрэглэх embedding үүсгэнэ.
          */
         AdminProductCreateForm: {
             /** Base Colour */
@@ -2287,8 +2288,8 @@ export interface components {
         };
         /**
          * AdminStats
-         * @description Dashboard. Орлого нь төлөгдсөн, илгээсэн, хүргэсэн захиалгыг төлөгдсөн өдрөөр нь тооцно;
-         *     төлбөрийг нь буцаасан захиалга орлого биш.
+         * @description Dashboard. Орлогод төлөгдсөн, илгээсэн, хүргэсэн захиалгыг төлөгдсөн өдрөөр нь тооцно.
+         *     Төлбөрийг нь буцаасан захиалга орлогод орохгүй.
          */
         AdminStats: {
             average_order_cents: components["schemas"]["Delta"];
@@ -2355,8 +2356,7 @@ export interface components {
         /**
          * AppliedFilter
          * @description Текстээс задалж хэрэгжүүлсэн шүүлтүүр. `value`: өнгө, хүйс, улирал, хэрэглээ, төрөлд англи
-         *     нэр; `min_price`/`max_price`-д бага нэгжийн
-         *     (төгрөг x 100) тоо; `in_stock`-д "true".
+         *     нэр; `min_price`/`max_price`-д бага нэгжийн (төгрөг x 100) тоо; `in_stock`-д "true".
          */
         AppliedFilter: {
             /**
@@ -2703,10 +2703,9 @@ export interface components {
         };
         /**
          * FilterParams
-         * @description Catalogue-ийн filter-үүд, жагсаалт (query string), зургаар хайлт (form field), текстээр
-         *     хайлт (JSON) гурвын хооронд хуваалцдаг. Хэд хэдэн утга өгөхийн тулд параметрийг давтана:
-         *     `?gender=Men&gender=Unisex`. Үнэ нь бусад API шиг бүхэл бага нэгжээр
-         *     (төгрөг x 100).
+         * @description Catalogue-ийн filter-үүд. Жагсаалт (query string), зургаар хайлт (form field), текстээр хайлт
+         *     (JSON) гурав нэг адил ашиглана. Нэг filter-т хэд хэдэн утга өгөхийн тулд параметрийг давтана:
+         *     `?gender=Men&gender=Unisex`. Үнэ бусад API-тай адил бүхэл бага нэгжээр (төгрөг x 100).
          */
         FilterParams: {
             /**
@@ -2761,8 +2760,8 @@ export interface components {
         };
         /**
          * FulfillmentBoard
-         * @description Агуулахын ажилтны нүүр: юуг илгээх, нөөц хаана дууссан, өөрийн сүүлийн үйлдлүүд. Орлого,
-         *     хэрэглэгчийн мэдээлэл ороогүй.
+         * @description Агуулахын ажилтны нүүр хуудас: юу илгээх, аль барааны нөөц дууссан, өөрийн сүүлийн үйлдлүүд.
+         *     Орлого, хэрэглэгчийн мэдээлэл орохгүй.
          */
         FulfillmentBoard: {
             /** Avg Ship Hours */
@@ -3345,8 +3344,9 @@ export interface components {
         };
         /**
          * PaymentMethodOut
-         * @description Checkout ямар аргаар төлүүлэх вэ, захиалга үүсэхээс өмнө (хуудас зөв алхмыг харуулна).
-         *     `provider` None бол төлбөр тохируулаагүй. `charge_currency` нь бодитоор авах валют.
+         * @description Захиалга үүсэхээс өмнө checkout ямар аргаар төлбөр авахыг мэдэгдэнэ (хуудас зөв алхам
+         *     харуулахын тулд). `provider` None бол төлбөр тохируулаагүй. `charge_currency` бол бодитоор
+         *     авах валют.
          */
         PaymentMethodOut: {
             /** Charge Currency */
@@ -3356,8 +3356,8 @@ export interface components {
         };
         /**
          * PaymentOut
-         * @description Browser төлбөр авахад хэрэгтэй зүйл. `qpay`: QR болон банкны холбоосыг харуулж, дараа нь
-         *     `check-payment`-аар баталгаажуулна. `offline` (development): simulate endpoint-ийг дуудна.
+         * @description Browser-т төлбөр хийхэд хэрэгтэй мэдээлэл. `qpay`: QR болон банкны холбоосыг харуулж, дараа
+         *     нь `check-payment`-аар баталгаажуулна. `offline` (development): simulate endpoint-ийг дуудна.
          */
         PaymentOut: {
             charge: components["schemas"]["ChargeOut"] | null;
@@ -3617,7 +3617,7 @@ export interface components {
         };
         /**
          * RefundRequest
-         * @description Үргэлж бүтэн дүн (төлбөрийн gateway-ийн дэмждэг зүйл).
+         * @description Үргэлж бүтэн дүнгээр буцаана (төлбөрийн gateway зөвхөн үүнийг дэмждэг).
          */
         RefundRequest: {
             /** Reason */
@@ -3641,7 +3641,7 @@ export interface components {
         };
         /**
          * RegionOut
-         * @description Зураг дээр олдсон нэг хувцас (эсвэл гутал, цүнх). Хайлт сонгосон хэсгээрээ явна.
+         * @description Зураг дээрээс олдсон нэг хувцас (эсвэл гутал, цүнх). Хайлт сонгосон хэсгээр хийгдэнэ.
          */
         RegionOut: {
             box: components["schemas"]["RegionBox"];
@@ -3685,8 +3685,8 @@ export interface components {
         };
         /**
          * ReorderSkipped
-         * @description Өмнөх захиалгын мөр, сагсанд бүрэн нэмэгдээгүй: шалтгаан нь `reduced` бол цөөн ширхэг
-         *     нэмэгдсэн, бусад үед огт нэмэгдээгүй.
+         * @description Өмнөх захиалгын сагсанд бүрэн нэмэгдээгүй мөр. Шалтгаан нь `reduced` бол цөөн ширхэг
+         *     нэмэгдсэн, бусад шалтгаанд огт нэмэгдээгүй.
          */
         ReorderSkipped: {
             /** Name */
@@ -3883,8 +3883,8 @@ export interface components {
         };
         /**
          * SessionOut
-         * @description Access token нь `Authorization: Bearer`-д очиж, client-ийн санах ойд хадгалагдана. Refresh
-         *     token хариуны body-д хэзээ ч гарахгүй: httpOnly cookie байна.
+         * @description Access token-ыг client санах ойдоо хадгалж, `Authorization: Bearer`-ээр илгээнэ. Refresh
+         *     token хариуны body-д хэзээ ч орохгүй, зөвхөн httpOnly cookie-ээр очно.
          */
         SessionOut: {
             /** Access Token */
@@ -3906,8 +3906,8 @@ export interface components {
         };
         /**
          * ShipRequest
-         * @description Хүргэлтийн захиалгад хоёулаа заавал. Дэлгүүрээс авах захиалгад хоёуланг нь орхино: энэ
-         *     үйлдэл "авахад бэлэн" гэсэн үг.
+         * @description Хүргэлтийн захиалгад хоёуланг нь заавал бөглөнө. Дэлгүүрээс авах захиалгад хоёуланг нь хоосон
+         *     үлдээнэ: энэ үйлдэл "авахад бэлэн болсон" гэсэн үг.
          */
         ShipRequest: {
             /** Carrier */

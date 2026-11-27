@@ -23,7 +23,7 @@ beforeEach(() => {
     configurable: true,
     value: { getUserMedia: vi.fn(async () => ({ getTracks: () => [{ stop }] })) },
   });
-  // jsdom-д видео, canvas байхгүй: бэлэн кадр бүхий 640x480 камер дүрслэнэ.
+  // jsdom-д видео, canvas байхгүй тул бэлэн кадртай 640x480 камерыг дуурайна.
   vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
   vi.spyOn(HTMLMediaElement.prototype, "readyState", "get").mockReturnValue(4);
   vi.spyOn(HTMLVideoElement.prototype, "videoWidth", "get").mockReturnValue(640);

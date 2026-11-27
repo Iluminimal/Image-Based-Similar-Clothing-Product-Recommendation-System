@@ -102,7 +102,7 @@ async def test_checkout_reserves_stock_snapshots_prices_and_starts_the_payment(
             }
         ]
         assert await stock_of(api.app.state.engine, product.product_id) == 7 - 2
-        # Төлбөр амжилттай болтол сагс хэвээр: татгалзсан карт сагсыг үрэхгүй.
+        # Төлбөр амжилттай болтол сагс хэвээр: карт татгалзагдсан ч сагс алга болохгүй.
         cart = await shopper.client.get("/api/v1/cart", headers=shopper.auth)
         assert cart.json()["item_count"] == 2
 

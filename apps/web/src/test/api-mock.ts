@@ -29,8 +29,8 @@ export function problem(status: number, title: string, extra: Record<string, unk
 }
 
 /**
- * Multipart body-ийн талбарууд. (undici-ийн өөрийн parser jsdom `File`-ыг татгалздаг тул энэ
- * байна.)
+ * Multipart body-ийн талбаруудыг уншина. (undici-ийн parser jsdom-ын `File`-ыг хүлээж авдаггүй тул өөрсдөө
+ * уншина.)
  */
 function parseMultipart(raw: string, contentType: string): FormData {
   const boundary = /boundary=([^;]+)/.exec(contentType)?.[1];
@@ -49,9 +49,9 @@ function parseMultipart(raw: string, contentType: string): FormData {
 }
 
 /**
- * `fetch`-ийг "METHOD /path" түлхүүртэй router-оор солино (query string үл тооно). `Request` объект
- * (openapi-fetch) болон энгийн URL string хоёуланг боловсруулна. Үл мэдэгдэх route тестийг чангаар
- * унагана.
+ * `fetch`-ийг "METHOD /path" key-тэй router-оор солино (query string-ийг тооцохгүй). `Request` объект
+ * (openapi-fetch) болон энгийн URL string хоёуланг боловсруулна. Тодорхойлоогүй route дуудвал тест ил алдаа
+ * өгч унана.
  */
 export function stubApi(routes: Record<string, Handler>) {
   const calls: Call[] = [];

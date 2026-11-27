@@ -15,11 +15,11 @@ export const VARIANTS: Variant[] = Object.keys(VIEWPORTS).flatMap((viewport) =>
   SCHEMES.map((scheme) => ({ viewport: viewport as Variant["viewport"], scheme })),
 );
 
-/** Хуудас агуулгаа зурсан: юу ч ачаалж байхгүй, web font болон transition тогтсон. */
+/** Хуудас агуулгаа зурж дууссаныг хүлээнэ: юу ч ачаалагдаагүй байхгүй, web font, transition тогтсон. */
 export async function settled(page: Page) {
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   await page.evaluate(() => document.fonts.ready);
-  // Contrast-ыг зурагдсан зүйлээр хэмждэг: эхлээд fade болон slide-in дуусгана.
+  // Contrast-ыг зурагдсан зүйл дээр хэмждэг тул fade, slide-in дуусахыг эхлээд хүлээнэ.
   await page.waitForTimeout(400);
 }
 

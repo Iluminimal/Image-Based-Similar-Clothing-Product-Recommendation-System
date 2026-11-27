@@ -65,7 +65,7 @@ test("the department menu behaves like one flyout: instant switching, a solid ba
   await expect(page.getByRole("region", { name: `${first!.name} categories`, exact: true })).toBeVisible();
   await expect.poll(barBackground).not.toBe(translucent);
 
-  // Өөр department руу: хаагаад дахин нээхгүй, нэг flyout өөр агуулгаа харуулна.
+  // Өөр department руу шилжихэд flyout хаагдаж дахин нээгдэхгүй: нэг flyout агуулгаа солино.
   await link(second!.name).hover();
   await expect(link(second!.name)).toHaveAttribute("aria-expanded", "true");
   await expect(link(first!.name)).toHaveAttribute("aria-expanded", "false");
@@ -187,7 +187,7 @@ test.describe("on a computer the bar stays, whatever is opened (apple.com's glob
     await expect.poll(async () => (await panel.boundingBox())!.height).toBeGreaterThan(200);
     const box = await panel.boundingBox();
     expect(box!.y).toBeGreaterThanOrEqual(BAR_HEIGHT - 1);
-    // Дэлгэцийг бүхлээр нь биш: самбарын доор curtain-ы цаана хуудас харагдана.
+    // Дэлгэцийг бүтнээр нь хучихгүй: panel-ийн доор curtain-ы цаана хуудас харагдана.
     expect(box!.y + box!.height).toBeLessThanOrEqual(page.viewportSize()!.height - 150);
     expect(box!.width).toBeGreaterThanOrEqual(1439);
     const curtain = page.locator(".bar-curtain");

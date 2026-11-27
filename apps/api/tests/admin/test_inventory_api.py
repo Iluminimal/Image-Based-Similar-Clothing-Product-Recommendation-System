@@ -39,7 +39,7 @@ async def test_units_held_for_unshipped_orders_are_still_on_the_shelf(
 
         _, paid = await place_order(api, product, pay=True)
         assert await numbers(api, worker, product.product_id) == (8, 2, 10)
-        await place_order(api, product)  # төлбөр хүлээж буй нь бас барьдаг
+        await place_order(api, product)  # төлбөр хүлээж буй захиалга ч нөөц эзэлдэг
         assert await numbers(api, worker, product.product_id) == (6, 4, 10)
 
         shipped = await api.client.post(

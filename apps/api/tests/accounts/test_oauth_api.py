@@ -35,7 +35,7 @@ async def sign_in(client: AsyncClient, email: str | None = None, **params: str) 
 
 
 async def who_am_i(client: AsyncClient) -> dict[str, object]:
-    """Callback-ийн тавьсан refresh cookie-г session-оор солино, web апп ачаалахад хийдэг шиг."""
+    """Web апп ачаалахдаа хийдгийн адил callback-ийн тавьсан refresh cookie-гоор session авна."""
     response = await client.post(REFRESH)
     assert response.status_code == 200, response.text
     user: dict[str, object] = response.json()["user"]
@@ -154,7 +154,7 @@ async def test_password_login_for_a_google_only_account_looks_like_any_wrong_pas
 
         assert known.status_code == unknown.status_code == 401
         assert known.json()["title"] == unknown.json()["title"]
-        # Мөн тэр имэйлээр бүртгүүлэх нь татгалзагдсан хэвээр: account байна.
+        # Тэр имэйлээр шинээр бүртгүүлэхийг ч зөвшөөрөхгүй хэвээр: account аль хэдийн байгаа.
         again = await api.client.post(
             "/api/v1/auth/register", json={"email": email, "password": PASSWORD, "full_name": "X"}
         )

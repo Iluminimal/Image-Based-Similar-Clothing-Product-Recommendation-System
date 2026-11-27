@@ -2,8 +2,8 @@ import { test, expect } from "./fixtures";
 import { openSearch } from "./support/ui";
 
 /**
- * Keyboard болон screen reader хэрэглэгчид хэрэгтэй боловч axe шүүж чаддаггүй зүйл: focus очих
- * ёстой газартаа очих, байх ёстой газартаа үлдэх, үргэлж харагдах.
+ * Keyboard, screen reader хэрэглэгчид хэрэгтэй ч axe шалгаж чадахгүй зүйлс: focus очих ёстой газраа очих,
+ * байх ёстой газраа үлдэх, үргэлж харагдах.
  */
 
 test("the skip link is the first stop and moves focus into the page", async ({ page }) => {
@@ -30,7 +30,7 @@ test("every stop in the header and the first screen of a page shows where focus 
       const style = getComputedStyle(el);
       const outline = style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0;
       const shadow = style.boxShadow !== "none";
-      // Radio эсвэл checkbox focus-ыг харагдах дүр төрх дээрээ (дараагийн элемент) үзүүлнэ.
+      // Radio, checkbox-ын focus-ыг харагдах хэсэг дээр нь (дараагийн элемент) харуулдаг.
       const label = `${el.tagName.toLowerCase()} ${el.getAttribute("aria-label") ?? el.textContent?.trim().slice(0, 30) ?? ""}`;
       return { label, shown: outline || shadow, hidden: el.className.includes?.("sr-only") ?? false };
     });
@@ -105,8 +105,8 @@ test("the arrow keys move along the navigation bar and switch an open flyout", a
   await page.keyboard.press("Home");
   await page.keyboard.press("ArrowDown");
   await expect(links.first()).toHaveAttribute("aria-expanded", "true");
-  // ArrowDown focus-ийг flyout-ын эхний холбоос руу дараагийн frame дээр зөөнө. Түүнээс өмнө bar руу
-  // буцвал хоцорсон тэр шилжилт focus-ийг дахин булаана.
+  // ArrowDown дарахад дараагийн frame дээр focus flyout-ын эхний холбоос руу шилжинэ. Түүнээс өмнө bar руу
+  // буцвал хоцрогдсон тэр шилжилт focus-ыг дахин авна.
   await expect(page.locator("#mega-women [data-mega-link]").first()).toBeFocused();
   await links.first().focus();
 

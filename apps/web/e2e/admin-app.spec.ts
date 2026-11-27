@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures";
 
-// Admin-ыг жинхэнэ апп болгож буй хэсгүүд: глобал хайлт (⌘K), мөр сонгоод олон барааны төлөв солих.
+// Админ хэсгийг бодит апп шиг болгодог боломжууд: нийтлэг хайлт (⌘K), мөр сонгож олон барааны төлөв солих.
 
 test("⌘K finds a product by name and opens it", async ({ adminPage: page, newProduct }) => {
   const product = await newProduct({ name: `Palette jacket ${Date.now()}` });

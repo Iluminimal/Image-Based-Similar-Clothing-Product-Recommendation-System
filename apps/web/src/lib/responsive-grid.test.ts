@@ -13,9 +13,9 @@ function components(folder: string): string[] {
 }
 
 /**
- * `grid lg:grid-cols-…` нь утсан дээр баганагүй: далд (`auto`) багана хамгийн урт мөр таслагддаггүй
- * бичвэрийн (`truncate`, урт имэйл) хэмжээгээр тэлж, хуудсыг дэлгэцээс гаргадаг (checkout 176px,
- * dashboard 378px гарсан). Суурь `grid-cols-1` нь `minmax(0,1fr)` тул тэлэхгүй.
+ * `grid lg:grid-cols-…` утсан дээр багана заадаггүй. Тэгвэл далд (`auto`) багана мөр нь таслагддаггүй хамгийн
+ * урт бичвэрийн (`truncate`, урт имэйл) хэмжээгээр тэлж, хуудсыг дэлгэцээс гаргадаг (checkout 176px,
+ * dashboard 378px хэтэрч байсан). Суурь `grid-cols-1` бол `minmax(0,1fr)` тул тэлдэггүй.
  */
 describe("grids that only get columns on wider screens", () => {
   it("also say how the phone's single column is sized", () => {

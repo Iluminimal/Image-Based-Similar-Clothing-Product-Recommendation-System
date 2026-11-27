@@ -30,7 +30,7 @@ def bearer(token: str) -> dict[str, str]:
 
 
 async def google_session(client: AsyncClient, email: str) -> str:
-    """Fake Google-ээр бүтэн урсгалыг дамжин нэвтэрч, access token буцаана."""
+    """Fake Google-ээр нэвтрэх бүх алхмыг дамжиж, access token буцаана."""
     start = await client.get("/api/v1/auth/google/start", params={"login_hint": email})
     assert start.status_code == 302
     location = start.headers["location"].split("localhost:3000", 1)[1]
@@ -273,7 +273,7 @@ async def test_deleting_an_account_anonymizes_it_and_keeps_the_orders(
             await scalar(api, "SELECT count(*) FROM orders WHERE user_id = :i", i=shopper.user_id)
             == 1
         )
-        # Хэн ч энэ account-ыг ашиглаж чадахгүй, имэйлээр дахин бүртгүүлж болно.
+        # Энэ account-ыг хэн ч ашиглаж чадахгүй, харин тэр имэйлээр дахин бүртгүүлж болно.
         assert (
             await api.client.post(LOGIN, json={"email": shopper.email, "password": PASSWORD})
         ).status_code == 401

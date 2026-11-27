@@ -178,7 +178,7 @@ async def test_hybrid_default_blends_image_and_text(api: Api) -> None:
     assert response.status_code == 200
     assert len(body["results"]) == 10
     assert len(body["detected"]) == 3  # ангиллын таамаглал зургийн хэсгээс ирнэ
-    # Санамсаргүй fake embedding-ийн үед холимог нь зурагт өөрт нь хамгийн ойр байхаа больсон.
+    # Fake embedding санамсаргүй тул текст нэмсний дараа хамгийн ойр нь тэр зураг өөрөө биш болсон.
     assert body["results"][0]["similarity"] < 0.95
 
 

@@ -220,7 +220,7 @@ async def test_reembed_replaces_embeddings_but_keeps_shop_owned_fields(
         db_engine, products, storage, version=VERSION, options=OPTIONS, embedder=embedder
     )
 
-    assert embedder.images_embedded == 3  # хуучирсан хувилбар дахин embedding хийхийг өдөөнө
+    assert embedder.images_embedded == 3  # хувилбар хуучирвал дахин embed хийнэ
     assert stats.thumbnails_written == 0
     async with db_engine.connect() as connection:
         rows = (await connection.execute(select(Product))).all()

@@ -33,7 +33,7 @@ def parse(text: str, vocabulary: Vocabulary = VOCABULARY) -> ParsedQuery:
     [
         ("blue shirt", ("Blue",)),
         ("цэнхэр цамц", ("Blue",)),
-        ("цэнхэрээр", ("Blue",)),  # тохиолдлын нөхцөл
+        ("цэнхэрээр", ("Blue",)),  # тийн ялгалын нөхцөл
         ("Улаан", ("Red",)),  # том үсэг
         ("navy blue jacket", ("Navy Blue",)),  # хамгийн урт хэллэг: "blue" биш
         ("хар хөх", ("Navy Blue",)),  # "хар", "хөх" тус тусдаа биш

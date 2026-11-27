@@ -104,15 +104,15 @@ test("a delivered order is returned: approved, received at the warehouse, then r
 });
 
 /**
- * Session-ий алдаа: хуудас шилжих эсвэл сүлжээ тасрахад сервер refresh token-ийг сольсон ч browser
- * шинэ cookie-г авдаггүй. Дараагийн хуудас хуучнаар сэргээхэд хэрэглэгч гарч болохгүй.
+ * Session-ий алдааны тест: хуудас шилжих, сүлжээ тасрах үед server refresh token-ийг сольсон ч browser шинэ
+ * cookie аваагүй байж болно. Дараагийн хуудас хуучин token-оор сэргээхэд хэрэглэгч гарах ёсгүй.
  */
 test("a shopper stays signed in when the answer to a refresh never reached the browser", async ({
   shopperPage: page,
   account,
   playwright,
 }) => {
-  // Browser-ийн cookie-оор өөр газраас refresh: сервер сольсон, browser-т хуучин нь үлдсэн.
+  // Browser-ийн cookie-гоор өөр газраас refresh хийнэ: server token-ийг сольсон ч browser-т хуучин нь үлдэнэ.
   const elsewhere = await playwright.request.newContext({ storageState: withEnglish(account.cookies) });
   const lost = await elsewhere.post(`${API_URL}/api/v1/auth/refresh`);
   expect(lost.status()).toBe(200);

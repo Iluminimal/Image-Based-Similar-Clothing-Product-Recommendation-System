@@ -25,8 +25,7 @@ const SESSIONS = "/api/v1/auth/sessions";
 const SECURITY_EVENTS = "/api/v1/auth/security-events";
 
 /**
- * `stubApi` дээр хуудасны үргэлж асуудаг хоосон төхөөрөмжийн жагсаалтыг нэмсэн; `calls` тэр
- * хүсэлтийг оруулдаггүй.
+ * `stubApi` дээр хуудас үргэлж асуудаг (хоосон) төхөөрөмжийн жагсаалтыг нэмсэн; `calls`-д тэр хүсэлт орохгүй.
  */
 function stubProfileApi(routes: Parameters<typeof stubApi>[0]) {
   const api = stubApi({ [`GET ${SESSIONS}`]: respond([]), [`GET ${SECURITY_EVENTS}`]: respond([]), ...routes });

@@ -40,7 +40,7 @@ test("a photo search shows similar products with match badges and a detected cat
   await expect(page.getByText(/\d+% match/).first()).toBeVisible();
   await openSingleView(page);
   if (!FAKE_MODEL) {
-    // FashionCLIP browser-ийн дахин encode-ыг давж харна: барааны өөрийн зураг ялсаар байна.
+    // FashionCLIP browser-ийн дахин encode-ыг давж чадна: барааны өөрийн зураг эхэнд гарсаар байна.
     await expect(page.locator("article a").first()).toHaveAttribute("href", new RegExp(`^/products/${product.id}/`));
   }
 });
@@ -102,7 +102,7 @@ test("through the API, a catalogue photo finds its own product first with a near
   expect(response.status()).toBe(200);
   const body = await response.json();
   expect(body.results[0].product.id).toBe(product.id);
-  // Thumbnail нь embedding гарсан зургийн алдагдалтай хуулбар: маш ойр боловч яг ижил биш.
+  // Thumbnail бол embedding гаргасан зургийн чанар бага зэрэг алдсан хуулбар: маш төстэй ч яг ижил биш.
   expect(body.results[0].similarity).toBeGreaterThan(0.97);
   expect(body.results[1].similarity).toBeLessThan(body.results[0].similarity - 0.05);
   expect(body.detected.length).toBeGreaterThan(0);
@@ -118,8 +118,7 @@ test("the user can override the detected category", async ({ page, api, products
   await searches.clear();
 
   await page.getByRole("button", { name: /Detected:/ }).click();
-  // "Any category" эхэнд байх бөгөөд дараагийн бүртгэл нь загварын олсон хамгийн магадлалтай
-  // ангилал.
+  // "Any category" эхэнд, дараагийнх нь model-ийн олсон хамгийн магадлалтай ангилал.
   const choice = page.getByRole("menuitemradio").nth(1);
   const category = (await choice.locator("span").first().innerText()).trim();
   await choice.click();

@@ -3,9 +3,9 @@ import path from "node:path";
 import { ADMIN_EMAIL, ADMIN_PASSWORD, WAREHOUSE_EMAIL, WAREHOUSE_PASSWORD } from "./support/env";
 
 /**
- * Admin тестүүдийн нэвтэрдэг админ ба агуулахын ажилтан байгаа эсэхийг баталгаажуулна. Оператор
- * ашигладаг CLI-аар (`make create-admin`, `make create-warehouse`) дамждаг тул тэр замыг мөн шалгана.
- * Давтан ажиллуулахад аюулгүй: байгаа account-ыг тухайн role-д оноож, энэ нууц үгийг өгнө.
+ * Админ тестүүд нэвтрэх админ, агуулахын ажилтныг бэлдэнэ. Оператор ашигладаг CLI-г (`make create-admin`,
+ * `make create-warehouse`) дууддаг тул тэр замыг ч шалгана. Дахин дахин ажиллуулахад аюулгүй: байгаа
+ * account-д тэр role-ийг өгч, энэ нууц үгийг тавина.
  */
 function provision(command: "create-admin" | "create-warehouse", email: string, name: string, password: string) {
   const result = spawnSync("uv", ["run", "python", "-m", "angel.cli.admin", command, "--email", email, "--name", name], {

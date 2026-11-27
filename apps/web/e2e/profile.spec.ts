@@ -8,7 +8,7 @@ const NEW_PASSWORD = "an entirely new passphrase";
 const login = (api: import("@playwright/test").APIRequestContext, email: string, password: string) =>
   api.post(`${API_URL}/api/v1/auth/login`, { data: { email, password } });
 
-/** Хуудас ачаалахдаа session-ээ сэргээдэг; account-ыг уншихын өмнө үүнийг хүлээ. */
+/** Хуудас ачаалахдаа session-оо сэргээдэг тул account-ыг уншихаас өмнө үүнийг хүлээнэ. */
 async function openProfile(page: Page) {
   await page.goto("/account/profile");
   await expect(page.getByRole("heading", { level: 2, name: "Profile" })).toBeVisible();

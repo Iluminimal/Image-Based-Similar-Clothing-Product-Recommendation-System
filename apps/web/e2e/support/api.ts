@@ -52,9 +52,7 @@ export const OTP_CODE = "000000";
 export const uniqueEmail = (label: string) =>
   `e2e-${label}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}@example.com`;
 
-/**
- * API-аар үүсгэсэн шинэ хэрэглэгч: тест форм дээр (мөн бүртгэлийн rate limit-д) хугацаа үрэхгүй.
- */
+/** API-аар шинэ хэрэглэгч үүсгэнэ: тест form бөглөхөд цаг үрэхгүй (бүртгэлийн rate limit-д ч тулахгүй). */
 export async function registerAccount(request: APIRequestContext, label = "shopper"): Promise<Account> {
   const email = uniqueEmail(label);
   const body = await ok<{ access_token: string }>(
@@ -173,9 +171,9 @@ export async function placePendingOrder(request: APIRequestContext, account: Acc
 }
 
 /**
- * Энэ тестийн өөрийн бараа ("E2E ..." нэртэй, `make e2e-clean` устгана): нөөц өөрчлөх эсвэл
- * худалдан авдаг тестүүд бие биедээ болон бусад spec-ийн уншдаг каталогт саад болохгүй. Үүнийг шууд
- * дуудахын оронд `newProduct` fixture ашигла: тест дуусахад бараа хасагдана.
+ * Энэ тестийн өөрийн бараа ("E2E ..." нэртэй, `make e2e-clean` устгана). Нөөц өөрчлөх эсвэл худалдан авдаг
+ * тестүүд бие биедээ болон бусад spec-ийн уншдаг каталогт саад болохгүй. Шууд дуудахын оронд `newProduct`
+ * fixture ашиглана: тест дуусахад барааг зарахаа болино.
  */
 export async function createProduct(
   request: APIRequestContext,
@@ -186,8 +184,8 @@ export async function createProduct(
     await request.get(`${API_URL}/api/v1/admin/categories`, { headers: bearer(worker) }),
     "listing categories",
   );
-  // Хувцас биш: бусад spec "хамгийн сүүлийн нөөцтэй хувцас"-ыг сонгодог, зургаас үүсгэсэн бараа
-  // тэдгээрийн нэг байж болохгүй (`newProduct` fixture-ийг fixtures.ts-ээс үз, тэр нь бас хасдаг).
+  // Хувцас биш бараа: бусад spec "хамгийн шинэ нөөцтэй хувцас"-ыг сонгодог тул зургаас үүсгэсэн бараа тэдний
+  // нэг байх ёсгүй (`newProduct` fixture-ийг fixtures.ts-ээс үзнэ үү, тэр барааг эргүүлж зарахаа болино).
   const category = categories.find((c) => c.article_type === "Handbags") ?? categories[0]!;
   const name = options.name ?? `E2E handbag ${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
   const created = await ok<{ id: number }>(
@@ -212,7 +210,7 @@ export async function withdrawProduct(request: APIRequestContext, worker: Accoun
   await request.post(`${API_URL}/api/v1/admin/products/${productId}/deactivate`, { headers: bearer(worker) });
 }
 
-/** Дэлгүүрийн өөрийн бүртгэл барааны талаар юу гэдэг (storefront зөвхөн "нөөцтэй" гэж харуулна). */
+/** Дэлгүүрийн бүртгэл дэх барааны мэдээлэл (дэлгүүрийн хуудас зөвхөн "нөөцтэй" гэж харуулдаг). */
 export async function stockOf(request: APIRequestContext, admin: Account, productId: number): Promise<number> {
   const product = await ok<{ stock_quantity: number }>(
     await request.get(`${API_URL}/api/v1/admin/products/${productId}`, { headers: bearer(admin) }),
@@ -221,7 +219,7 @@ export async function stockOf(request: APIRequestContext, admin: Account, produc
   return product.stock_quantity;
 }
 
-/** Худалдан авагчийн харах захиалга, API-ийн өгснөөр. */
+/** API-ийн өгдгөөр, худалдан авагчид харагдах захиалга. */
 export async function orderOf(request: APIRequestContext, account: Account, number: string) {
   return ok<{ status: string; tracking_number: string | null; events: { type: string }[] }>(
     await request.get(`${API_URL}/api/v1/orders/${number}`, { headers: bearer(account) }),

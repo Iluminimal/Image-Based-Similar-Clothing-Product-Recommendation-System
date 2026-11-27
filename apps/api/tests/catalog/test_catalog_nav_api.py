@@ -12,7 +12,8 @@ SEEDED = range(1, 41)
 
 
 def seeded(*, genders: tuple[str, ...] = GENDERS, article: str | None = None) -> int:
-    """Seed хийсэн 40 барааны хэд нь таарах вэ (хүйс ба article type n-ээр эргэлдэнэ)."""
+    """Seed хийсэн 40 барааны хэд нь таарахыг тооцно (хүйс, article type нь n дугаараас хамаарч
+    ээлжилнэ)."""
     return sum(
         1
         for n in SEEDED

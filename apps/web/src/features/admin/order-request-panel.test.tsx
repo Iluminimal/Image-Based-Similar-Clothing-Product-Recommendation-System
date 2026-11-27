@@ -111,7 +111,8 @@ describe("OrderRequestPanel", () => {
   it("refunds a received return without asking about the stock again", async () => {
     signInAs("admin");
     const api = stubApi({ [`POST /api/v1/admin/orders/${NUMBER}/refund`]: respond(makeAdminOrder()) });
-    // Төлсөн захиалгад "үлдэгдэлд буцаах" өгөгдмөлөөр сонгогддог ч хүлээн авсан бараанд биш.
+    // Төлсөн захиалгад "үлдэгдэлд буцаах" анхдагчаар сонгогддог, харин хүлээж авсан буцаалтын бараанд
+    // сонгогддоггүй.
     const order = makeAdminOrder({ status: "delivered", requests: [returning("received")] });
     renderWithQuery(<OrderActions order={order} />);
     await userEvent.click(screen.getByRole("button", { name: "Refund" }));

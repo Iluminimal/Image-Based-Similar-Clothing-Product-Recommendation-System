@@ -21,7 +21,7 @@ FORBIDDEN = "urn:angel:problem:forbidden"
 
 
 def add_probe(app: FastAPI) -> None:
-    """Админ route бүрийн ашигладаг dependency, өөр юу ч хийдэггүй route-ийн ард."""
+    """Админ route бүрийн ашигладаг dependency-г юу ч хийдэггүй route-ийн өмнө тавьж шалгана."""
 
     async def probe(admin: AdminDep) -> dict[str, str]:
         return {"email": admin.identifier}

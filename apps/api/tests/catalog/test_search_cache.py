@@ -149,7 +149,7 @@ async def test_search_keeps_working_when_redis_is_down(api_factory: ApiFactory) 
 
     assert (text.status_code, similar.status_code, image.status_code) == (200, 200, 200)
     assert text_again.json()["cached"] is False
-    assert ready.status_code == 503  # тасалдлыг мэдэгдсэн хэвээр, гэхдээ хайлтад үхлийн биш
+    assert ready.status_code == 503  # тасарсныг мэдэгдсээр байх ч хайлт унахгүй
 
 
 async def test_catalog_filters_are_cached_and_expire(api_factory: ApiFactory) -> None:
@@ -158,7 +158,7 @@ async def test_catalog_filters_are_cached_and_expire(api_factory: ApiFactory) ->
         redis: Redis = api.app.state.redis
         key = f"catalog:filters:{api.embedder.version}"
         ttl = await redis.ttl(key)
-        # Cache-ийн мэдэлгүй каталогийг өөрчилнө: cache-д хадгалсан хуулбар хэвээр үйлчилнэ.
+        # Cache-д мэдэгдэлгүйгээр каталогийг өөрчилнө: cache дахь хуучин хуулбар гарсаар байна.
         engine = api.app.state.engine
         async with engine.begin() as connection:
             await connection.execute(text("UPDATE products SET base_colour = 'Purple'"))

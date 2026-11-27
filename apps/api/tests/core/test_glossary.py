@@ -59,7 +59,7 @@ TEXTS = {path: string_literals(path) for path in SRC.rglob("*.py")}
 
 
 def test_the_scan_reads_the_messages_users_see() -> None:
-    """Шалгалт юу ч уншихгүй байгаад "тэнцэх"-ээс сэргийлнэ."""
+    """Шалгалт юу ч уншаагүй мөртлөө "тэнцэх"-ээс сэргийлнэ."""
     everything = {text for texts in TEXTS.values() for text in texts}
 
     assert "Бараа олдсонгүй" in everything

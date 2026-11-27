@@ -5,10 +5,10 @@ import { API_URL } from "./support/env";
 import { addToCartFromProductPage, cartButton } from "./support/ui";
 
 /**
- * API-ийн суулгасан хуурамч Google-ээр (OAUTH_MODE=fake) нэвтрэх: Google-ийн зөвшөөрлийн дэлгэцийг
- * алгасдаг ч жинхэнэ урсгал (эхлэх, state cookie, callback, session, сагс нэгтгэх) ажиллана. Fake
- * байхгүй бол дарах товч байхгүй (эсвэл Google key болон жинхэнэ Google account хэрэгтэй) тул
- * эдгээр тест skip болно.
+ * API-ийн хуурамч Google-ээр (OAUTH_MODE=fake) нэвтрэх тест. Зөвхөн Google-ийн зөвшөөрлийн дэлгэц
+ * алгасагдана, бусад жинхэнэ урсгал (эхлэх, state cookie, callback, session, сагс нэгтгэх) ажиллана. Fake
+ * асаагүй бол дарах товч байхгүй (эсвэл Google-ийн key, жинхэнэ account хэрэгтэй) тул эдгээр тест
+ * алгасагдана.
  */
 test.beforeEach(async ({ api }) => {
   const providers = await (await api.get(`${API_URL}/api/v1/auth/providers`)).json();
@@ -29,8 +29,8 @@ const problem = (page: Page) => page.locator('p[role="alert"]');
 const google = (page: Page) => page.getByRole("link", { name: /^Continue with Google$/ });
 
 async function whoAmI(page: Page) {
-  // Хуудас ачаалахдаа өөрийн session-ийг сэргээж, refresh token-ыг сольдог: үүнийг дуустал хүлээ,
-  // эс бөгөөс энэ дуудлага refresh race-д ялагдана (API зориудаар татгалздаг).
+  // Хуудас ачаалахдаа session-оо сэргээж, refresh token-ыг сольдог. Үүнийг дуустал хүлээнэ, эс бөгөөс энэ
+  // дуудлага refresh-ийн уралдаанд хожигдоно (API зориуд татгалздаг).
   await page.waitForLoadState("networkidle");
   const response = await page.request.post("/api/v1/auth/refresh");
   expect(response.ok()).toBe(true);

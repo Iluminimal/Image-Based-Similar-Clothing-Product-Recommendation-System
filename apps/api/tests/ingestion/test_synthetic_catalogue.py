@@ -1,4 +1,4 @@
-"""End-to-end тестүүдийн ажилладаг синтетик каталог ба fake embedder-ийн сэлгүүр."""
+"""End-to-end тестэд ашигладаг синтетик каталог, fake embedder-ийг сонгох тохиргоо."""
 
 import io
 from pathlib import Path

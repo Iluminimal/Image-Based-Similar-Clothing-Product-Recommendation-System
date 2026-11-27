@@ -15,7 +15,7 @@ let drawn: { width: number; height: number } | null = null;
 
 beforeEach(() => {
   drawn = null;
-  // jsdom-д canvas байхгүй: гаралтын хэмжээ, encoding-ийг ажиглахад хүрэлцэхүйц хуурамч хийв.
+  // jsdom-д canvas байхгүй тул гаралтын хэмжээ, encoding-ийг шалгахад хүрэлцэх хиймэл canvas хийв.
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(function (this: HTMLCanvasElement) {
     drawn = { width: this.width, height: this.height };
     return { fillRect: vi.fn(), drawImage: vi.fn(), set fillStyle(_: string) {} } as unknown as CanvasRenderingContext2D;

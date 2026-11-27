@@ -112,8 +112,8 @@ test("quick add on a card: a size is asked for once, then the Bag opens with tha
   await card.getByRole("button", { name: `Quick add ${product.name}` }).click();
   const sizes = page.getByRole("group", { name: new RegExp(`Choose a size for ${product.name}`) });
   const size = await sizes.getByRole("radio").first().inputValue();
-  // Хүн шиг харагдаж буй товчийг дарна. Radio өөрөө нуугдсан (1px): түүнийг дэлгэцэд оруулах гэсэн
-  // гүйлгэлт smooth scroll-тэй хамт тасралтгүй хөдөлгөөн болж, дарах мөч хэзээ ч ирдэггүй.
+  // Хүн шиг харагдаж байгаа товчийг дарна. Radio өөрөө нуугдсан (1px): түүн рүү гүйлгэх гэвэл smooth
+  // scroll-оос болж хуудас байнга хөдөлж, дарах боломж гарахгүй.
   await sizes.getByText(size, { exact: true }).click();
 
   const drawer = page.getByRole("dialog");
@@ -122,8 +122,9 @@ test("quick add on a card: a size is asked for once, then the Bag opens with tha
 });
 
 test("a misspelled search still finds the product and says the results are the closest", async ({ page, products }) => {
-  // Бараа нь worker-оос хамаарахгүй тогтмол: ойролцоо хайлт бүх алдааг даадаггүй. 7 үсэгтэй үгэнд
-  // хоёр үсгийн байр солиход ("Nordkap" -> "Norkdap") ижил төстэй байдал 0.375, босго 0.4.
+  // Барааг worker-оос үл хамаарч ижил байхаар сонгосон, учир нь ойролцоо хайлт бүх үсгийн алдааг даваад
+  // гардаггүй. 7 үсэгтэй үгэнд хоёр үсгийг сольвол ("Nordkap" -> "Norkdap") төстэй байдал 0.375 болж, 0.4
+  // босгод хүрэхгүй.
   const product = products[0]!;
   const word = product.name.split(" ").find((part) => part.length >= 6) ?? product.name;
   const typo = word.slice(0, 3) + word.slice(4, 5) + word.slice(3, 4) + word.slice(5);

@@ -157,7 +157,7 @@ async def test_the_token_is_reused_until_it_expires_then_refreshed(
 async def test_relative_expiry_seconds_are_understood_too(
     gateway: QPayGateway, qpay: FakeQPay
 ) -> None:
-    qpay.expires_in = 30  # маржинаас богино: дараагийн дуудлага шинэ token авна
+    qpay.expires_in = 30  # шинэчлэх нөөц хугацаанаас богино: дараа нь шинэ token авна
     await gateway.check("inv-1")
     await gateway.check("inv-1")
 

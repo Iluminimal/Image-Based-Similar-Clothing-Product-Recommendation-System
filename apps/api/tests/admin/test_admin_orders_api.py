@@ -1,4 +1,4 @@
-"""Админы харах эрхтэй (read-only) бүх хэрэглэгчийн захиалгын жагсаалт."""
+"""Бүх хэрэглэгчийн захиалгын жагсаалт (админ зөвхөн харна)."""
 
 from pathlib import Path
 
@@ -40,7 +40,7 @@ async def administrator(api: Api, engine: AsyncEngine) -> Shopper:
 
 
 async def warehouse_worker(api: Api, engine: AsyncEngine) -> Shopper:
-    """Агуулахын ажилтан: бараа, нөөц, ачилтыг хариуцна."""
+    """Агуулахын ажилтан: бараа, нөөц, захиалга илгээхийг хариуцна."""
     worker = await register(api.client)
     await set_role(engine, worker.user_id, "warehouse")
     return worker

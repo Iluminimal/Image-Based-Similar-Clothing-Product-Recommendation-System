@@ -108,8 +108,9 @@ async def test_catalogue_photos_find_themselves(
         results = response.json()["results"]
         own = next(h for h in results if h["product"]["slug"].endswith(f"-{product.source_id}"))
         assert own["similarity"] > 0.999
-        # Dataset заримдаа нэг зургийг хоёр бараанд ашигладаг (жишээ нь цамцны зургийг цагонд),
-        # тиймээс эхэнд тэнцэх нь хэвийн: барааг өөрийг нь хэн ч гүйцэхгүй байхад л болно.
+        # Dataset заримдаа нэг зургийг хоёр бараанд ашигладаг (жишээ нь цамцны зургийг цагт).
+        # Тиймээс эхний байрт тэнцэх нь хэвийн: ямар ч бараа тэр бараанаас илүү оноо авахгүй байхыг
+        # л шалгана.
         assert results[0]["similarity"] == pytest.approx(own["similarity"], abs=1e-3)
 
 
@@ -117,8 +118,8 @@ async def test_with_the_detector_most_catalogue_photos_still_find_themselves(
     yolo_api: AsyncClient, dataset_products: dict[str, list[CleanProduct]]
 ) -> None:
     """YOLO хувцсыг тайрдаг тул vector нь хадгалсан (бүтэн зургийн) embedding-тэй яг таарахгүй
-    (~0.8-0.9). Бараг ижил бараа олонтой төрөлд (jegging) өөрөө эхний 5-аас гарч болох тул
-    ихэнх нь л олдоно гэж шаардана."""
+    (~0.8-0.9). Бараг ижил бараа олонтой төрөлд (jegging) тэр бараа өөрөө эхний 5-д орохгүй байж
+    болно. Тиймээс ихэнх нь олдохыг л шаардана."""
     products = [p for bucket in dataset_products.values() for p in bucket]
     found = 0
     for product in products:
@@ -160,7 +161,7 @@ async def test_a_photo_of_an_outfit_returns_each_garment_with_its_own_products(
     def types_of(garment: dict[str, list[dict[str, dict[str, str]]]]) -> list[str]:
         return [hit["product"]["article_type"] for hit in garment["results"]]
 
-    # Хамгийн багадаа нэг хэсэг бүр өөрийн төрлийн (цамц, өмд, гутал) бараа ихэвчлэн авсан байна.
+    # Төрөл бүрд (цамц, өмд, гутал) үр дүнгийн дор хаяж тал нь тэр төрлийнх байх хэсэг олдох ёстой.
     wanted = [
         {"Tshirts", "Shirts", "Tops"},
         {"Jeans", "Trousers", "Jeggings"},

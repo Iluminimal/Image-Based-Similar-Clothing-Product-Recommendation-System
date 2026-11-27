@@ -134,7 +134,7 @@ async def test_login_succeeds_and_fails_with_the_same_error_for_unknown_and_wron
         assert ok.status_code == 200
         assert wrong.status_code == unknown.status_code == 401
         assert wrong.json()["type"] == "urn:angel:problem:invalid-credentials"
-        # "Ийм хэрэглэгч байхгүй" ба "нууц үг буруу" хоёрын request id ч ялгаагүй.
+        # "Ийм хэрэглэгч байхгүй", "нууц үг буруу" хоёрын хариу request id-аас бусдаар яг адил.
         assert without_request_id(wrong) == without_request_id(unknown)
 
 
@@ -208,7 +208,8 @@ async def test_replaying_a_used_refresh_token_revokes_the_whole_session(
         stolen = api.client.cookies.get("lk_refresh")
         await api.client.post(REFRESH)  # зөв ротаци
         assert stolen is not None
-        # Хугацааны зөвшөөрлөөс хойш давтан ашигласан token бол хулгай, давхар дарсан биш.
+        # Зөвшөөрөгдсөн богино хугацаа өнгөрсний дараа token дахин ашиглавал хулгай гэж үзнэ
+        # (санамсаргүй давхар даралт биш).
         async with api.app.state.engine.begin() as connection:
             await connection.execute(
                 text(
@@ -233,7 +234,7 @@ async def test_replaying_a_used_refresh_token_revokes_the_whole_session(
 
 
 async def age_used_tokens(api: Api, by: timedelta = timedelta(hours=1)) -> None:
-    """Зөвшөөрлийн цонх өнгөрсөн мэт болгоно (дараалал хадгалагдана)."""
+    """Зөвшөөрөгдсөн богино хугацаа өнгөрсөн мэт болгоно (дараалал хэвээр үлдэнэ)."""
     async with api.app.state.engine.begin() as connection:
         await connection.execute(
             text(
@@ -286,7 +287,7 @@ async def test_two_tabs_may_refresh_at_once_and_only_one_chain_stays_alive(
         assert (status_a, status_b) == (200, 200)
         assert tab_a is not None
         assert tab_b is not None
-        # Cookie нь нэг: аль нь үлдсэн ч ажиллана, нөгөө нь үхнэ.
+        # Cookie ганцхан: аль шинэ token нь үлдсэн нь ажиллана, нөгөөх нь хүчингүй болно.
         status, newest = await refresh_with(api, tab_a)
         assert status == 200
         assert newest is not None

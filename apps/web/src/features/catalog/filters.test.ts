@@ -80,8 +80,8 @@ describe("toSearchParams / toHref", () => {
     });
     const href = toHref("/products", original);
     const reparsed = parseListingQuery(Object.fromEntries(new URL(href, "http://x").searchParams.entries()));
-    // Object.fromEntries зөвхөн давтагдсан сүүлийн утгыг үлдээдэг тул serialize хийсэн хэлбэрээр
-    // харьцуул.
+    // Object.fromEntries давтагдсан параметрийн зөвхөн сүүлийн утгыг үлдээдэг тул бичсэн string хэлбэрээр нь
+    // харьцуулна.
     expect(toSearchParams(reparsed).get("sort")).toBe("price_asc");
     expect(href).toContain("gender=Men&gender=Unisex");
     expect(href).toContain("page=3");

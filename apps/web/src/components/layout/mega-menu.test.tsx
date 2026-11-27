@@ -105,7 +105,7 @@ describe("MegaMenu", () => {
   });
 
   it("is as tall as the department it shows when open, and nothing when closed", async () => {
-    // jsdom-д layout байхгүй: харагдаж буй агуулгын өндөр 420px гэж хэлээд, ажиглагдахад мэдэгднэ.
+    // jsdom-д layout байхгүй тул харагдаж буй агуулгын өндрийг 420px гэж өгөөд, ажиглагчид мэдэгдэнэ.
     vi.stubGlobal("ResizeObserver", class { constructor(private cb: () => void) {} observe() { this.cb(); } disconnect() {} });
     const height = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(420);
     render(<MegaMenu />);

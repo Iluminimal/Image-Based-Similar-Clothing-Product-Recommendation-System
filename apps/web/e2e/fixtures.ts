@@ -28,8 +28,8 @@ type Fixtures = {
   newProduct: (options?: { name?: string; stock?: number }) => Promise<{ id: number; name: string }>;
 };
 
-// Playwright fixture бүрт `use` гэж нэрлэдэг callback өгдөг. Энд `provide` гэж нэрлэсэн, учир нь
-// React hook-ийн lint дүрэм `use(...)` дуудлага бүрийг hook гэж үздэг.
+// Playwright fixture бүрт `use` нэртэй callback өгдөг. React hook-ийн lint дүрэм `use(...)` дуудлага бүрийг
+// hook гэж үздэг тул энд `provide` гэж нэрлэсэн.
 export const test = base.extend<Fixtures>({
   api: async ({ playwright }, provide) => {
     const context = await playwright.request.newContext();

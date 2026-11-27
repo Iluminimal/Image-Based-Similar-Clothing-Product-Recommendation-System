@@ -410,7 +410,7 @@ async def test_a_hidden_review_leaves_the_page_and_the_average_and_comes_back(st
     assert [r["rating"] for r in page["items"]] == [5]
     assert page["summary"]["average"] == 5.0
     assert (await store.product())["rating_count"] == 1
-    # Зохиогч өөрийнхөө сэтгэгдлийг далд тэмдэглэгээтэй харна, хоёр дахийг бичиж чадахгүй.
+    # Зохиогч өөрийн сэтгэгдлийг "нуусан" тэмдэглэгээтэй харна, хоёр дахийг бичиж чадахгүй.
     own = (await store.page(rude))["viewer"]
     assert own["review"]["status"] == "hidden"
     assert own["can_review"] is False

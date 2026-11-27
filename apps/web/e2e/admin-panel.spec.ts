@@ -180,7 +180,8 @@ test.describe("fulfilment", () => {
     // --- хүргэгдсэн: одоо сэтгэгдэл бичиж болно ---
     await warehouse.getByRole("button", { name: "Mark as delivered" }).click();
     await warehouse.getByRole("dialog").getByRole("button", { name: "Mark as delivered" }).click();
-    // Диалог нээлттэй үед ардах товчнууд "алга" мэт харагддаг: хаагдахыг (хүсэлт дууссаныг) хүлээнэ.
+    // Диалог нээлттэй үед ард нь байгаа товчнууд тестэд "алга" мэт харагддаг тул диалог хаагдахыг (хүсэлт
+    // дуусахыг) хүлээнэ.
     await expect(warehouse.getByRole("dialog")).toHaveCount(0);
     // Буцаалт нь админых: агуулахын ажилтан харахгүй.
     await expect(warehouse.getByRole("button", { name: "Refund" })).toHaveCount(0);

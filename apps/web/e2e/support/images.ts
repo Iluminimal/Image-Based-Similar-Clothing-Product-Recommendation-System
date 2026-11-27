@@ -23,12 +23,12 @@ function chunk(type: string, data: Buffer): Buffer {
 
 /** Өнгөт блокуудтай зөв PNG, `seed`-ээс хамаарна: өөр seed загварт өөр харагдана. */
 export function makePng(seed: number, width = 240, height = 320): Buffer {
-  // 32 битийн арифметик тасралтгүй: энгийн үржвэр double-ийн бүхэл тооны мужаас халж, зэргэлдээ
-  // seed-ээс ижил зураг гаргана.
+  // 32 битийн арифметикийг тууштай хэрэглэнэ: энгийн үржвэр double-ийн бүхэл тооны хязгаараас хэтэрч,
+  // зэргэлдээ seed ижил зураг гаргадаг.
   let state = (Math.imul(seed + 1, 2654435761) + 1) >>> 0;
   const next = () => {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    return state >>> 8; // энэ generator-ын доод битүүд хамгийн бага санамсаргүй
+    return state >>> 8; // энэ generator-ын доод битүүд хамгийн муу санамсаргүй байдалтай
   };
   const block = 24;
   const cols = Math.ceil(width / block);

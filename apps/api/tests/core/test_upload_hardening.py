@@ -1,4 +1,4 @@
-"""Зургийн endpoint-ын (`/search/image`, `/search/hybrid`) upload-ын захын тохиолдлууд."""
+"""Зургийн endpoint-уудын (`/search/image`, `/search/hybrid`) upload-ийн edge case-үүд."""
 
 import io
 import tempfile

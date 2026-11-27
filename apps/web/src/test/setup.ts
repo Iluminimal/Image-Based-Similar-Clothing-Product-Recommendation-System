@@ -26,8 +26,8 @@ class IntersectionObserverStub {
 }
 globalThis.IntersectionObserver ??= IntersectionObserverStub as unknown as typeof IntersectionObserver;
 window.HTMLElement.prototype.scrollIntoView ??= () => {};
-// Тестүүд reduced motion-той ажиллана, ингэснээр тоолж гарсан нийлбэр зэрэг нь шууд эцсийн утгаа
-// харуулна; animation-ы тест `matchMedia`-г өөрийнхөөрөө stub хийнэ (animated-number.test-ийг үз).
+// Тестүүд reduced motion-той ажиллана: аажим тоолж гарч ирдэг тоо шууд эцсийн утгаа харуулна. Animation
+// шалгадаг тест `matchMedia`-г өөрөө stub хийнэ (animated-number.test-ийг үзнэ үү).
 window.matchMedia ??= ((query: string) => ({
   matches: query.includes("prefers-reduced-motion: reduce"),
   media: query,
@@ -41,8 +41,8 @@ window.matchMedia ??= ((query: string) => ({
 window.HTMLElement.prototype.hasPointerCapture ??= () => false;
 window.HTMLElement.prototype.releasePointerCapture ??= () => {};
 
-// Component-ууд App Router hook ашигладаг бөгөөд холбогдсон router-гүйгээр шиддэг. Навигацид
-// анхаардаг тестүүд үүнийг өөрийн `vi.mock("next/navigation", ...)`-оор орлуулна.
+// Component-ууд App Router-ийн hook ашигладаг, router холбогдоогүй бол алдаа шиддэг. Навигаци шалгадаг
+// тестүүд үүнийг өөрийн `vi.mock("next/navigation", ...)`-оор орлуулна.
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
   usePathname: () => "/",

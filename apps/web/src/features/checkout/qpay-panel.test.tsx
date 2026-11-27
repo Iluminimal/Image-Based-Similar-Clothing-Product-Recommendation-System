@@ -24,11 +24,11 @@ afterEach(() => {
   Reflect.deleteProperty(document, "visibilityState");
 });
 
-/** Нүүр хуудас захиалгын төлвийг асууна: өөр route тодорхойлоогүй тестэд "төлбөр хүлээж буй" гэж хариулна. */
+/** Хуудас захиалгын төлвийг асуудаг: тест өөр route тодорхойлоогүй бол "төлбөр хүлээж буй" гэж хариулна. */
 const stubPending = (routes: Parameters<typeof stubApi>[0] = {}) =>
   stubApi({ [ORDER]: respond(makeOrder({ status: "pending" })), ...routes });
 
-/** Хуурамч цаг ба жинхэнэ цаг хамт явна: userEvent, waitFor ажиллана, `advance` секундээр урагшлуулна. */
+/** Хуурамч цаг жинхэнэ цагтай зэрэг явдаг тул userEvent, waitFor ажиллана; `advance` секундээр урагшлуулна. */
 async function advance(ms: number) {
   await act(async () => void (await vi.advanceTimersByTimeAsync(ms)));
 }

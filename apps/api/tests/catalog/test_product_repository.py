@@ -186,8 +186,9 @@ async def test_filters_are_applied(
 async def test_selective_filters_still_return_a_full_page_thanks_to_iterative_scan(
     db_engine: AsyncEngine, sessions: async_sessionmaker[AsyncSession]
 ) -> None:
-    """ef_search жижиг, шүүлт мөрийн ~5%-ийг тааруулахад энгийн HNSW бараг юу ч буцаахгүй
-    (index 10 candidate өгч, шүүлт тэдгээрийг хаяна). Iterative scan хуудас дүүртэл үргэлжилнэ.
+    """ef_search бага, шүүлтүүрт мөрүүдийн ~5% л таарах үед энгийн HNSW бараг юу ч буцаадаггүй
+    (index 10 candidate өгөөд, шүүлтүүр тэдгээрийг хасна). Iterative scan хуудас дүүртэл
+    үргэлжилдэг.
     """
     products = [_product(i) for i in range(1, 401)]
     vectors = _unit(400, 4)

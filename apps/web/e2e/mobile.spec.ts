@@ -1,6 +1,6 @@
 /**
- * Утасны дэлгэц (390px): хуудас хэвтээ тийш гулсахгүй, чухал зүйл дэлгэцэндээ багтана. Монгол
- * бичвэр англиас урт тул хоёр хэлээр шалгана. Хөтчийн өргөнийг хэмжинэ; бодит утсыг орлохгүй.
+ * Утасны дэлгэц (390px): хуудас хөндлөн гүйхгүй, чухал зүйл дэлгэцэд багтах ёстой. Монгол бичвэр англиасаа
+ * урт тул хоёр хэлээр шалгана. Энэ нь browser-ийн өргөнийг хэмждэг; жинхэнэ утсыг орлохгүй.
  */
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
@@ -25,7 +25,7 @@ async function open(page: Page, path: string) {
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0); // skeleton биш, жинхэнэ агуулга
 }
 
-/** Хуудас дэлгэцээс хэдэн пиксел өргөн бэ. */
+/** Хуудас дэлгэцээс хэдэн пикселээр өргөн байна. */
 const overflow = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 

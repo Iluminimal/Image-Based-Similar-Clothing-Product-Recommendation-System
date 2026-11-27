@@ -18,7 +18,7 @@ WISHLIST = "/api/v1/wishlist"
 ADDRESSES = "/api/v1/addresses"
 
 
-# --- Хүслийн жагсаалт -----------------------------------------------------------------------
+# --- Хадгалсан бараа (wishlist) -------------------------------------------------------------
 
 
 async def test_wishlist_requires_an_account(api_factory: ApiFactory) -> None:

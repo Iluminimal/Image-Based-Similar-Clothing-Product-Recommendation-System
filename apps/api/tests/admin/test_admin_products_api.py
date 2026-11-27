@@ -245,7 +245,7 @@ async def test_the_list_paginates_sorts_and_searches(
         assert prices == sorted(prices)
         assert target["id"] in [p["id"] for p in by_id["items"]]
         assert target["id"] in [p["id"] for p in by_part["items"]]
-        assert wildcard["total"] == 0  # утгаараа % тэмдэгт, "бүгдийг тааруул" биш
+        assert wildcard["total"] == 0  # % энд энгийн тэмдэгт: "юу ч таарна" гэсэн утгагүй
         assert huge.status_code == 200
         assert huge.json()["total"] == 0
 

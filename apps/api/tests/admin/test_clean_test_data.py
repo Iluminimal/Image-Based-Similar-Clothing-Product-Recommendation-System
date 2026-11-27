@@ -1,4 +1,4 @@
-"""Туршилтын өгөгдлийг цэвэрлэх: зөвхөн заасан акаунт, датасетийн бараа үлдэнэ, нөөц буцна."""
+"""Туршилтын өгөгдлийг цэвэрлэх: зөвхөн заасан account болон датасетийн бараа үлдэнэ, нөөц буцна."""
 
 from pathlib import Path
 
@@ -28,7 +28,7 @@ async def exists_user(engine: AsyncEngine, email: str) -> bool:
 
 
 async def rename_one_customer(engine: AsyncEngine) -> None:
-    """Demo customer-үүдийн нэгийг "үлдэх акаунт" болгоно."""
+    """Demo customer-уудын нэгийг "үлдэх account" болгоно."""
     async with engine.begin() as connection:
         await connection.execute(
             text(
@@ -125,11 +125,12 @@ async def test_a_dry_run_only_counts_and_deleting_keeps_the_account_and_the_cata
         assert await exists_user(db_engine, KEEP)
         for table in ("orders", "payments", "order_items", "order_events", "reviews"):
             assert await scalar(db_engine, f"SELECT COUNT(*) FROM {table}") == 0, table  # noqa: S608
-        # Үлдэх акаунтын хаяг хэвээр, туршилтын бараа, зураг нь алга; бусад каталог хөндөгдөөгүй.
+        # Үлдэх account-ын хаяг хэвээр; туршилтын бараа, зураг нь алга болсон; бусад каталог
+        # хөндөгдөөгүй.
         assert await scalar(db_engine, "SELECT COUNT(*) FROM addresses") > 0
         assert await scalar(db_engine, "SELECT COUNT(*) FROM products") == catalogue
         assert not any(file.exists() for file in files)
-        # Захиалга барьсан нөөц буцаж, сэтгэгдэлгүй болсон бараа бүрийн үнэлгээ 0.
+        # Захиалгад эзлэгдсэн нөөц буцаж, сэтгэгдэлгүй болсон бараа бүрийн үнэлгээ 0 болсон.
         assert await scalar(db_engine, "SELECT SUM(stock_quantity) FROM products") == stock
         assert (
             await scalar(

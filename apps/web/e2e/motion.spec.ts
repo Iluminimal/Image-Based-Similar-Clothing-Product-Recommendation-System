@@ -13,7 +13,7 @@ test("adding to the cart confirms on the button and shows the free-shipping prog
   const product = pickProduct(products, testInfo.workerIndex);
   await openProduct(page, product);
 
-  // Хэмжээ сонгоогүй: хэмжээнүүд сэгсэрч, мессеж гулсан орно.
+  // Хэмжээ сонгоогүй бол хэмжээний товчнууд сэгсэрч, мессеж гулсаж гарна.
   await page.getByRole("button", { name: "Add to Bag", exact: true }).click();
   await expect(page.getByText("Please select a size.")).toBeVisible();
   await expect(page.locator("fieldset").locator("xpath=..")).toHaveClass(/animate-shake/);
@@ -44,7 +44,7 @@ test("the product page has details and delivery that open and close", async ({ p
 
   const delivery = page.getByText("Delivery", { exact: true });
   await delivery.click();
-  // "Standard delivery" үнийн доорх мөрөнд ч бий тул нээсэн хэсгийн жагсаалтыг шалгана.
+  // "Standard delivery" үнийн доорх мөрөнд ч бий тул зөвхөн нээсэн хэсгийн жагсаалтыг шалгана.
   const options = page.locator("details", { has: delivery }).getByRole("listitem");
   await expect(options.filter({ hasText: "Standard delivery" })).toBeVisible();
   await expect(options.filter({ hasText: "Express delivery" })).toBeVisible();

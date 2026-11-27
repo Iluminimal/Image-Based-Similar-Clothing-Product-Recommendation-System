@@ -46,8 +46,8 @@ export async function signInThroughTheForm(page: Page, email: string, password: 
 export const money = (cents: number) => `₮${Math.round(cents / 100).toLocaleString("en-US")}`;
 
 /**
- * Тестүүдийг каталогт тараана: зэрэгцээ худалдан авалт нэг барааны сүүлийн ширхэг дээр ховор
- * таарна.
+ * Тестүүд каталогийн өөр өөр бараа сонгоно: зэрэг ажиллаж байгаа худалдан авалтууд нэг барааны сүүлчийн
+ * ширхэг дээр мөргөлдөх нь ховор болно.
  */
 export function pickProduct(products: CatalogProduct[], testIndex: number): CatalogProduct {
   return products[testIndex % products.length]!;

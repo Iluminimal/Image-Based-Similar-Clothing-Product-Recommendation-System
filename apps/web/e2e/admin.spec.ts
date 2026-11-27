@@ -98,8 +98,8 @@ test("a warehouse worker creates a product from a photo, edits it, replaces the 
   await page.getByLabel("Photo", { exact: true }).setInputFiles(photo(first));
   await expect(page.getByAltText("Preview of the chosen photo")).toBeVisible();
   await page.getByLabel("Name").fill(name);
-  // Handbags (хувцас биш): тест дундаа унавал үлдсэн бараа бусад тестийн хуваалцсан `products`
-  // ("хамгийн шинэ хувцас")-д орж, тэдгээрийг дагуулж унагахгүй.
+  // Handbags (хувцас биш) сонгосон: тест дундаа унаад бараа нь үлдсэн ч бусад тестийн ашигладаг `products`
+  // (хамгийн шинэ хувцас)-д орж, тэднийг дагуулж унагахгүй.
   await page.getByLabel("Category").selectOption({ label: "Handbags" });
   await page.getByLabel("Colour (optional)").fill("Blue");
   await page.getByLabel("Price (₮)").fill("87900");
@@ -150,7 +150,7 @@ test("a warehouse worker creates a product from a photo, edits it, replaces the 
   await expect(sell).toBeChecked();
   await expect.poll(async () => (await api.get(`${API_URL}/api/v1/products/${id}`)).status()).toBe(200);
 
-  // API-ийн боломжоор өөрийнхөө үлдээсэн зүйлийг цэвэрлэнэ: зарахаа больсон төлөвт үлдээнэ.
+  // API-аар боломжтой хэмжээгээр өөрийн үүсгэснийг цэвэрлэнэ: барааг зарахаа больсон төлөвт үлдээнэ.
   await sell.click();
   await expect(sell).not.toBeChecked();
   await expect.poll(async () => (await api.get(`${API_URL}/api/v1/products/${id}`)).status()).toBe(404);

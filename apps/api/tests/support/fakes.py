@@ -22,11 +22,11 @@ def write_jpeg(path: Path, seed: int, size: tuple[int, int] = (300, 400)) -> Non
 
 
 class RecordingGateway(OfflineGateway):
-    """Offline gateway ба shop түүнээс юу хүссэнийг бичдэг бүртгэл; жинхэнэ provider-ийн адил
-    алдаа гаргах сэлгүүртэй. `qpay=True` бол QPay шиг төгрөгөөр мөнгө авч, QR өгнө.
+    """Дэлгүүр юу хүссэнийг тэмдэглэдэг offline gateway. Жинхэнэ provider шиг алдаа гаргуулах
+    тохиргоотой. `qpay=True` бол QPay шиг төгрөгөөр мөнгө авч, QR өгнө.
 
-    Тест `pay()`-ээр худалдан авагч банкны апп-аараа төлсөн мэт тэмдэглэнэ; дараа нь `check`
-    тэр төлбөрийг QPay-ийн `payment/check` шиг буцаана.
+    Тест `pay()`-ээр худалдан авагч банкны апп-аараа төлсөн мэт тэмдэглэнэ. Дараа нь `check` тэр
+    төлбөрийг QPay-ийн `payment/check` шиг буцаана.
     """
 
     def __init__(self, *, qpay: bool = False) -> None:

@@ -121,7 +121,7 @@ async def stock_of(engine: AsyncEngine, product_id: int) -> int:
 
 
 async def set_role(engine: AsyncEngine, user_id: int, role: str) -> None:
-    """`make create-admin`-ий адил database дээр шууд админ болгох эсвэл болиулах."""
+    """`make create-admin`-ийн адил database дээр шууд админ болгоно эсвэл эрхийг нь хасна."""
     async with engine.begin() as connection:
         await connection.execute(
             text("UPDATE users SET role = :role WHERE id = :id"), {"role": role, "id": user_id}

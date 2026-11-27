@@ -1,7 +1,7 @@
 /**
- * Сайтын өгөгдөл хэл монгол. Тестүүд англи текст шалгадаг тул англи хэлийг `NEXT_LOCALE` cookie-гээр
- * тогтооно. Тест өөрөө context үүсгэх бүрт (`browser.newContext`) энэ cookie-г өгөх ёстой: төслийн
- * `storageState` зөвхөн Playwright-ийн өөрийн `context` fixture-д хамаарна.
+ * Сайтын анхдагч хэл монгол. Тестүүд англи бичвэр шалгадаг тул англи хэлийг `NEXT_LOCALE` cookie-гоор
+ * тогтооно. Тест өөрөө context үүсгэх бүрдээ (`browser.newContext`) энэ cookie-г өгөх ёстой: төслийн
+ * `storageState` зөвхөн Playwright-ийн өөрийн `context` fixture-д үйлчилнэ.
  */
 const host = new URL(process.env.E2E_BASE_URL ?? "http://localhost:3000").hostname;
 

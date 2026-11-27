@@ -86,7 +86,7 @@ async def test_a_product_nobody_ordered_is_removed_with_everything_that_held_it(
 async def test_pictures_that_came_from_the_dataset_are_left_on_disk(
     api_factory: ApiFactory, db_engine: AsyncEngine, tmp_path: Path
 ) -> None:
-    """Зураг солихтой ижил дүрэм: админ самбар зөвхөн өөрийн upload хийсэн файлыг устгана."""
+    """Зураг солихтой ижил дүрэм: зөвхөн back-office-оос upload хийсэн файлыг устгана."""
     async with admin_api(api_factory, db_engine, tmp_path) as (api, worker):
         product_id = api.entries[1].product_id
         async with db_engine.connect() as connection:

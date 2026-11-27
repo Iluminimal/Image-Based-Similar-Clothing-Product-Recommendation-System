@@ -165,5 +165,5 @@ make typecheck
 
 - Датасет repo-д ороогүй. Дэлгэцийн зургуудад түүний (Kaggle, paramaggarwal) барааны зураг харагдана. Ашиглахын өмнө
   нөхцөлийг нь шалгана.
-- FashionCLIP загварыг MIT, YOLOv8m_fashion загварыг Apache-2.0 гэж тэмдэглэсэн.
+- Нийтлэгчдийнх нь зааснаар FashionCLIP загвар MIT, YOLOv8m_fashion загвар Apache-2.0 лицензтэй.
 - Ultralytics сан AGPL-3.0 эсвэл арилжааны лицензтэй.

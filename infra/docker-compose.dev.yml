@@ -37,9 +37,9 @@ services:
       retries: 10
 
   mailpit:
-    # Имэйл баригч (SMTP :1025, Web UI :8025): `MAIL_MODE=smtp` үед API-ийн илгээсэн нэг удаагийн
-    # код, захиалгын имэйлийг жинхэнэ интернет рүү гаргалгүй http://localhost:8025 дээр харна.
-    # Олон архитектурын image (linux/amd64 + linux/arm64).
+    # Туршилтын имэйл хүлээн авагч (SMTP :1025, Web UI :8025). `MAIL_MODE=smtp` үед API-ийн илгээсэн нэг удаагийн код,
+    # захиалгын имэйл жинхэнэ интернет рүү гарахгүй, http://localhost:8025 дээр харагдана. Олон архитектурын image
+    # (linux/amd64 + linux/arm64).
     image: axllent/mailpit:latest
     restart: unless-stopped
     environment:

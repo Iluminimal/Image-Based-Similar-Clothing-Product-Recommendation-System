@@ -8,8 +8,8 @@
 
 - `*-api.ts` — API дуудлага.
 - `use-*.ts` — hook. Серверийн өгөгдлийг TanStack Query-ээр авна.
-- `*-store.ts` — зөвхөн дэлгэцийн төлөв (Zustand).
-- `*.test.tsx` — тухайн файлын хажууд.
+- `*-store.ts` — зөвхөн UI-ийн state (Zustand).
+- `*.test.tsx` — тест; шалгадаг файлынхаа хажууд байна.
 
 Маягтад React Hook Form ба Zod ашиглана. Zod-ыг browser дээр ашигладаг файл эхэндээ
 `import "@/lib/zod-jitless"` бичнэ.

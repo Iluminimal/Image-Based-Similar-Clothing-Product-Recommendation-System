@@ -32,7 +32,7 @@ ENV PATH=/app/.venv/bin:$PATH \
     YOLO_AUTOINSTALL=False
 USER angel
 EXPOSE 8000
-# /readyz нь загвар ачаалагдтал улаан: эхний асалтад загвар татахад хэдэн минут болно.
+# Загвар ачаалагдаж дуустал /readyz бэлэн биш гэж хариулна: эхний асалтад загвар татахад хэдэн минут болно.
 HEALTHCHECK --interval=15s --timeout=10s --start-period=600s --retries=5 \
   CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=8).status == 200 else 1)"
 CMD ["uvicorn", "angel.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]

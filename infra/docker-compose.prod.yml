@@ -20,7 +20,7 @@ x-api-env: &api-env
     GOOGLE_REDIRECT_URI: ${SITE_URL}/api/v1/auth/google/callback
     QPAY_CALLBACK_BASE_URL: ${SITE_URL}
     COOKIE_SECURE: "true"
-    # API-д зөвхөн Caddy -> web -> api сүлжээгээр хүрнэ: X-Forwarded-For-ийг итгэнэ.
+    # API руу зөвхөн Caddy -> web -> api замаар хандах боломжтой тул X-Forwarded-For-т итгэнэ.
     TRUST_PROXY_HEADERS: "true"
 
 services:

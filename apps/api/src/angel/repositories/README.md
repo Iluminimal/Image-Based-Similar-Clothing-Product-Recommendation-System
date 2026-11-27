@@ -1,6 +1,6 @@
 # `repositories`: өгөгдлийн сантай харилцах код
 
-SQL query бичих газар. (Service-д цөөн онцгой тохиолдол бий: advisory lock ба бүртгэл устгах үеийн
+SQL query-г энд бичнэ. (Цөөн хэдэн query service-д бий: advisory lock болон бүртгэл устгах үеийн
 цэвэрлэгээ.)
 
 - Commit хийхгүй: transaction-ийг service удирдана.

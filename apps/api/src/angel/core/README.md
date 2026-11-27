@@ -10,7 +10,7 @@
 | Нууц үг, token, 2FA | `security.py`, `passwords.py`, `totp.py`, `secret_box.py` |
 | Хүсэлтийн хамгаалалт | `rate_limit.py`, `csrf.py`, `cookies.py`, `uploads.py`, `security_headers.py` |
 | Имэйл, SMS | `mail.py`, `sms.py` |
-| Монголын онцлог | `mongolia.py` (аймаг, дүүрэг), `phone.py`, `money.py`, `shop_time.py` |
+| Хаяг, утас, мөнгө, цаг | `mongolia.py` (аймаг, дүүрэг), `phone.py`, `money.py`, `shop_time.py` |
 | Log | `logging.py`, `request_context.py` |
 
 Дэлгүүрийн дүрмийг энд биш, `services/`-д бичнэ.

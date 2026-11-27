@@ -20,7 +20,7 @@ FastAPI-ийн код. Бүтцийн бүтэн тайлбар: [`docs/architec
 | `oauth/` | Google-ээр нэвтрэх provider (жинхэнэ ба хиймэл) |
 | `db/` | SQLAlchemy-ийн engine, `Base` класс |
 | `storage.py` | Барааны зураг хадгалах интерфейс |
-| `main.py` | Аппыг угсрах газар |
+| `main.py` | Аппын бүх хэсгийг холбож угсардаг файл |
 
 `api`, `services`, `repositories`, `schemas` дотор ижил нэртэй хэсгүүд бий: `accounts`, `catalog`, `commerce`,
 `reviews`, `admin`, `system`. Нэг боломжийн код давхарга бүрд ижил нэртэй folder-т байна. Тестүүд

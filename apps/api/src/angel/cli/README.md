@@ -2,7 +2,7 @@
 
 | Файл | Команд |
 | --- | --- |
-| `admin.py` | `make create-admin`, `make create-warehouse` (EMAIL=…), утсаа алдсан ажилтны 2FA-г арилгах |
+| `admin.py` | `make create-admin`, `make create-warehouse` (EMAIL=…), `make reset-2fa` (утсаа алдсан ажилтны 2FA-г арилгана) |
 | `outbox.py` | `make outbox`, `make outbox-retry` |
 | `seed_demo.py` | `make seed-demo`, `make seed-demo-clean` |
 | `clean_test_data.py` | `make clean-test-data` (анхдагчаар зөвхөн тоолно) |

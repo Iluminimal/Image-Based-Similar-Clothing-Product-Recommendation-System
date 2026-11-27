@@ -46,7 +46,7 @@ reset-2fa: ## Утсаа алдсан ажилтны 2FA-г арилгах: make
 	@test -n "$(EMAIL)" || { echo "usage: make reset-2fa EMAIL=you@example.com"; exit 2; }
 	$(API) uv run python -m angel.cli.admin reset-2fa --email "$(EMAIL)"
 
-outbox: ## Мэдэгдлийн имэйлийн дараалал: хэд хүлээж, илгээгдэж, унасан (агуулгагүй)
+outbox: ## Мэдэгдлийн имэйлийн дараалал: хэд нь хүлээгдэж, илгээгдэж, унасныг харуулах (агуулгагүй)
 	$(API) uv run python -m angel.cli.outbox status
 
 outbox-retry: ## Унасан имэйлүүдийг дахин илгээх дараалалд оруулах (SMTP-г зассаны дараа)
@@ -86,7 +86,7 @@ seed-demo: ## Админ самбарт зориулсан demo хэрэглэг
 seed-demo-clean: ## seed-demo-ийн үүсгэснийг устгах (нөөцийг буцаана)
 	$(API) uv run python ../../scripts/seed_demo.py --clean
 
-clean-test-data: ## БҮХ туршилтын өгөгдлийг устгах (dry-run; --yes-ээр жинхэнээр): make clean-test-data KEEP=you@example.com [ARGS=--yes]
+clean-test-data: ## БҮХ туршилтын өгөгдлийг устгах (эхлээд зөвхөн тоолно; ARGS=--yes бол устгана): make clean-test-data KEEP=you@example.com [ARGS=--yes]
 	@test -n "$(KEEP)" || { echo "usage: make clean-test-data KEEP=you@example.com [ARGS=--yes]"; exit 2; }
 	$(API) uv run python ../../scripts/clean_test_data.py --keep-email "$(KEEP)" $(ARGS)
 
@@ -125,10 +125,10 @@ test-ml: ## Жинхэнэ FashionCLIP, YOLO загвар ачаалдаг те�
 test-web: ## Зөвхөн web-ийн тест
 	$(WEB) npm test
 
-api-types: openapi ## Web-ийн төрөлтэй API клиентийг дахин үүсгэх (apps/web/src/lib/api/schema.d.ts)
+api-types: openapi ## API өөрчлөгдсөний дараа web-ийн TypeScript төрлийг дахин үүсгэх (apps/web/src/lib/api/schema.d.ts)
 	$(WEB) npm run api:types
 
-latency: ## Жинхэнэ каталог дээрх API-ийн бүтэн хугацааны тайлан; жишээ: make latency DEVICE=mps
+latency: ## Жинхэнэ каталог дээр API хэр хурдан хариулахыг хэмжих; жишээ: make latency DEVICE=mps
 	$(API) uv run python ../../scripts/measure_api_latency.py --device $(or $(DEVICE),cpu)
 
 openapi: ## API-ийн OpenAPI schema-г docs/openapi.json руу бичих

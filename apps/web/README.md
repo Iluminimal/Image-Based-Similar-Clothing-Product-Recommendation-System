@@ -22,23 +22,25 @@ make lighthouse     # production build дээрх Lighthouse (үр дүн, ар�
 
 Folder бүрийн заавар тухайн folder-ийн `README.md`-д бий (эхлэх нь: [`src/README.md`](src/README.md)).
 
-- `src/app` — route-ууд ба layout. Анхдагчаар Server Component; `providers.tsx` нь client хил.
+- `src/app` — route ба layout-ууд. Анхдагчаар Server Component; client талын provider-ууд `providers.tsx`-д бий.
   Дэлгүүр, бүртгэл, checkout хуудсууд, `/admin/*` (админ ба агуулахын ажилтан, `docs/admin.md`), `sitemap.ts`, `robots.ts`.
-  Нүүр болон хайлтын хуудас хүсэлт болгонд шинээр үүсдэг, учир нь API-аас уншдаг бөгөөд build хийх үед API байдаггүй.
-- `src/features/<нэр>` — үйлдэл бүрийн код (component, API дуудлага, тест нэг дор):
+  Нүүр, хайлтын хуудсыг хүсэлт бүрд шинээр зурна: эдгээр нь API-аас уншдаг, харин build хийх үед API ажиллаагүй байдаг.
+- `src/features/<нэр>` — боломж бүрийн код (component, API дуудлага, тест нэг дор):
   `catalog` (жагсаалт, шүүлтүүр, барааны хуудас), `search` (зургаар хайх), `home`, `cart`, `checkout`, `account`,
-  `orders`, `wishlist`, `auth`, `admin`, `seo`.
+  `orders`, `reviews`, `wishlist`, `auth`, `admin`, `seo`.
 - `src/components/ui` — shadcn/ui-ийн суурь хэсгүүд (шинэ нэмэх: `npx shadcn@latest add <нэр>`).
 - `src/lib/api` — OpenAPI-аас үүссэн төрлүүд (`schema.d.ts`), төрөлтэй `openapi-fetch` клиент, RFC 7807 алдааны боловсруулалт.
 - `src/lib/image-loader.ts` — API-ийн урьдчилан үүсгэсэн 400/800 px WebP-г сонгож, энэ сайтын `/media` route-оор дамжуулна.
   Тиймээс Next-ийн зургийн optimizer ашиглагддаггүй.
 - `src/lib/env.ts` — шалгагдсан орчны хувьсагчид (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`, `.env.example`-ийг харна).
-  Browser код импортлодог тул зориудаар энгийн TypeScript.
+  Browser-ийн код үүнийг import хийдэг тул зориуд сан ашиглалгүй, энгийн TypeScript-ээр бичсэн.
 - `e2e/` — Playwright тестүүд, `scripts/lighthouse.mjs` — Lighthouse скрипт.
 
 ## Анхаарах зүйл
 
-- Dialog, sheet, dropdown зэрэг давхарга хэсгүүд анх ашиглах үедээ `next/dynamic`-аар ачаалагддаг. Scroll-snap
-  container-д `scroll-smooth` нэмж болохгүй. Хоёулангийнх нь шалтгаан `docs/frontend.md` (Performance) хэсэгт бий.
-- Dark mode: class стратеги (`components/theme`), анхдагчаар системийн тохиргоог дагана.
+- Хуудсан дээр давхарлан нээгддэг хэсгүүдийг (dialog, sheet, dropdown) анх хэрэгтэй болоход нь `next/dynamic`-аар
+  ачаална. Scroll-snap container-д `scroll-smooth` нэмж болохгүй. Хоёр дүрмийн шалтгаан `docs/frontend.md`-ийн
+  Performance хэсэгт бий.
+- Dark mode `<html>` дээрх `dark` class-аар асдаг (`components/theme`). Анхдагч нь цайвар; хэрэглэгч харанхуй
+  горим эсвэл системийн тохиргоог дагахыг сонгож болно.
 - Tailwind нь PostCSS plugin-оор (`postcss.config.mjs`) ажиллана.

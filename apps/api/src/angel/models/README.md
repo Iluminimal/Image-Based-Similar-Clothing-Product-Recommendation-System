@@ -8,7 +8,8 @@ SQLAlchemy-ийн ORM класс бүр нэг хүснэгт. Client руу ORM
 2. `cd apps/api && uv run alembic revision --autogenerate -m "…"`.
 3. Үүссэн файлыг (`apps/api/migrations/versions/`) **заавал уншиж шалгана**: Alembic `CHECK` constraint
    зэрэг зарим зүйлийг анзаардаггүй.
-4. `make migrate`, дараа нь `uv run alembic check` "No new upgrade operations" гэж хэлэх ёстой.
+4. `make migrate` ажиллуулна. Дараа нь `uv run alembic check` "No new upgrade operations" гэж хариулах
+   ёстой.
 
 Мөнгөн дүнг бүхэл бага нэгжээр хадгална (төгрөг x 100; багана нь `*_cents` нэртэй). Цагийг UTC-ээр
 хадгална.

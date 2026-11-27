@@ -38,9 +38,9 @@ const REASON_MAX = 200;
 type Action = "ship" | "deliver" | "cancel" | "refund" | null;
 
 /**
- * Захиалгад одоогийн төлвөөр нь, мөн хэрэглэгчийн role-оор юу хийж болох вэ (өөрийг нь API татгалзана):
- * илгээх, хүргэх нь агуулахын ажилтных; цуцлах, буцаах нь админых. `onHold`: цуцлах хүсэлт
- * шийдэгдээгүй тул илгээхгүй.
+ * Захиалгын төлөв, хэрэглэгчийн role-оос хамаарч юу хийж болохыг тогтооно (бусдыг API татгалзана). Илгээх,
+ * хүргэх нь агуулахын ажилтны ажил; цуцлах, төлбөр буцаах нь админых. `onHold`: цуцлах хүсэлт шийдэгдээгүй
+ * тул илгээхгүй.
  */
 export function availableActions(status: AdminOrder["status"], role: string | undefined, onHold = false) {
   const warehouse = role === "warehouse";
@@ -56,8 +56,8 @@ export function availableActions(status: AdminOrder["status"], role: string | un
 export function OrderActions({ order }: { order: AdminOrder }) {
   const t = useTranslations("admin.actions");
   const [open, setOpen] = useState<Action>(null);
-  // Диалог нээгдэх бүрд шинэ төлөвтэй: өмнөх удаагийн бичсэн шалтгаан, "үлдэгдэлд буцаах" сонголт
-  // (захиалгын одоогийн төлвөөс гарсан өгөгдмөл) үлдэхгүй.
+  // Диалог нээгдэх бүрд шинээр эхэлнэ: өмнө бичсэн шалтгаан, "үлдэгдэлд буцаах" сонголт үлдэхгүй (анхдагч
+  // утгыг захиалгын одоогийн төлвөөс авна).
   const [session, setSession] = useState(0);
   const role = useAuth((state) => state.user?.role);
   const can = availableActions(order.status, role, Boolean(openRequestOf(order)));
@@ -308,7 +308,8 @@ function RefundDialog({ order, open, onClose }: DialogProps) {
   const fieldError = useFieldError();
   const refund = useRefundOrder();
   const amount = order.payment?.amount_cents ?? order.total_cents;
-  // Буцаасан бараа ирэхэд агуулах үлдэгдлийг аль хэдийн шийдсэн: энд дахин асуухгүй.
+  // Буцаасан бараа ирэхэд агуулахын ажилтан түүнийг үлдэгдэлд нэмэх эсэхийг аль хэдийн шийдсэн тул энд дахин
+  // асуухгүй.
   const restockDecided = openRequestOf(order)?.status === "received";
   const {
     register,

@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 /**
- * Жагсаалтын хайлтын мөр (Apple-ийн pill хэлбэртэй хайлт). `q` нь URL-д орох тул `onSearch` дуудагч
- * `router.replace` хийнэ. `key={defaultValue}`: URL-ээс ирсэн шинэ утга бичсэнийг орлоно.
+ * Жагсаалтын хайлтын мөр (Apple-ийн pill хэлбэртэй хайлт). `q` URL-д орох тул `onSearch`-д дуудсан код
+ * `router.replace` хийнэ. `key={defaultValue}`: URL-ээс шинэ утга ирвэл талбарт бичсэнийг солино.
  */
 export function SearchForm({
   label,

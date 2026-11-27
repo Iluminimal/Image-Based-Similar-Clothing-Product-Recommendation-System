@@ -52,7 +52,7 @@ export function CartLines({ cart, onNavigate, className }: Props) {
   );
 }
 
-/** "Removed Blue Kurta. Undo": мөрийг хасснаас хойш хэдэн секунд, cart дотроо. */
+/** "Removed Blue Kurta. Undo": мөр хассанаас хойш хэдхэн секунд сагсан дотор харагдана. */
 export function UndoBar() {
   const t = useTranslations("cart");
   const removed = useBagPanel((state) => state.removed);
@@ -67,7 +67,7 @@ export function UndoBar() {
   }, [removed, setRemoved]);
 
   if (!removed) return null;
-  // Хасалт амжилтгүй болбол мөр cart-даа буцсан тул буцаах зүйл байхгүй.
+  // Хасаж чадаагүй бол мөр сагсандаа буцсан тул буцаах зүйл байхгүй.
   if (cart?.lines.some((line) => line.product.id === removed.productId && line.size === removed.size)) return null;
   return (
     <div
@@ -105,10 +105,11 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
   // Дөнгөж нэмсэн мөр Bag-д нэг удаа гэрэлтэнэ.
   const isNew = added?.productId === product.id && added.size === line.size;
 
-  // Буцаах мөр cart дотор байна (toast нээлттэй Bag-ийн гадна байх тул screen reader хүрэхгүй).
+  // "Буцаах" мөрийг сагсан дотор харуулна: toast нээлттэй Bag-ийн гадна гардаг тул screen reader түүнд хүрч
+  // чадахгүй.
   const setRemoved = useBagPanel((state) => state.setRemoved);
   const removeWithUndo = () => {
-    // Одоо тавина, сервер хариулахад биш: тэр үед энэ мөр алга болсон, callback-ууд ажиллахгүй.
+    // Одоо тавина, сервер хариулахыг хүлээхгүй: тэр үед энэ мөр алга болсон байх тул callback-ууд ажиллахгүй.
     setRemoved({ productId: product.id, size: line.size, quantity: line.quantity, name: product.name });
     remove.mutate(line.id);
   };
@@ -132,7 +133,7 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
 
   return (
     <m.li
-      // Хасагдах мөр огцом алга болохын оронд гулсан хаагдана.
+      // Хасагдаж буй мөр огцом алга болохгүй, гулсаж хаагдана.
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}

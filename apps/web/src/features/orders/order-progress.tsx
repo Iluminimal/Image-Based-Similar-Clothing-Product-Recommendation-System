@@ -51,7 +51,7 @@ export function OrderProgress({ order, className }: { order: Progress; className
   return (
     <ol aria-label={t("progress.label")} className={cn("flex", className)}>
       {steps.map((step, index) => {
-        // Сүүлийн алхамд хүрсэн бол захиалга дууссан: "явагдаж байна" биш, биелсэн.
+        // Сүүлийн алхамд хүрсэн бол захиалга дууссан: "явагдаж байна" биш, "биелсэн" гэж харуулна.
         const finished = step.done && index === steps.length - 1;
         const state = step.stopped
           ? "stopped"
@@ -69,7 +69,7 @@ export function OrderProgress({ order, className }: { order: Progress; className
             {index > 0 && (
               <span aria-hidden className="bg-border absolute top-3.5 right-1/2 h-0.5 w-full -translate-y-1/2">
                 {step.done && (
-                  // Хуудас ачаалахад өмнөх алхмаас дүүрч эхэлнэ, холбогч бүр дараалан.
+                  // Хуудас ачаалахад алхмуудыг холбосон шугамууд өмнөх алхмаас эхэлж дараалан дүүрнэ.
                   <span
                     className={cn(
                       "animate-grow absolute inset-0 origin-left",

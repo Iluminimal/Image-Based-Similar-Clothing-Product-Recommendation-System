@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Бүтээгдэхүүний хуудас бэлтгэгдэж байх хооронд: зураг зүүн талд, мэдээлэл баруун талд. */
+/** Барааны хуудас бэлтгэгдэж байх зуур: зураг зүүн талд, мэдээлэл баруун талд. */
 export function ProductSkeleton() {
   return (
     <div className="container-page py-8 md:py-12" aria-busy>

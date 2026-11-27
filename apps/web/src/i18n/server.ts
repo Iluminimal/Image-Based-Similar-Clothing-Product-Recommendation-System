@@ -16,8 +16,8 @@ export async function getFormat(): Promise<Format> {
 }
 
 /**
- * Хэл санал болгох banner-т: зочин хэлээ хараахан сонгоогүй бөгөөд түүнд илүү тохирох өөр хэл байвал
- * `{ current, suggested }`. Хадгалсан сонголт (banner-ийг хаасан нь ч мөн адил) байвал дахин асуухгүй.
+ * Хэл санал болгох banner-т: зочин хэлээ сонгоогүй, түүнд илүү тохирох өөр хэл байвал
+ * `{ current, suggested }`. Сонголт аль хэдийн хадгалагдсан бол (banner-ийг хаасан ч мөн) дахин асуухгүй.
  */
 export async function getLocaleSuggestion(): Promise<{ current: Locale; suggested: Locale } | null> {
   const [cookieStore, headerStore, locale] = await Promise.all([cookies(), headers(), getLocale()]);

@@ -46,8 +46,8 @@ export async function GoogleSignIn({ next }: { next: string }) {
         <span className="bg-border h-px flex-1" />
       </div>
       <Button asChild variant="outline" size="lg" className="w-full">
-        {/* API руу шилжих navigation, энэ апп-ын хуудас биш: <Link> prefetch хийж, route-лэх гэж
-           оролдох байсан. */}
+        {/* Энэ бол апп-ын хуудас биш, API руу шилжих холбоос. <Link> ашиглавал prefetch хийж, дотоод хуудас
+            гэж үзэх байсан. */}
         <a href={googleStartHref(next)}>
           <GoogleMark />
           {t("continue")}

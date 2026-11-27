@@ -123,7 +123,7 @@ function ReviewItem({ review, mine, productId }: { review: Review; mine: boolean
   );
 }
 
-/** Зочин сэтгэгдэл бичихэд юу хийж болох: form, эсвэл чадахгүй шалтгаан. */
+/** Зочин сэтгэгдэл бичиж чадах эсэх: бичих form, эсвэл яагаад чадахгүйн тайлбар. */
 function WriteReview({ productId, page }: { productId: number; page: ReviewPage }) {
   const t = useTranslations("reviews");
   const status = useAuth((state) => state.status);
@@ -163,8 +163,8 @@ function WriteReview({ productId, page }: { productId: number; page: ReviewPage 
 }
 
 /**
- * Бүтээгдэхүүний сэтгэгдэл: дундаж ба бүрэлдэхүүн, сэтгэгдлүүд өөрсдөө, мөн (худалдаж авсан
- * хэрэглэгчид) бичих form. Эхний хуудас хуудастайгаа хамт ирнэ; үлдсэнийг шаардлагатай үед татна.
+ * Барааны сэтгэгдэл: дундаж үнэлгээ, одны хуваарилалт, сэтгэгдлүүд, мөн (худалдаж авсан хэрэглэгчид) бичих
+ * form. Эхний хуудас хуудастай хамт ирдэг, дараагийнхыг хэрэгтэй үед татна.
  */
 export function ProductReviews({ productId, initial }: { productId: number; initial: ReviewPage | null }) {
   const t = useTranslations("reviews");

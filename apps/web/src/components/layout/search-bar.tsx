@@ -184,7 +184,8 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
   function onPaste(event: ClipboardEvent) {
     const file = firstImage(event.clipboardData.files);
     if (!file) return;
-    // Энд зохицуулна: хуудас даяарх paste listener (нүүр хуудас) нэг зургийг хоёр удаа авах ёсгүй.
+    // Paste-ийг энд боловсруулж дуусгана: хуудас даяар paste сонсдог listener (нүүр хуудас) нэг зургийг хоёр
+    // дахь удаа авах ёсгүй.
     event.preventDefault();
     event.stopPropagation();
     void searchWithPhoto(file);
@@ -250,8 +251,8 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
           onPaste={onPaste}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
-              // Зөвхөн санал болголтыг хаана: хайлтын талбар өөрөө цэвэрлэгдэж, мөн харагдахаа
-              // больсон идэвхжсэн санал болголт Enter-ээр нээгдэх ёсгүй.
+              // Зөвхөн санал болголтыг хаана: хайлтын талбар өөрөө цэвэрлэгддэг. Мөн нуугдсан санал болголт
+              // сонгогдсон хэвээр үлдэж, Enter дарахад нээгдэх ёсгүй.
               if (showList) e.preventDefault();
               setOpen(false);
               setActive(-1);

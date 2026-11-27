@@ -6,11 +6,11 @@ import { useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Native scroll-snap carousel; сумнууд нь pointer хэрэглэгчдэд зориулсан нэмэлт.
+ * Browser-ийн өөрийн scroll-snap carousel. Сумнууд нь хулганатай хэрэглэгчдэд зориулсан нэмэлт.
  *
- * Энд `scroll-smooth` class НЭМЭХГҮЙ: snap-тэй хамт хуудас ачаалах үед smooth-scroll animation
- * эхлүүлж, Chrome хуудасны largest paint-ыг хэдэн зуун миллисекунд хоцорч мэдээлэхэд хүргэнэ (нүүр
- * хуудсан дээр Lighthouse LCP 88 -> 92). Сумнууд өөрсдөө smooth scroll хүсдэг.
+ * Энд `scroll-smooth` class БҮҮ НЭМ: snap-тэй хамт хуудас ачаалахад smooth-scroll animation эхэлж, Chrome
+ * хуудасны largest paint-ыг хэдэн зуун миллисекунд хоцроож тооцдог (нүүр хуудсан дээр Lighthouse LCP 88 ->
+ * 92). Сумнууд smooth scroll-ийг өөрсдөө хүсдэг.
  */
 export function ScrollRail({ children, label }: { children: ReactNode; label: string }) {
   const t = useTranslations("layout.ui");

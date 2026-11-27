@@ -19,9 +19,9 @@ const W = 100;
 const H = 100;
 
 /**
- * Өдөр тутмын орлогыг талбайт муруйгаар харуулна (Apple Stocks/Health шиг): нимгэн тор, градиент,
- * hover дээр босоо шугам ба тайлбар. Chart library ашиглахгүй гараар зурсан: утсан дээр бүдгэрэх,
- * жижгэрэхгүй. Яг тоонуудыг screen reader болон хүссэн хүнд зориулж доор нь хүснэгтээр өгсөн.
+ * Өдөр тутмын орлогыг талбайтай муруйгаар харуулна (Apple Stocks/Health шиг): нимгэн тор, градиент, hover
+ * хийхэд босоо шугам, тайлбар. Chart library ашиглалгүй өөрсдөө зурсан тул утсан дээр бүдгэрч, жижгэрэхгүй.
+ * Яг тоонуудыг screen reader болон харахыг хүссэн хүнд зориулж доор нь хүснэгтээр өгсөн.
  */
 export function RevenueChart({ stats }: { stats: AdminStats }) {
   const t = useTranslations("admin.chart");
@@ -32,7 +32,7 @@ export function RevenueChart({ stats }: { stats: AdminStats }) {
   const { series, currency } = stats;
   const total = series.reduce((sum, point) => sum + point.revenue_cents, 0);
   const ceiling = niceCeiling(Math.max(...series.map((point) => point.revenue_cents), 0));
-  // Тэнхлэгийн дээд хязгаарыг (ceiling) 100%, тэгийг 0% гэж авч, цэг бүрийг баруун ирмэг хүртэл тараана.
+  // Тэнхлэгийн дээд хязгаарыг (ceiling) 100%, тэгийг 0% гэж авна. Цэгүүдийг баруун ирмэг хүртэл жигд тараана.
   const step = series.length > 1 ? W / (series.length - 1) : W;
   const points: Point[] = series.map((point, index) => [
     series.length > 1 ? Number((index * step).toFixed(2)) : W / 2,

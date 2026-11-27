@@ -49,16 +49,15 @@ function QuickLinks({ onNavigate }: { onNavigate: () => void }) {
 }
 
 /**
- * Apple-ийн хайлтын арга: bar дахь томруулагч том талбар ба шуурхай холбоостой panel нээнэ. Md-ээс
- * дээш bar-ын доор дэлгэцийг дүүргэж, bar үлдэнэ (томруулагч дахин хаана, Escape ба өөр flyout
- * нээгдэхэд ч мөн хаагдана); утсан дээр bar-ыг ч бүрхэж зөвхөн X нь үлдэнэ. Panel нь <body> руу
- * portal хийгддэг: header-ийн backdrop blur нь доторх `fixed` бүх зүйлийн containing block
- * болчихно.
+ * Apple-ийнх шиг хайлт: bar дээрх томруулагч том талбар, шуурхай холбоос бүхий panel нээнэ. md-ээс дээш бол
+ * bar-ын доорх дэлгэцийг дүүргэж, bar харагдсаар үлдэнэ. Томруулагчийг дахин дарах, Escape дарах, өөр flyout
+ * нээхэд хаагдана. Утсан дээр bar-ыг ч бүрхэж, зөвхөн X үлдэнэ. Panel-ийг <body> руу portal хийдэг:
+ * header-ийн backdrop blur доторх `fixed` бүх элементийг өөртөө уяж орхидог.
  */
 export function HeaderSearch() {
   const t = useTranslations("layout.header");
   const pathname = usePathname();
-  // Хаана нээснээ санана: навигацийн дараа effect-гүйгээр хаагдсан гэж тооцогдоно.
+  // Аль хуудсан дээр нээснээ санана: өөр хуудас руу шилжвэл effect-гүйгээр хаагдсанд тооцогдоно.
   const [openedAt, setOpenedAt] = useState<string | null>(null);
   const [requested, setRequested] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
@@ -68,8 +67,7 @@ export function HeaderSearch() {
   useBarPanel(open);
   useCloseOnOtherFlyout("search", close);
 
-  // Escape focus хаана байсан ч panel-ийг хаана (panel доторх focus-ыг panel-ийн өөрийн handler
-  // барина).
+  // Focus хаана ч байсан Escape panel-ийг хаана (focus panel дотор бол panel-ийн өөрийн handler барина).
   useEffect(() => {
     if (!open) return;
     function onKeyDown(event: globalThis.KeyboardEvent) {
@@ -81,8 +79,8 @@ export function HeaderSearch() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  // "/" дарахад хаанаас ч хайлт эхэлнэ, GitHub, apple.com шиг. Талбарт бичиж байх үед биш (тэнд
-  // налуу зураас нь тэмдэгт), dialog дотор биш, modifier товч дарсан үед биш.
+  // GitHub, apple.com шиг хаанаас ч "/" дарвал хайлт нээгдэнэ. Харин талбарт бичиж байх үед (тэнд "/" энгийн
+  // тэмдэгт), dialog дотор, modifier товчтой хамт дарсан үед нээгдэхгүй.
   useEffect(() => {
     function onKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey || event.defaultPrevented || event.isComposing) return;
@@ -137,9 +135,9 @@ export function HeaderSearch() {
               className="search-panel bg-background fixed inset-x-0 top-0 z-50 h-dvh overflow-y-auto overscroll-contain pb-10 md:top-[2.8125rem] md:z-30 md:h-auto md:max-h-[calc(100dvh-2.8125rem)] md:bg-[var(--flyout)] md:pt-8 md:pb-20"
             >
               <div className="container-nav">
-                {/* Утсан дээр apple.com шиг: bar-д зөвхөн X байх бөгөөд цэсийн товчны оронд орно
-                   (logo, хайлт, bag алга), талбар нь доорх тусдаа мөрөнд. Md-ээс дээш X байхгүй:
-                   bar үлдэж, түүний томруулагч panel-ийг хаана. */}
+                {/* Утсан дээр apple.com шиг: bar-д зөвхөн X үлдэж, цэсний товчны байрыг эзэлнэ (logo, хайлт,
+                    bag нуугдана). Хайлтын талбар доорх тусдаа мөрөнд. md-ээс дээш X байхгүй: bar хэвээр
+                    үлдэж, дээрх томруулагч panel-ийг хаана. */}
                 <div className="flex h-12 items-center justify-end md:hidden">
                   <button type="button" className={HEADER_CELL} aria-label={t("searchClose")} onClick={close}>
                     <X className="size-[18px]" strokeWidth={1.25} />

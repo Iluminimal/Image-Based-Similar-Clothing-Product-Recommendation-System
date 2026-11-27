@@ -40,7 +40,7 @@ export function MobileFiltersSheet({
   const [open, setOpen] = useState(defaultOpen ?? false);
   const { apply } = useListingNavigation(query);
   const count = activeFilterCount(query);
-  // Sheet-ийг гарчгаас нь доош татаж хаана.
+  // Sheet-ийг гарчгаас нь барьж доош чирвэл хаагдана.
   const swipe = useSwipeDismiss("y", () => setOpen(false), "[data-slot=sheet-header]");
   return (
     <Sheet open={open} onOpenChange={setOpen}>

@@ -20,8 +20,8 @@ export function initials(name: string): string {
 }
 
 /**
- * Хүний зураг (Google-ээр нэвтэрсэн бол Google-ийнх) эсвэл нэрийн эхний үсгүүд. Чимэглэл: нэр нь
- * үргэлж хажууд бичигдсэн эсвэл тойрсон товчны label байна.
+ * Хэрэглэгчийн зураг (Google-ээр нэвтэрсэн бол Google-ийнх) эсвэл нэрийн эхний үсгүүд. Зөвхөн чимэглэл: нэр
+ * нь үргэлж хажууд бичигдсэн эсвэл тойрсон товчны label дээр байна.
  */
 export function UserAvatar({ user, size = 32, className }: Props) {
   const [failed, setFailed] = useState(false);
@@ -35,7 +35,7 @@ export function UserAvatar({ user, size = 32, className }: Props) {
         width={size}
         height={size}
         style={style}
-        // Google-ийн серверт энэ дэлгүүр аль нь гэдгийг хэлэх шаардлагагүй.
+        // Дэлгүүрийн хаягийг Google-ийн server-т мэдэгдэх шаардлагагүй.
         referrerPolicy="no-referrer"
         onError={() => setFailed(true)}
         className={cn("shrink-0 rounded-full object-cover", className)}

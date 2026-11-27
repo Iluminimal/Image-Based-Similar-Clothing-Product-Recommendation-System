@@ -10,9 +10,9 @@ export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const next = resolvedTheme === "dark" ? "light" : "dark";
 
-  // Хоёр icon үргэлж render хийгдэж CSS-ээр (`dark:` variant) солигдоно, label нь тогтмол: server
-  // зочны theme-ийг мэдэхгүй тул `resolvedTheme`-ээс гарсан зүйл server ба client markup-д ялгаатай
-  // болно (hydration mismatch).
+  // Хоёр icon-ыг хоёуланг нь үргэлж render хийж, CSS-ээр (`dark:` variant) сольдог, label тогтмол. Server
+  // зочны theme-ийг мэдэхгүй тул `resolvedTheme`-ээс хамаарсан бүх зүйл server, client дээр өөр гарна
+  // (hydration mismatch).
   return (
     <Button
       variant="ghost"

@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 
 /**
- * `expiresAt`-аас хойш үлдсэн секунд (секунд бүр шинэчлэгдэнэ). Хугацаа мэдэгдэхгүй бол null. Серверийн
- * цаг, хөтчийн цаг зөрж болох тул `expiresAt`-ийг тэр чигээр нь биш, зөвхөн тоолуурт ашиглана.
+ * `expiresAt` хүртэл үлдсэн секунд (секунд бүр шинэчлэгдэнэ). Хугацаа тодорхойгүй бол null. Сервер,
+ * browser-ийн цаг зөрж болох тул `expiresAt`-ийг шууд харуулахгүй, зөвхөн үлдсэн хугацаа тоолоход хэрэглэнэ.
  */
 export function useTimeLeft(expiresAt: string | null | undefined): number | null {
   const [now, setNow] = useState(() => Date.now());

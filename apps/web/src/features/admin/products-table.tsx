@@ -64,8 +64,8 @@ function readView(): ViewMode {
 }
 
 /**
- * Хүснэгт/зураг харагдацын сонголтыг энэ хөтөч дээр санана (хувийн тохиргоо). Server болон hydration
- * үед "table": `useSyncExternalStore` хоёр хувилбарыг зөв тааруулна.
+ * Хүснэгт, зурган харагдацын сонголтыг энэ browser-т санана (хувийн тохиргоо). Server болон hydration үед
+ * "table". `useSyncExternalStore` hydration үед хоёр утгыг зөв зохицуулна.
  */
 function useViewMode(): [ViewMode, (mode: ViewMode) => void] {
   const mode = useSyncExternalStore(
@@ -121,7 +121,8 @@ export function ProductsTable({ params }: { params: ProductListParams }) {
   const [pricing, setPricing] = useState<AdminProduct | null>(null);
   const [deleting, setDeleting] = useState<AdminProduct[] | null>(null);
 
-  // Өөр хуудас, шүүлтүүр руу шилжихэд сонголт хамт үлдэхгүй: харагдахгүй мөрөнд үйлдэл хийчихгүй.
+  // Өөр хуудас, шүүлтүүр руу шилжихэд сонголтыг арилгана: харагдахгүй байгаа мөр дээр андуурч үйлдэл хийхээс
+  // сэргийлнэ.
   const filterKey = JSON.stringify(params);
   const { clear } = selection;
   useEffect(() => clear(), [filterKey, clear]);

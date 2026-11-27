@@ -60,10 +60,7 @@ export const getProduct = cache(async (id: number) => {
   }
 });
 
-/**
- * Бүтээгдэхүүний сэтгэгдлийн эхний хуудас, шинэ нь түрүүнд. Авч чадахгүй бол `null`: хуудас тэднээс
- * хамаарахгүй.
- */
+/** Барааны сэтгэгдлийн эхний хуудас, шинэ нь эхэнд. Авч чадахгүй бол `null`: хуудас үүнээс хамаарахгүй. */
 export const getProductReviews = cache(async (id: number) => {
   try {
     return await unwrap(

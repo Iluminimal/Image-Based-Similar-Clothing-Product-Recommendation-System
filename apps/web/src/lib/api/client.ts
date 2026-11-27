@@ -7,8 +7,8 @@ import createClient from "openapi-fetch";
 import { env } from "@/lib/env";
 import type { paths } from "./schema";
 
-// Server component-ууд API-д дотоод сүлжээний хаягаар (docker) хандаж болно; browser үргэлж нийтийн
-// хаягийг ашиглана. `API_INTERNAL_URL` client-д хэзээ ч ил гарахгүй.
+// Server component-ууд API руу дотоод сүлжээний хаягаар (docker) хандаж болно. Browser үргэлж нийтийн хаягийг
+// ашиглана. `API_INTERNAL_URL` client-д хэзээ ч харагдахгүй.
 export function apiBaseUrl(): string {
   if (typeof window === "undefined" && process.env.API_INTERNAL_URL) {
     return process.env.API_INTERNAL_URL;
@@ -19,9 +19,9 @@ export function apiBaseUrl(): string {
 type Revalidate = number | false;
 
 /**
- * Үүсгэсэн OpenAPI `paths`-д зориулсан typed client. `revalidate` нь Next.js-ийн fetch cache-ийн
- * насжилт секундээр (зөвхөн server, browser үүнийг тоохгүй). Давтагдсан параметрийг
- * `gender=Men&gender=Unisex` гэж serialize хийдэг, API үүнийг хүлээдэг.
+ * Үүсгэсэн OpenAPI `paths`-д тохирсон төрөлтэй client. `revalidate` бол Next.js-ийн fetch cache хадгалах
+ * секунд (зөвхөн server дээр, browser үүнийг тооцохгүй). Давтагдсан параметрийг API-ийн хүлээдгээр
+ * `gender=Men&gender=Unisex` гэж бичнэ.
  */
 export function createApiClient(revalidate?: Revalidate) {
   return createClient<paths>({

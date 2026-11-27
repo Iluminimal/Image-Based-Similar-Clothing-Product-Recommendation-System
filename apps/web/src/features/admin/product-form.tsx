@@ -41,7 +41,7 @@ type Props = {
 };
 
 
-/** Ангиллыг "Apparel › Topwear" хэлбэрээр бүлэглэнэ, дэлгүүрийн шүүлтүүрийн үүрлэлттэй адил. */
+/** Ангиллыг "Apparel › Topwear" хэлбэрээр бүлэглэнэ, дэлгүүрийн шүүлтүүрийн шаталсан бүтэцтэй адил. */
 function groupCategories(categories: AdminCategory[], name: (value: string) => string) {
   const groups = new Map<string, AdminCategory[]>();
   for (const category of categories) {
@@ -67,8 +67,8 @@ export function ProductForm({ categories, product, submitLabel, onSubmit, readOn
     resolver: zodResolver(productSchema),
     defaultValues: toFormValues(product),
   });
-  // Бараа өөр газраас (үлдэгдэл, төлөв) өөрчлөгдвөл form-ын хүрээгүй талбарууд шинэчлэгдэнэ, харин
-  // хэрэглэгчийн бичиж байгаа зүйл устахгүй (form-ыг дахин mount хийхгүй).
+  // Бараа өөр газраас (үлдэгдэл, төлөв) өөрчлөгдвөл хэрэглэгчийн засаагүй талбарууд шинэчлэгдэнэ. Бичиж
+  // байгаа зүйл нь алга болохгүй (form-ыг дахин mount хийхгүй).
   useEffect(() => {
     if (product) reset(toFormValues(product), { keepDirtyValues: true });
   }, [product, reset]);
@@ -103,7 +103,8 @@ export function ProductForm({ categories, product, submitLabel, onSubmit, readOn
       if (missingPhoto()) return;
       try {
         await onSubmit(toPayload(values), photo?.file ?? null, { stock: Boolean(dirtyFields.stock_quantity) });
-        // Хадгалсан утга шинэ эхлэл болно: дараагийн хадгалалт тоог "өөрчилсөн" гэж дахин илгээхгүй.
+        // Хадгалсан утгыг шинэ анхны утга болгоно: дараагийн хадгалалтад тоог "өөрчилсөн" гэж үзэж дахин
+        // илгээхгүй.
         reset(values);
       } catch {
         // Алдааны шалтгааныг mutation hook аль хэдийн харуулсан; бичсэн зүйл алдагдахгүйн тулд

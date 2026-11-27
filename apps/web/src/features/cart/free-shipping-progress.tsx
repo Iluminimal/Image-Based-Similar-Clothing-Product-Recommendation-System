@@ -9,9 +9,9 @@ import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 
 /**
- * "You're ₮12,000 away from free shipping": subtotal өсөхөд дүүрдэг bar, хүрмэгц баталгаа болж хувирна.
- * Босгыг checkout-ын ашигладаг endpoint-оос авдаг (cache-тэй) тул checkout-ын авах дүнтэй хэзээ ч
- * зөрөхгүй. Мэдэгдэх хүртэл юу ч зурахгүй.
+ * "You're ₮12,000 away from free shipping": дүн өсөхөд дүүрдэг bar, босгонд хүрмэгц "үнэгүй хүргэлт" гэж
+ * батална. Босгыг checkout-ын ашигладаг endpoint-оос авдаг (cache-тэй) тул checkout дээрх дүнтэй хэзээ ч
+ * зөрөхгүй. Босго мэдэгдэх хүртэл юу ч харуулахгүй.
  */
 export function FreeShippingProgress({ subtotalCents, className }: { subtotalCents: number; className?: string }) {
   const t = useTranslations("cart");

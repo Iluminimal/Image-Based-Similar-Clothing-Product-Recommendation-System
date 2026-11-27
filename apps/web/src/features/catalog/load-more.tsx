@@ -19,10 +19,10 @@ type Props = {
 };
 
 /**
- * Server-ээс ирсэн `query.page` хуудсын доор дараагийн хуудсуудыг товчоор нэмж харуулна. Автоматаар
- * гүйлгэхгүй тул footer-т хүрэх боломж хэвээр. Нэмэх бүрт URL-ын `?page=` шинэчлэгдэж, дахин
- * ачаалах эсвэл холбоос хуваалцахад сүүлд үзсэн хуудас нээгдэнэ. Татсан хуудсууд TanStack Query-д
- * үлдэх тул бүтээгдэхүүн рүү орж буцахад дахин татахгүй.
+ * Server-ээс ирсэн `query.page` хуудасны доор дараагийн хуудсуудыг товчоор нэмж харуулна. Автоматаар
+ * гүйлгэдэггүй тул footer-т хүрч болсоор байна. Нэмэх бүрд URL-ын `?page=` шинэчлэгддэг: дахин ачаалах эсвэл
+ * холбоос хуваалцахад сүүлд үзсэн хуудас нээгдэнэ. Татсан хуудсууд TanStack Query-д үлддэг тул бараа руу орж
+ * буцахад дахин татахгүй.
  */
 export function LoadMore({ query, path, shownIds, total, pages, pageSize }: Props) {
   const t = useTranslations("catalog");
@@ -31,7 +31,7 @@ export function LoadMore({ query, path, shownIds, total, pages, pageSize }: Prop
     queryFn: ({ pageParam }) => fetchProductPage(query, pageParam, pageSize),
     initialPageParam: query.page + 1,
     getNextPageParam: (last) => (last.page < last.pages ? last.page + 1 : undefined),
-    // Анхны хуудсыг server өгсөн: зөвхөн товч дарахад л татна.
+    // Эхний хуудсыг server өгсөн тул зөвхөн товч дарахад татна.
     enabled: false,
   });
 

@@ -22,7 +22,7 @@ import { withoutLine, withQuantity } from "./cart-math";
 
 const mutationKey = ["cart", "mutation"] as const;
 
-/** Cart нь хэрэглэгчийнх, эсвэл зочинд browser-ийнх: тусдаа cache entry. */
+/** Сагс хэрэглэгчийнх, зочны хувьд browser-ийнх: cache-д тусдаа хадгална. */
 function useCartKey() {
   const userId = useAuth((state) => state.user?.id);
   return [...queryKeys.cart, userId ?? "guest"] as const;
@@ -33,15 +33,16 @@ export function useCart() {
   return useQuery({
     queryKey: useCartKey(),
     queryFn: fetchCart,
-    // Session сэргэтэл хүсэлтэд зочны cart-аар хариулна.
+    // Session сэргэж дуусахаас өмнө хүсэлт явуулбал сервер зочны сагсыг буцаана.
     enabled: status !== "unknown",
     staleTime: 15_000,
   });
 }
 
 /**
- * Optimistic локал өөрчлөлттэй cart mutation; сервер татгалзвал toast-тойгоор буцаана. Хурдан
- * товшилтууд давхцдаг тул серверийн хариуг сүүлийн хүсэлт дууссаны дараа л итгэнэ.
+ * Дэлгэцийг тэр даруй өөрчилдөг (optimistic) сагсны mutation. Сервер татгалзвал toast харуулж, буцаана.
+ * Хурдан товшилтууд давхцдаг тул сервер рүү явсан сүүлчийн хүсэлт дууссаны дараа л хариуг нь хүлээн
+ * зөвшөөрнө.
  */
 function useCartMutation<Variables>(
   mutationFn: (variables: Variables) => Promise<Cart>,

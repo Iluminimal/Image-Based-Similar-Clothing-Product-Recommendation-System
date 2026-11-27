@@ -20,7 +20,8 @@ type Props<T extends CatalogFilters> = {
   value: T;
   onChange: (next: T) => void;
   /**
-   * Ангиллын мод нь хайлтыг нарийсгаж болох газарт л хэрэгтэй; search оронд нь "Detected" ашиглана.
+   * Ангиллын мод зөвхөн хайлтыг нарийсгах боломжтой газарт хэрэгтэй. Зургаар хайлт үүний оронд "Detected"
+   * ашиглана.
    */
   showCategories?: boolean;
   /** Аль бүлгүүдийг харуулах (default: бүгд). */
@@ -77,9 +78,9 @@ type TreeProps<T extends CatalogFilters> = {
 };
 
 /**
- * Дэд ангилалтай ангилал. Сумны товч тусдаа button (`<summary>` доторх checkbox нь интерактив
- * хяналтуудыг үүрлүүлэх байсан); доторх зүйл сонгогдсон үед салбар өөрөө нээгдэж, хэрэглэгч гараар
- * нээж хаах хүртэл хэвээр байна.
+ * Дэд ангилалтай ангилал. Нээх сум нь тусдаа товч (`<summary>` дотор checkbox тавибал дарж болох зүйлс нэг
+ * нэгэндээ орох байсан). Дотор нь сонголт хийсэн бол салбар өөрөө нээгдэж, хэрэглэгч гараар хаах хүртэл
+ * нээлттэй үлдэнэ.
  */
 function CategoryBranch<T extends CatalogFilters>({
   node,
@@ -162,7 +163,7 @@ function PriceFilter<T extends CatalogFilters>({
 }) {
   const t = useTranslations("catalog");
   const format = useFormat();
-  // Slider бүхэл төгрөгөөр, мянгаар шатлан ажиллана; API, URL бага нэгж (төгрөг x 100) ашиглана.
+  // Slider бүхэл төгрөгөөр, мянгаар алхамлана. API болон URL бага нэгж (төгрөг x 100) ашиглана.
   const lo = Math.floor(range.min_cents / 100 / PRICE_STEP) * PRICE_STEP;
   const hi = Math.ceil(range.max_cents / 100 / PRICE_STEP) * PRICE_STEP;
   const committed: [number, number] = [
@@ -278,7 +279,7 @@ export function FilterFields<T extends CatalogFilters>({
       {show("price") && (
         <Group title={t("price")}>
           <PriceFilter
-            // URL гаднаас мужийг өөрчилбөл (жишээ нь "clear all") дахин mount хийнэ.
+            // URL гаднаас үнийн мужийг өөрчилбөл (жишээ нь "clear all") дахин mount хийнэ.
             key={`${value.min_price ?? ""}-${value.max_price ?? ""}`}
             range={options.price_range}
             value={value}

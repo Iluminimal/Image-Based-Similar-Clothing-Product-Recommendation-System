@@ -39,7 +39,7 @@ import {
   type DemoError,
 } from "./live-search-state";
 
-// Камерын dialog хүн хүсэх үед л ачаалагдана.
+// Камерын dialog-ыг хэрэглэгч хүсэх үед л ачаална.
 const CameraDialog = dynamic(
   () => import("@/features/search/camera-dialog").then((m) => m.CameraDialog),
   { ssr: false },
@@ -52,10 +52,11 @@ const RESULTS = 4;
 export type DemoSample = { id: number; name: string; src: string };
 
 /**
- * Нүүр хуудасны гол хэсэг: хуудас дээрээ ажилладаг зургаар хайлт. Зураг тавих (drop, сонгох, paste, камер)
- * эсвэл жишээ сонгоход /search/garments дуудагдаж, олдсон хувцас бүрт дугаартай хүрээ зурагдаж, баруун талд
- * төстэй бодит бараанууд гарна. Хайлтын код (`search-api`, `normalize-image`) эхний хэрэглээгээр л ачаалагдах
- * тул хуудасны анхны ачаалал хөнгөн. Зураг хэзээ ч хадгалагдахгүй: зөвхөн энэ browser-ийн санах ойд.
+ * Нүүр хуудасны гол хэсэг: хуудсан дээрээ ажилладаг зургаар хайлт. Зураг оруулах (чирэх, сонгох, paste,
+ * камер) эсвэл жишээ сонгоход /search/garments дуудна. Олдсон хувцас бүрт дугаартай хүрээ зурж, баруун талд
+ * төстэй бодит бараануудыг харуулна. Хайлтын код (`search-api`, `normalize-image`) анх ашиглахад л
+ * ачаалагддаг тул хуудас хөнгөн нээгдэнэ. Зургийг хэзээ ч хадгалахгүй: зөвхөн энэ browser-ийн санах ойд
+ * байна.
  */
 export function LiveSearch({ samples }: { samples: DemoSample[] }) {
   const t = useTranslations("home.demo");
@@ -67,7 +68,7 @@ export function LiveSearch({ samples }: { samples: DemoSample[] }) {
   const [cameraRequested, setCameraRequested] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
 
-  // Preview-ийн Object URL солигдох, unmount хийгдэх бүрт чөлөөлөгдөнө.
+  // Preview-ийн Object URL-ыг зураг солигдох, component unmount хийгдэх бүрд чөлөөлнө.
   const previewUrl = state.phase === "idle" ? null : state.previewUrl;
   useEffect(
     () => () => {
@@ -152,7 +153,7 @@ export function LiveSearch({ samples }: { samples: DemoSample[] }) {
   const done = state.phase === "done" ? state : null;
   const garment = done?.garments[done.focus];
   const busy = state.phase === "scanning";
-  // Зураг сонгохоос өмнө үр дүнгийн талбар хоосон байх тул нэг баганаар үзүүлнэ.
+  // Зураг сонгохоос өмнө үр дүнгийн хэсэг хоосон тул нэг баганаар харуулна.
   const split = state.phase !== "idle";
 
   return (
@@ -174,7 +175,7 @@ export function LiveSearch({ samples }: { samples: DemoSample[] }) {
           split && "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]",
         )}
       >
-        {/* Зургийн тайз */}
+        {/* Зургийн хэсэг */}
         <div
           className={cn(
             "border-border flex flex-col gap-4 p-4 sm:p-6",

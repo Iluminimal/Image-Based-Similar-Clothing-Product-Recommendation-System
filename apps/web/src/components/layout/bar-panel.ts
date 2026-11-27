@@ -3,10 +3,10 @@ import { useEffect } from "react";
 let open = 0;
 
 /**
- * Цэс, хайлт, Bag хуудас нээлттэй гэдгийг `isOpen` үнэн байх хугацаанд <html> дээрх attribute-оор
- * (`data-bar-panel`) хуудсанд мэдэгднэ. apple.com-ийн утасны bar шиг CSS нь хаадаг товчноос бусад
- * бүх зүйлийг бүдгэрүүлнэ (globals.css дахь `.phone-bar-item`-ыг үз). Flag биш тоолуур: нэг хуудас
- * нээгдэж, нөгөө хаагдахад үүнийг арилгах ёсгүй.
+ * `isOpen` үнэн байх хугацаанд <html> дээр `data-bar-panel` attribute тавьж, цэс, хайлт эсвэл Bag нээлттэйг
+ * хуудсанд мэдэгдэнэ. Тэр үед apple.com-ийн утасны bar шиг CSS хаах товчноос бусад бүгдийг бүдгэрүүлнэ
+ * (globals.css дахь `.phone-bar-item`-ийг үзнэ үү). Энэ нь зөвхөн true/false биш, тоолуур: нэг хуудас
+ * нээгдэж, нөгөө нь хаагдахад attribute арилах ёсгүй.
  */
 export function useBarPanel(isOpen: boolean) {
   useEffect(() => {

@@ -29,7 +29,7 @@ import {
   type RequestReason,
 } from "./orders-api";
 
-/** Захиалгын хуудас серверийн шинэ хариуг шууд харуулна; бусад жагсаалт дахин татагдана. */
+/** Захиалгын хуудас server-ийн шинэ хариуг шууд харуулна; бусад жагсаалтыг дахин татна. */
 function useRequestMutation<V>(number: string, mutationFn: (variables: V) => Promise<Order>) {
   const queryClient = useQueryClient();
   const userMessage = useUserMessage();
@@ -43,8 +43,8 @@ function useRequestMutation<V>(number: string, mutationFn: (variables: V) => Pro
 }
 
 /**
- * Цуцлах, буцаах: одоо гаргаж болох хүсэлт (`available_request`-ийг сервер тооцно, дүрэм энд
- * давхардахгүй) ба өмнөх хүсэлтүүдийн явц.
+ * Цуцлах, буцаах: одоо гаргаж болох хүсэлт (`available_request`-ийг server тооцдог тул дүрмийг энд давтахгүй)
+ * болон өмнөх хүсэлтүүдийн явц.
  */
 export function OrderRequests({ order }: { order: Order }) {
   const t = useTranslations("orders.requests");

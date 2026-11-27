@@ -22,7 +22,7 @@ import type { CatalogFilterOptions } from "./product";
 
 type Props = {
   title: string;
-  /** Энэ жагсаалтын URL: шүүлтүүр, эрэмбэ, хуудас нь түүн рүү буцах холбоос. */
+  /** Энэ жагсаалтын URL: шүүлтүүр, эрэмбэ, хуудасны холбоосууд энэ хаяг дээр үндэслэнэ. */
   path: string;
   query: ListingQuery;
   options: CatalogFilterOptions;
@@ -32,7 +32,7 @@ type Props = {
   chips?: ReactNode;
   /** Desktop sidebar-ын дээд хэсэг (ангиллын drill-down). */
   asideTop?: ReactNode;
-  /** Checkbox ангиллын мод нь зам ангиллыг сонгоогүй үед л утгатай. */
+  /** Checkbox-той ангиллын мод зөвхөн URL-ын зам ангилал тогтоогоогүй үед утгатай. */
   showCategories?: boolean;
   groups?: FilterGroup[];
 };
@@ -86,8 +86,8 @@ export function ListingView({
             <ActiveFilters query={query} path={path} />
           </div>
 
-          {/* Boundary-д key өгөхгүй: шүүлтүүр солигдоход skeleton биш хуучин grid (бүдэг) хэвээр
-             үлдэнэ. */}
+          {/* Suspense-д key өгөхгүй: шүүлтүүр солигдоход skeleton харуулахгүй, хуучин grid (бүдэг) хэвээр
+              үлдэнэ. */}
           <Suspense fallback={<ProductGridSkeleton count={12} />}>
             <PendingResults>
               <Results query={query} path={path} />

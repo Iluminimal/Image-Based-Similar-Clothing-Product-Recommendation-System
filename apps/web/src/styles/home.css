@@ -1,9 +1,9 @@
 /*
- * Нүүр хуудасны Stripe/Linear хэв. Бүх зүйл `.home` wrapper-ийн дотор: токенуудыг энд дахин тодорхойлдог тул
- * Button, ProductCard, ProductRail нүүр дээр indigo палитр, жижиг радиустай болж, бусад хуудас хуучнаараа үлдэнэ.
- * Анхдагч нь цайвар; хэрэглэгч Dark/System сонговол `.dark .home` өгнө. Хөдөлгөөн энд байхгүй: бүгд
- * `styles/effects.css` дотор (`prefers-reduced-motion: no-preference` хамгаалалттай); эндхийн hover зөвхөн хулгана-тай
- * төхөөрөмж дээр.
+ * Нүүр хуудасны Stripe/Linear маягийн загвар. Бүгд `.home` дотор үйлчилнэ: өнгө, хэмжээний token-уудыг энд
+ * дахин тодорхойлсон тул Button, ProductCard, ProductRail нүүр хуудсанд indigo өнгө, жижиг дугуйралттай болж,
+ * бусад хуудас хуучнаараа үлдэнэ. Анхдагчаар цайвар; хэрэглэгч Dark эсвэл System сонговол `.dark .home`
+ * үйлчилнэ. Хөдөлгөөнийг энд бичээгүй: бүгд `styles/effects.css`-д (`prefers-reduced-motion: no-preference`
+ * дотор). Энд байгаа hover эффект зөвхөн хулганатай төхөөрөмж дээр.
  */
 @layer components {
   .home {
@@ -336,7 +336,8 @@
 .home .link-more {
   color: var(--brand);
 }
-/* Акцент үг: градиент нь үг (`.word`) бүр дээр, `background-clip: text` inline-block хүүхдүүдэд үйлчилдэггүй. */
+/* Онцлох үг: градиентыг үг (`.word`) бүр дээр тавина, учир нь `background-clip: text` дотор нь байгаа
+   inline-block элементүүдэд үйлчилдэггүй. */
 .home .text-gradient {
   background: none;
   color: inherit;

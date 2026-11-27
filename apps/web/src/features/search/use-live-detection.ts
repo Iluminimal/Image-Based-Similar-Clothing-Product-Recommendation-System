@@ -34,10 +34,10 @@ function captureFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement, maxEdg
 }
 
 /**
- * Камерын live preview дээрх хувцсыг олно: өмнөх хүсэлт дууссанаас хойш хамгийн багадаа `intervalMs` өнгөрсний
- * дараа нэг кадрыг `/search/detect` руу явуулж, хайрцгийг `RegionTracker`-ээр тогтворжуулна. Хүсэлт
- * хэзээ ч давхцахгүй. Таб далд, асаалт унтарсан, компонент устгагдсан үед зогсоно. Алдаа гарвал (429 буюу
- * дараалсан алдаа) `unavailable` болно, зураг авалт үүнээс хамаарахгүй.
+ * Камерын live preview дээрх хувцсыг олно. Өмнөх хүсэлт дууссанаас хойш дор хаяж `intervalMs` өнгөрсний дараа
+ * нэг кадрыг `/search/detect` руу илгээж, хайрцгуудыг `RegionTracker`-ээр тогтворжуулна. Хүсэлтүүд хэзээ ч
+ * давхцахгүй. Tab нуугдсан, горим унтарсан, component устсан үед зогсоно. Алдаа гарвал (429 эсвэл хэд
+ * дараалсан алдаа) `unavailable` болно; зураг авахад энэ нөлөөлөхгүй.
  */
 export function useLiveDetection(
   videoRef: RefObject<HTMLVideoElement | null>,

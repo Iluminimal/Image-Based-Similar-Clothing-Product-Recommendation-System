@@ -20,10 +20,7 @@ function isProduct(value: unknown): value is Product {
   );
 }
 
-/**
- * Энэ browser-ийн сүүлд үзсэн бүтээгдэхүүн, шинэ нь түрүүнд. Storage хаалттай эсвэл өөрчлөгдсөн
- * байж болно: тэгвэл хоосон.
- */
+/** Энэ browser дээр сүүлд үзсэн бараанууд, шинэ нь эхэнд. Storage хаалттай эсвэл эвдэрсэн бол хоосон. */
 export function readRecentlyViewed(): Product[] {
   let raw: string | null;
   try {
@@ -31,7 +28,7 @@ export function readRecentlyViewed(): Product[] {
   } catch {
     return EMPTY;
   }
-  // Storage өөрчлөгдөх хүртэл ижил массив, `useSyncExternalStore` шаарддаг.
+  // `useSyncExternalStore`-ийн шаардлагаар storage өөрчлөгдөх хүртэл яг ижил массивыг буцаана.
   if (raw === cache.raw) return cache.items;
   let items: Product[] = EMPTY;
   try {
@@ -54,7 +51,7 @@ export function recordView(product: Product): void {
     window.localStorage.setItem(KEY, JSON.stringify(next));
     window.dispatchEvent(new Event(EVENT));
   } catch {
-    // Санахгүй байсан ч зүгээр.
+    // Санаж чадаагүй ч асуудалгүй.
   }
 }
 

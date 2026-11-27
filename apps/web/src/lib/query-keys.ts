@@ -1,6 +1,6 @@
 /**
- * TanStack Query түлхүүрүүдийн нэг газар, ингэснээр mutation өөрийн өөрчилсөн зүйлийг invalidate
- * хийж чадна.
+ * Бүх TanStack Query түлхүүрийг нэг дор тодорхойлно: ингэснээр mutation өөрчилсөн зүйлийнхээ cache-ийг
+ * хүчингүй болгож чадна.
  */
 export const queryKeys = {
   cart: ["cart"] as const,

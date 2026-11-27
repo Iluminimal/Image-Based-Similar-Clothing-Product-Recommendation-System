@@ -8,12 +8,11 @@ const MAGNET_RADIUS = 96;
 const MAGNET_MAX = 7;
 
 /**
- * Нэг delegated listener-ээр бүх карт ба товчийг "амьдруулна": `[data-tilt]` элемент курсорын
- * дагуу хазайж гялтганана (CSS хувьсагч `--rx --ry --gx --gy` тавигдана, зургийг `effects.css`
- * зурна), `[data-magnetic]` товч курсор ойртоход бага зэрэг татагдана (`--mx --my`). Карт бүр
- * client component болохгүй: ганц `pointermove` (passive, нэг frame-д нэг удаа). Зөвхөн жинхэнэ
- * заагчтай (`hover: hover`, `pointer: fine`) ба хөдөлгөөн хорьсонгүй үед л listener нэмэгдэнэ.
- * Хуудсанд юу ч render хийхгүй.
+ * Нэг delegated listener бүх карт, товчийг хөдөлгөөнтэй болгоно. `[data-tilt]` элемент курсорыг дагаж хазайж,
+ * гялалзана (`--rx --ry --gx --gy` CSS хувьсагч тавина, зургийг `effects.css` зурна). `[data-magnetic]` товч
+ * курсор ойртоход бага зэрэг татагдана (`--mx --my`). Карт бүрийг client component болгох шаардлагагүй:
+ * ганцхан `pointermove` (passive, нэг frame-д нэг удаа). Listener-ийг зөвхөн жинхэнэ хулганатай (`hover:
+ * hover`, `pointer: fine`), хөдөлгөөнийг хязгаарлаагүй үед нэмнэ. Хуудсанд юу ч зурахгүй.
  */
 export function CardTilt() {
   useEffect(() => {
@@ -72,7 +71,7 @@ export function CardTilt() {
         frame = requestAnimationFrame(update);
       }
     };
-    // Товшихад карт хазайлтаа тавьж, дарагдах (scale) animation-д зам тавина.
+    // Товшиход карт хазайлтаа болиулж, дарагдах (scale) animation-д зай өгнө.
     const onDown = () => {
       if (tilted) {
         release(tilted);

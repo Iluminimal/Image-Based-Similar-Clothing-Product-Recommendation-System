@@ -14,7 +14,7 @@ export type Garment = components["schemas"]["GarmentResult"];
 
 export type ImageSearchParams = {
   filters: CatalogFilters;
-  /** Хэрэглэгчийн сонгосон; илрүүлсэн ангилал зөвхөн санал бөгөөд хэрэгжихгүй. */
+  /** Хэрэглэгчийн сонгосон ангилал. Таньсан ангилал зөвхөн санал тул шүүлтүүр болохгүй. */
   articleType: string | null;
   /** Текстээр нарийсгах ("like this but in blue"). Хоосон биш бол hybrid search руу шилжинэ. */
   refinement: string;
@@ -23,7 +23,7 @@ export type ImageSearchParams = {
   limit?: number;
 };
 
-/** Upload endpoint-ууд multipart form авдаг; давтагдсан талбар "аль нэг нь" гэсэн үг. */
+/** Upload endpoint-ууд multipart form авдаг. Талбарыг давтвал "эдгээрийн аль нэг нь" гэсэн үг. */
 export function buildSearchForm(file: File, params: ImageSearchParams): FormData {
   const form = new FormData();
   form.append("file", file);
@@ -68,8 +68,8 @@ export async function searchByImage(
 export type DetectResponse = components["schemas"]["DetectResponse"];
 
 /**
- * Камерын live preview-ийн нэг кадраас хувцасны хайрцгийг авна (хайлт хийхгүй). Кадр зөвхөн шинжилгээнд
- * явна, сервер хадгалахгүй.
+ * Камерын live preview-ийн нэг кадраас хувцасны хайрцгуудыг авна (хайлт хийхгүй). Кадрыг зөвхөн шинжлэхэд
+ * илгээнэ, server хадгалахгүй.
  */
 export async function detectGarments(frame: Blob, signal?: AbortSignal): Promise<DetectResponse> {
   const form = new FormData();
@@ -86,7 +86,7 @@ export async function detectGarments(frame: Blob, signal?: AbortSignal): Promise
 
 export type GarmentSearchParams = {
   filters: CatalogFilters;
-  /** Хувцас тутамд хэдийг (нэгдсэн харагдацад цөөн: дэлгэрэнгүйг нь "бүгдийг харах" үзүүлнэ). */
+  /** Хувцас бүрт хэдэн үр дүн авах (нэгдсэн харагдацад цөөн: бүгдийг "бүгдийг харах" харуулна). */
   limit?: number;
 };
 
@@ -121,7 +121,7 @@ export async function searchGarments(
   return (await response.json()) as GarmentSearchResponse;
 }
 
-/** Нэг л хувцас олдсон үед нэгдсэн хариуг ердийн нэг-хувцасны хариу болгож, тэр харагдацыг дахин ашиглана. */
+/** Зөвхөн нэг хувцас олдвол нэгдсэн хариуг энгийн нэг хувцасны хариу болгож, тэр харагдацыг ашиглана. */
 export function garmentAsSearchResponse(response: GarmentSearchResponse): SearchResponse {
   const [garment] = response.garments;
   return {

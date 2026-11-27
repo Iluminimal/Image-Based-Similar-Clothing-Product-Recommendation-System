@@ -3,7 +3,7 @@ import type { ListingQuery } from "./filters";
 
 type T = (key: "resultsFor" | "whoWhat" | "newArrivals" | "allProducts", values?: Record<string, string>) => string;
 
-/** Хамгийн тодорхой шүүлтүүрээс гаргасан жагсаалтын хүнд ойлгомжтой гарчиг. */
+/** Хамгийн нарийн шүүлтүүрээс жагсаалтын ойлгомжтой гарчиг гаргана. */
 export function listingTitle(query: ListingQuery, t: T, vocab: Vocab): string {
   if (query.q) return t("resultsFor", { query: query.q });
   const kids = query.gender.length === 2 && query.gender.includes("Boys") && query.gender.includes("Girls");

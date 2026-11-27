@@ -52,7 +52,7 @@ import {
   type ShipDetails,
 } from "./admin-api";
 
-/** Query-үүд баталгаажсан ажилтныг хүлээнэ, тиймээс энгийн хэрэглэгч хүсэлт ч илгээхгүй. */
+/** Query-үүд ажилтан гэдэг нь батлагдтал хүлээдэг тул энгийн хэрэглэгчээс хүсэлт огт явахгүй. */
 function useIsStaff() {
   const status = useAuth((state) => state.status);
   const role = useAuth((state) => state.user?.role);
@@ -114,7 +114,7 @@ export function useAdminOrder(number: string) {
   });
 }
 
-/** Mutation алдаагаа өөрөө toast-оор мэдээлдэг тул дуудагч зөвхөн амжилтыг боловсруулна. */
+/** Mutation алдааг өөрөө toast-оор харуулдаг тул дуудсан код зөвхөн амжилтыг боловсруулна. */
 function useProductMutation<V, R>(mutationFn: (variables: V) => Promise<R>) {
   const queryClient = useQueryClient();
   const userMessage = useUserMessage();
@@ -140,8 +140,8 @@ export const useReplaceProductImage = () =>
   useProductMutation(({ id, file }: { id: number; file: File }) => replaceAdminProductImage(id, file));
 
 /**
- * Олон барааны төлвийг нэг дор солино: одоо байгаа endpoint-ыг 4-өөр зэрэг дуудна. Амжилттай
- * солигдсон id-г буцаана ("Буцаах" зөвхөн тэднийг буцаана).
+ * Олон барааны төлвийг нэг дор солино: одоо байгаа endpoint-ыг нэг зэрэг 4-өөр нь дуудна. Амжилттай солигдсон
+ * id-уудыг буцаана ("Буцаах" зөвхөн тэдгээрийг буцаана).
  */
 export const useBulkSetProductActive = () =>
   useProductMutation(async ({ ids, active }: { ids: readonly number[]; active: boolean }) => {
@@ -198,8 +198,9 @@ export function useAdminAudit(params: AuditListParams) {
 }
 
 /**
- * Sidebar-ын тоон тэмдэг. Админ: dashboard-ын анхдагч (30 хоног) хүсэлттэй нэг cache. Статистик нь
- * админых тул агуулахын ажилтанд агуулахын самбарын тоог (илгээх, нөөц дууссан/багассан) ашиглана.
+ * Sidebar-ын тоон тэмдэг. Админд dashboard-ын анхдагч (30 хоног) хүсэлтийн cache-ийг дахин ашиглана.
+ * Статистик зөвхөн админых тул агуулахын ажилтанд агуулахын самбарын тоог (илгээх, нөөц дууссан/багассан)
+ * харуулна.
  */
 export function useNavBadges(): { orders?: number; products?: number } {
   const isAdmin = useIsAdmin();

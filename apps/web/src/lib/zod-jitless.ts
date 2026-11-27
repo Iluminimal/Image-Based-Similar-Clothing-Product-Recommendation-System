@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 /**
- * Zod 4 хурдасгахын тулд `new Function`-ээр schema бүрийг эхлээд туршдаг. Content-Security-Policy
- * `unsafe-eval`-ийг хаадаг (`src/lib/security-headers.ts`) тул тэр оролдлого бүр зөрчил болж
- * мэдээлэгддэг, дараа нь Zod ердийн замаараа ажиллана. `jitless` нь оролдлогыг эхнээс нь хийхгүй.
- * Form шалгалт нь хэдхэн талбар тул хурдны зөрүү мэдэгдэхгүй.
+ * Zod 4 хурдан ажиллахын тулд эхлээд schema бүрд `new Function`-ийг туршдаг. Content-Security-Policy
+ * `unsafe-eval`-ийг хориглодог (`src/lib/security-headers.ts`) тул тэр оролдлого бүр CSP зөрчил болж
+ * мэдээлэгдээд, дараа нь Zod энгийн аргаараа ажилладаг. `jitless` энэ оролдлогыг огт хийлгэхгүй. Form
+ * шалгахад хэдхэн талбар тул хурдны ялгаа мэдэгдэхгүй.
  *
- * Zod ашигладаг browser талын файл бүр схемээ үүсгэхээс өмнө `import "@/lib/zod-jitless"` хийнэ.
+ * Zod ашигладаг browser-ийн файл бүр schema үүсгэхээс өмнө `import "@/lib/zod-jitless"` хийнэ.
  */
 z.config({ jitless: true });

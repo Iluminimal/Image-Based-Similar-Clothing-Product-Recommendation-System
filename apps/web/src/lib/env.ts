@@ -1,8 +1,7 @@
 /**
- * Нийтийн тохиргоо, эхлэх үед нэг удаа шалгана, ингэснээр буруу хаяг canonical холбоос, Open Graph
- * tag, sitemap-д буруу URL оруулахын оронд тэр дор нь чангаар унана. Зориудаар энгийн TypeScript:
- * энэ module browser код-д импортлогддог, validation сан зөвхөн хоёр string шалгахын тулд зочин
- * бүрт ачаалагдана.
+ * Нийтийн тохиргоог апп эхлэхэд нэг удаа шалгана. Ингэснээр буруу хаяг canonical холбоос, Open Graph tag,
+ * sitemap-д орохын оронд тэр даруй ил алдаа гарна. Зориуд энгийн TypeScript-ээр бичсэн: browser-ийн код энэ
+ * модулийг import хийдэг тул хоёр string шалгахын тулд validation сан зочин бүрд татагдах ёсгүй.
  */
 
 function publicUrl(name: string, value: string | undefined, fallback: string): string {

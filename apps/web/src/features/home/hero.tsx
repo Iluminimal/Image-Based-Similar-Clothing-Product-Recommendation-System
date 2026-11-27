@@ -6,8 +6,9 @@ import { SplitWords } from "@/components/motion/split-words";
 import { Button } from "@/components/ui/button";
 
 /**
- * Эхний хэсэг (Stripe/Linear хэв): ард нь зөөлөн gradient mesh, голд нь шошго, том гарчиг, нэг мөр тайлбар, хоёр
- * товч. Зураг байхгүй: доорх live demo нь харагдах гол зүйл. Гарчиг хэзээ ч нуугддаггүй (LCP нь текст).
+ * Эхний хэсэг (Stripe/Linear маягийн): ард нь зөөлөн gradient mesh, голд нь шошго, том гарчиг, нэг мөр
+ * тайлбар, хоёр товч. Зураг байхгүй: доорх live demo гол харагдах зүйл. Гарчиг хэзээ ч нуугдахгүй (LCP нь энэ
+ * бичвэр).
  */
 export async function Hero() {
   const t = await getTranslations("home.hero");

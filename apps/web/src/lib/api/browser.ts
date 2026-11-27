@@ -1,6 +1,6 @@
 /**
- * Browser-оос нэвтэрсэн хүний нэрийн өмнөөс API дуудах client: access token-ийг нэмж, хугацаа нь
- * дууссан бол session-ийг нэг удаа сэргээгээд хүсэлтийг давтана.
+ * Browser-оос нэвтэрсэн хэрэглэгчийн нэрийн өмнөөс API дуудах client. Access token нэмнэ. Хугацаа нь дууссан
+ * бол session-ийг нэг удаа сэргээж, хүсэлтийг дахин явуулна.
  */
 
 import createClient from "openapi-fetch";
@@ -44,9 +44,7 @@ export function browserApi() {
   return client;
 }
 
-/**
- * openapi-fetch дуудлагыг хүлээж, data-г нь буцаана эсвэл `ApiError` шиднэ (offline бол status 0).
- */
+/** openapi-fetch-ийн дуудлагыг хүлээж, data-г нь буцаана эсвэл `ApiError` шиднэ (offline үед status 0). */
 export async function call<T>(
   request: Promise<{ data?: T; error?: unknown; response: Response }>,
 ): Promise<T> {

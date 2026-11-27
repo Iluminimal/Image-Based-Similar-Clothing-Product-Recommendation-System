@@ -19,8 +19,7 @@ import { staffHome } from "./roles";
 import { useSignOut } from "./use-sign-out";
 
 /**
- * Нэвтэрсэн хэрэглэгчийн цэс. Эхний товшилтоор ачаална (`AccountMenu`-г хар): dropdown library
- * хэрэгтэй.
+ * Нэвтэрсэн хэрэглэгчийн цэс. Dropdown library хэрэгтэй тул анх товшиход л ачаална (`AccountMenu`-г үзнэ үү).
  */
 export function AccountDropdown({ user, defaultOpen }: { user: SessionUser; defaultOpen?: boolean }) {
   const t = useTranslations();

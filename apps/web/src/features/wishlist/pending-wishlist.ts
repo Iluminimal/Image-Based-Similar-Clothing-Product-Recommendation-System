@@ -3,15 +3,15 @@ import type { Product } from "@/features/catalog/product";
 const KEY = "angel:pending-wishlist";
 
 /**
- * Зочин зүрх дарсан бараа: нэвтрэх хуудас руу явахад хадгалж, нэвтэрсний дараа автоматаар хадгална
- * (`PendingWishlistReplay`). sessionStorage: энэ табдаа л, хаахад алга болно. Хаа ч хадгалах боломжгүй
- * (private горим) бол чимээгүй алгасна.
+ * Зочин зүрх дарсан барааг түр санаад, нэвтрэх хуудас руу явна. Нэвтэрсний дараа автоматаар хадгална
+ * (`PendingWishlistReplay`). sessionStorage ашигладаг тул зөвхөн энэ tab-д, хаавал алга болно. Хадгалах
+ * боломжгүй (private горим) бол чимээгүй алгасна.
  */
 export function rememberPendingWishlist(product: Product): void {
   try {
     window.sessionStorage.setItem(KEY, JSON.stringify(product));
   } catch {
-    // хадгалж чадахгүй: зүгээр л нэвтэрсний дараа дахин дарна.
+    // хадгалж чадахгүй бол хэрэглэгч нэвтэрсний дараа дахин дарна
   }
 }
 

@@ -23,7 +23,7 @@ export function useAddresses() {
   });
 }
 
-/** Mutation алдаагаа өөрөө toast-оор мэдээлдэг тул дуудагч зөвхөн амжилтыг боловсруулна. */
+/** Mutation алдааг өөрөө toast-оор харуулдаг тул дуудсан код зөвхөн амжилтыг боловсруулна. */
 function useAddressMutation<V, R>(mutationFn: (variables: V) => Promise<R>) {
   const queryClient = useQueryClient();
   const userMessage = useUserMessage();

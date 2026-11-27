@@ -59,7 +59,7 @@ export function OrderPageView({ number }: { number: string }) {
             </p>
           )}
           {hasOpenInvoice(order) && <PendingOrderPanel order={order} />}
-          {/* Шийдэгдэж байгаа хүсэлт (буцаах хаяг) эхэнд харагдана; бусад үед захиалгын дараа. */}
+          {/* Шийдэгдэж байгаа хүсэлт (буцаах хаягтай) эхэнд харагдана; бусад үед захиалгын дараа. */}
           {hasOpenRequest(order) && <OrderRequests order={order} />}
           <OrderDetail order={order} reviewLinks />
           {!hasOpenRequest(order) && <OrderRequests order={order} />}

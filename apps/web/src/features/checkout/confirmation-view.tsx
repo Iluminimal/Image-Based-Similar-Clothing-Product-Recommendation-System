@@ -28,7 +28,7 @@ export function ConfirmationView({ number }: { number: string }) {
   const status = useAuth((state) => state.status);
   const router = useRouter();
   const heading = useRef<HTMLHeadingElement>(null);
-  // Session дууссан бол хуудас "ачаалж байна" гэж гацахгүй: нэвтэрч байгаад энд буцаж ирнэ.
+  // Session дууссан бол хуудас "ачаалж байна" дээр гацахгүй: нэвтэрсний дараа энд буцна.
   useEffect(() => {
     if (status === "signedOut") router.replace(`/login?next=${encodeURIComponent(`/checkout/confirmation/${number}`)}`);
   }, [status, number, router]);
@@ -36,7 +36,7 @@ export function ConfirmationView({ number }: { number: string }) {
     queryKey: queryKeys.order(number),
     queryFn: () => fetchOrder(number),
     enabled: status === "signedIn",
-    // Төлбөрийн баталгаа redirect-ээс хоцорч болно: тогттол үргэлжлүүлэн шалгана.
+    // Төлбөрийн баталгаа redirect-ээс хожуу ирж болох тул дахин дахин шалгана.
     refetchInterval: (query) => (query.state.data?.status === "pending" ? 2_000 : false),
   });
 
@@ -64,7 +64,7 @@ export function ConfirmationView({ number }: { number: string }) {
   }
 
   const Icon = order.status === "paid" ? CheckCircle2 : order.status === "pending" ? Clock : XCircle;
-  // QR-тай нээлттэй нэхэмжлэх: худалдан авагч төлөх ёстой (баталгаажуулалт хүлээж буй биш).
+  // QR-той нэхэмжлэх нээлттэй: худалдан авагч төлөх ёстой (одоо баталгаажуулалт хүлээж буй биш).
   const awaiting = hasOpenInvoice(order);
   const title =
     order.status === "paid" ? t("thanks") : awaiting ? t("awaiting") : order.status === "pending" ? t("confirming") : t("cancelled");
@@ -107,7 +107,7 @@ export function ConfirmationView({ number }: { number: string }) {
   );
 }
 
-/** Төлсний дараах гурван богино алхам, тус бүр өмнөхийнхөөс жаахан хоцорч гарна. */
+/** Төлсний дараах гурван богино алхам, тус бүр өмнөхөөсөө бага зэрэг хоцорч гарч ирнэ. */
 function WhatHappensNext({ email }: { email: string }) {
   const t = useTranslations("checkout.confirmation.next");
   const steps = [

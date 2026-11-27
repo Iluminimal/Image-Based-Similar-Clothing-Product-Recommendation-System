@@ -9,7 +9,7 @@ import { useFormat } from "@/i18n/use-format";
 import { useShippingText } from "@/features/checkout/shipping-text";
 import { queryKeys } from "@/lib/query-keys";
 
-/** Хүргэлт хэд, хэр удах вэ: checkout-ын ашигладаг endpoint-оос уншина. */
+/** Хүргэлт хэдэн төгрөг, хэр удах вэ: checkout-ын ашигладаг endpoint-оос уншина. */
 export function DeliveryInfo() {
   const t = useTranslations("catalog.delivery");
   const shipping = useShippingText();

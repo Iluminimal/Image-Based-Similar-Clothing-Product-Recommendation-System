@@ -73,7 +73,7 @@ export function ForgotPasswordForm({ next = "/" }: { next?: string }) {
       router.refresh();
     } catch (error) {
       if (error instanceof ApiError && error.is("signInRequired")) {
-        // Нууц үг солигдсон; ажилтан хоёр дахь кодтойгоо өөрөө нэвтэрнэ.
+        // Нууц үг солигдлоо. Ажилтан 2FA кодтойгоо өөрөө нэвтэрнэ.
         toast.success(t("changedSignIn"));
         router.replace(next === "/" ? "/login" : `/login?next=${encodeURIComponent(next)}`);
         return;

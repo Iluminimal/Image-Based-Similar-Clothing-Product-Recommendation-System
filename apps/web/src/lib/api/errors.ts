@@ -45,7 +45,7 @@ const TYPE = {
   checkoutBusy: "urn:angel:problem:checkout-busy",
   reviewExists: "urn:angel:problem:review-exists",
   invalidTransition: "urn:angel:problem:invalid-order-transition",
-  // Ижил түлхүүрээр давтсан checkout, гэхдээ захиалга хугацаа нь дууссан (409).
+  // Ижил key-тэй давтсан checkout, гэхдээ тэр захиалгын хугацаа дууссан (409).
   attemptExpired: "urn:angel:problem:attempt-expired",
   reauthRequired: "urn:angel:problem:reauth-required",
   openOrders: "urn:angel:problem:open-orders",
@@ -142,9 +142,9 @@ export async function errorFromResponse(response: Response): Promise<ApiError> {
 export type ErrorTranslator = (key: keyof typeof en.errors, values?: Record<string, string | number>) => string;
 
 /**
- * Шидэгдсэн дурын утгыг худалдан авагчид харуулахад аюулгүй, хэрэгтэй мессеж болгон хөрвүүлэх функц
- * үүсгэнэ. Тодорхой төрөлтэй алдаа орчуулсан мессежээ авна; серверийн `detail` (монголоор) зөвхөн төрөл нь
- * үл мэдэгдэх (422, ерөнхий) үед л дамжина.
+ * Ямар ч төрлийн алдааг худалдан авагчид харуулахад аюулгүй, хэрэгтэй мессеж болгодог функц үүсгэнэ. Тодорхой
+ * төрөлтэй алдаанд орчуулсан мессеж өгнө. Server-ийн `detail`-ийг (монголоор) зөвхөн төрөл нь танигдахгүй
+ * (422, ерөнхий) үед харуулна.
  */
 export function createUserMessage(t: ErrorTranslator) {
   return (error: unknown): string => {
@@ -266,7 +266,7 @@ export const userMessage = createUserMessage(
   createTranslator({ locale: "en", messages: en, namespace: "errors" }) as unknown as ErrorTranslator,
 );
 
-/** Сүлжээний алдааг (fetch reject) status 0-тэй `ApiError` болгож боож өгнө. */
+/** Сүлжээний алдааг (fetch reject) status 0-тэй `ApiError` болгоно. */
 export function networkError(cause: unknown): ApiError {
   if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
   const error = new ApiError({ status: 0, title: "Network error" });

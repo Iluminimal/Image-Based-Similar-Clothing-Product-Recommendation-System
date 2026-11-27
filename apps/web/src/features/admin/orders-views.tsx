@@ -71,7 +71,7 @@ function ExportOrders({ params }: { params: OrderListParams }) {
   );
 }
 
-/** Жагсаалтаас шууд харагдах: энэ захиалгад хэрэглэгчийн хүсэлт хүлээгдэж байна. */
+/** Захиалгад хэрэглэгчийн хүсэлт хүлээгдэж байгааг жагсаалтаас шууд харуулна. */
 function RequestFlag({ order }: { order: AdminOrderSummary }) {
   const t = useTranslations("admin.orders.openRequest");
   if (!order.open_request) return null;

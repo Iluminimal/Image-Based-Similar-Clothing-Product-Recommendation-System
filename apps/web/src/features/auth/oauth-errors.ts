@@ -8,8 +8,8 @@ function isCode(code: string): code is OAuthErrorCode {
 }
 
 /**
- * `?error=`-оор нэвтрэх хуудас руу буцаагдсан хүнд юу хэлэх. Үл мэдэгдэх код юу ч хэлэхгүй: холбоос
- * бидний хуудсанд өөрийн үгээ оруулж болохгүй.
+ * `?error=` кодтойгоор login хуудас руу буцсан хүнд юу хэлэх вэ. Танихгүй кодод юу ч харуулахгүй: гадны
+ * холбоос манай хуудсан дээр өөрийн бичвэрийг гаргаж чадах ёсгүй.
  */
 export function oauthErrorMessage(raw: string | string[] | undefined, t: AuthTranslator): string | null {
   const code = Array.isArray(raw) ? raw[0] : raw;

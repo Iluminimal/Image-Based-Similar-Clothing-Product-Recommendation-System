@@ -177,7 +177,7 @@ function ProductThumb({ src, size }: { src: string; size: number }) {
   );
 }
 
-/** Нийт дотор эзлэх хувь: 0-ээс их боловч 1%-иас бага бол "<1%", тэгэхгүй бол "0%" гэж хуурахгүй. */
+/** Нийтэд эзлэх хувь: 0-ээс их ч 1%-иас бага бол "<1%" гэнэ, "0%" гэж ташаа харуулахгүй. */
 export function share(part: number, whole: number): string | undefined {
   if (whole <= 0) return undefined;
   const value = (part / whole) * 100;

@@ -47,7 +47,7 @@ function SheetContent({
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
-  // Дээрээс нээгддэг sheet байхгүй, түүний utility-ууд хуудас бүрт бага зэрэг CSS нэмнэ.
+  // Дээрээс нээгддэг sheet хийгээгүй: хэрэглэхгүй utility ч хуудас бүрд бага зэрэг CSS нэмдэг.
   side?: "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {

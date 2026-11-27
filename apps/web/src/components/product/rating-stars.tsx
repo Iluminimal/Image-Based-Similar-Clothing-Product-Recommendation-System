@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const FIVE = [0, 1, 2, 3, 4];
 
-// Мөр таван одны өргөн; дүүргэсэн хэсэг нь мөртэй ижил өргөнтэй, clip хийсэн хуулбар.
+// Мөрийн өргөн таван одтой тэнцүү. Дүүрсэн хэсэг нь ижил өргөнтэй хуулбарыг тайрч харуулсан.
 const SIZES = {
   sm: { row: "h-3 w-[3.75rem]", star: "size-3" },
   md: { row: "h-4 w-20", star: "size-4" },
@@ -18,8 +18,8 @@ export function ratingLabel(rating: number, t: ReturnType<typeof useTranslations
 }
 
 /**
- * Үнэлгээгээр дүүрсэн таван од (хагас, дөрөвний нэгийг оруулан). Зураг нь нүдэнд зориулагдсан;
- * screen reader-т үгс ("4.5 out of 5 stars") очно.
+ * Үнэлгээний хэмжээгээр дүүрсэн таван од (хагас, дөрөвний нэг ч байж болно). Зургийг харж буй хүн хардаг;
+ * screen reader үгээр ("4.5 out of 5 stars") уншина.
  */
 export function RatingStars({
   rating,

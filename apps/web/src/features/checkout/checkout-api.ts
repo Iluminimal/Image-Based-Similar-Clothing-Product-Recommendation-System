@@ -13,7 +13,7 @@ export type QPayCheckout = components["schemas"]["QPayCheckoutOut"];
 export const fetchShippingMethods = (zone: ShippingZone = "ub") =>
   call(browserApi().GET("/api/v1/checkout/shipping-methods", { params: { query: { zone } } }));
 
-/** Checkout ямар аргаар төлүүлэх вэ (QPay эсвэл demo), захиалга үүсэхээс өмнө. */
+/** Захиалга үүсэхээс өмнө checkout ямар аргаар төлбөр авахыг асууна (QPay эсвэл demo). */
 export const fetchPaymentMethod = () => call(browserApi().GET("/api/v1/checkout/payment-method"));
 
 /** Сагсны барааг нөөцөлж, захиалга үүсгэнэ. Ижил key үргэлж ижил захиалгыг буцаана. */
@@ -35,8 +35,8 @@ export const payDemoOrder = (number: string) =>
   );
 
 /**
- * QPay: худалдан авагч "Төлбөрөө шалгах" дарсан эсвэл хуудас руу буцаж ирсэн. API нь QPay-ээс
- * асууж, төлөгдсөн бол захиалгыг шийднэ. Захиалгыг буцаана.
+ * QPay: худалдан авагч "Төлбөрөө шалгах" дарсан эсвэл хуудас руу буцаж ирсэн үед дуудна. API QPay-ээс асууж,
+ * төлөгдсөн бол захиалгыг төлөгдсөн болгоод буцаана.
  */
 export const checkPayment = (number: string) =>
   call(

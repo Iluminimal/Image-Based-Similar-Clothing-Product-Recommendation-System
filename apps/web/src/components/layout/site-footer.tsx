@@ -10,10 +10,9 @@ const LINK =
   "text-foreground/80 hover:text-foreground focus-visible:ring-ring/50 inline-block rounded-sm py-1 transition-colors outline-none hover:underline focus-visible:ring-3";
 
 /**
- * Apple-ийн global footer: цайвар саарал, 12px үсэг, лавлах (багана бүрт жижиг тод гарчиг ба
- * богино холбоосны жагсаалт), "more ways to shop" мөр ба copyright. Хэсгүүдийн хоорондох зураас нь
- * 1px hairline. Утсан дээр багана нугарахгүй: зэрэгцсэн хоёр багана холбоос бүрийг нэг товшилтын
- * зайд байлгана.
+ * Apple-ийн маягийн footer: цайвар саарал дэвсгэр, 12px үсэг, багана бүрд жижиг тод гарчигтай богино
+ * холбоосууд, "more ways to shop" мөр, copyright. Хэсгүүдийг 1px нарийн зураас тусгаарлана. Утсан дээр
+ * баганууд хураагдахгүй: зэрэгцсэн хоёр баганад холбоос бүр нэг товшилтын зайд байна.
  */
 export async function SiteFooter() {
   const [t, vocab] = await Promise.all([getTranslations("layout.footer"), getVocab()]);
@@ -55,9 +54,8 @@ export async function SiteFooter() {
                 {column.links.map((link) => {
                   const item = (
                     <li key={link.href}>
-                      {/* Нэвтрээгүй зочин account хуудас руу орвол login руу redirect хийгддэг.
-                         Prefetch хийвэл тэр хариу cache-лэгдэж, нэвтэрсний дараа дахин тоглогдон
-                         дахин /login руу буцаана. */}
+                      {/* Нэвтрээгүй зочин account хуудас руу орвол login руу redirect хийгддэг. Урьдчилан
+                          татвал (prefetch) тэр redirect cache-д үлдэж, нэвтэрсний дараа ч /login руу буцаана. */}
                       <Link href={link.href} prefetch={"private" in link ? false : undefined} className={LINK}>
                         {link.label}
                       </Link>

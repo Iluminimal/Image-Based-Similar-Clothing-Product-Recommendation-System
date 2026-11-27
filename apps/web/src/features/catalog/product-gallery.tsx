@@ -18,10 +18,9 @@ type Props = {
 const SWIPE = 45; // хуудас эргүүлэхэд хэрэгтэй хэвтээ зайн px
 
 /**
- * Бүтээгдэхүүний зургууд. Stage зургуудын хооронд cross-fade хийнэ, swipe (touch) эсвэл thumbnail
- * хуудас эргүүлнэ, хулгана stage дээр очвол заагчийн орчимд zoom хийнэ (globals.css дахь
- * `.zoom-stage`-г хар), товшвол бүтэн хэмжээний харагдац нээгдэнэ. Нэг зурагтай бол strip, swipe
- * байхгүй.
+ * Барааны зургууд. Том зургууд хооронд аажмаар солигдоно (cross-fade). Swipe (touch) эсвэл жижиг зургаар
+ * сольж болно. Хулгана том зураг дээр очвол заагчийн орчмыг томруулна (globals.css дахь `.zoom-stage`-г үзнэ
+ * үү). Товшвол бүтэн хэмжээгээр нээгдэнэ. Нэг зурагтай бол жижиг зургийн мөр, swipe байхгүй.
  */
 export function ProductGallery({ product, images: given }: Props) {
   const t = useTranslations("catalog");
@@ -32,7 +31,7 @@ export function ProductGallery({ product, images: given }: Props) {
   const current = images[index] ?? images[0]!;
   const go = (to: number) => setIndex((to + images.length) % images.length);
 
-  // Stage-д state-ээр дамжуулалгүй шууд бичнэ: заагч секундэд олон удаа хөдөлдөг.
+  // Заагч секундэд олон удаа хөдөлдөг тул state-ээр дамжуулалгүй том зурагт шууд бичнэ.
   function zoomAt(event: PointerEvent<HTMLButtonElement>) {
     const box = stage.current;
     if (!box || event.pointerType !== "mouse") return;

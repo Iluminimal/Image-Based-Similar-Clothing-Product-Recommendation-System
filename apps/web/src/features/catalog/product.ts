@@ -18,7 +18,7 @@ export function productPath(product: Pick<Product, "id" | "slug">): string {
   return `/products/${product.id}/${product.slug}`;
 }
 
-/** Admin, захиалгын түүхэд: `useFormat().price`-тэй ижил дүрслэл, гэхдээ hook-гүй. */
+/** Админ, захиалгын түүхэд: `useFormat().price`-тай ижил харагдана, гэхдээ hook ашиглахгүй. */
 export function formatPrice(cents: number, currency: string = BASE_CURRENCY, locale = "en-US"): string {
   return formatMoney(cents, currency, locale);
 }

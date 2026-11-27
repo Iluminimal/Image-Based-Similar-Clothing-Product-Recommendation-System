@@ -27,7 +27,7 @@ export function PurchasePanel({ product, sizes }: Props) {
   const tc = useTranslations("catalog");
   const [size, setSize] = useState<string | null>(null);
   const [missingSize, setMissingSize] = useState(false);
-  // Хэмжээ сонгоогүй оролдлого бүрд нэмэгдэнэ, ингэснээр сэгсрэлт аль хэдийн явж байсан ч дахин эхэлнэ.
+  // Хэмжээ сонгоогүй оролдох бүрд тоо нэмэгдэнэ, ингэснээр сэгсрэлт үргэлжилж байсан ч дахин эхэлнэ.
   const [shake, setShake] = useState(0);
   const [justAdded, setJustAdded] = useState(false);
   const add = useAddToCart();
@@ -36,7 +36,7 @@ export function PurchasePanel({ product, sizes }: Props) {
   const setAdded = useBagPanel((state) => state.setAdded);
   const buttonRow = useRef<HTMLDivElement>(null);
   const sizeBox = useRef<HTMLDivElement>(null);
-  // Утсан дээр хуудас урт: үндсэн товч дэлгэцээс гармагц bar түүнийг гарт ойр байлгана.
+  // Утсан дээр хуудас урт: үндсэн товч дэлгэцээс гармагц доорх bar түүнийг гарт ойр байлгана.
   const [barVisible, setBarVisible] = useState(false);
 
   useEffect(() => {
@@ -47,7 +47,8 @@ export function PurchasePanel({ product, sizes }: Props) {
     return () => observer.disconnect();
   }, [product.in_stock]);
 
-  // Хэмжээний товчнуудыг дахин mount хийж сэгсрэлтийг дахин эхлүүлдэг тул тэд буцмагц cursor орно.
+  // Хэмжээний товчнуудыг дахин mount хийснээр сэгсрэлт дахин эхэлдэг. Тиймээс тэдгээр буцаж гарч ирмэгц
+  // focus-ыг шилжүүлнэ.
   useEffect(() => {
     if (shake > 0) sizeBox.current?.querySelector("input")?.focus({ preventScroll: true });
   }, [shake]);
@@ -63,7 +64,8 @@ export function PurchasePanel({ product, sizes }: Props) {
     if (sizes && !size) {
       setMissingSize(true);
       setShake((count) => count + 1);
-      // Bar-аас дарахад хэмжээ сонгогч дэлгэцийн гадна байна: буцааж авчирч, cursor-ыг түүнд оруулна.
+      // Доорх bar-аас дарахад хэмжээ сонгогч дэлгэцээс гадуур байж болно: түүн рүү гүйлгэж, focus-ыг нь
+      // шилжүүлнэ.
       sizeBox.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -136,8 +138,8 @@ export function PurchasePanel({ product, sizes }: Props) {
         <WishlistButton product={product} variant="button" className="h-12 w-full type-body font-normal" />
       </div>
       <div
-        // Үндсэн товч дэлгэцээс гарахад дээш гулсаж гарна; бусад үед нуугдана (tab дарааллаас ч
-        // гарна).
+        // Үндсэн товч дэлгэцээс гарахад доороос дээш гулсаж гарч ирнэ. Бусад үед нуугдаж, tab-ын дарааллаас ч
+        // гарна.
         aria-hidden={!barVisible}
         inert={!barVisible}
         className={cn(
@@ -152,7 +154,7 @@ export function PurchasePanel({ product, sizes }: Props) {
         <Button
           type="button"
           disabled={add.isPending}
-          // Үндсэн товчтой ижил нэр биш: screen reader энэ хуудсанд хоёуланг нь таарна.
+          // Нэр нь үндсэн товчтой ижил биш: screen reader нэг хуудсанд хоёуланг нь олно.
           aria-label={t("addNamed", { name: product.name })}
           onClick={addToCart}
         >

@@ -9,8 +9,8 @@ const ROW =
   "focus-visible:ring-ring/50 flex items-center justify-between gap-3 rounded-lg py-1.5 pr-2 type-caption outline-none transition-colors duration-200 focus-visible:ring-3";
 
 /**
- * Sidebar дахь Amazon маягийн drill-down: дээш буцах зам, дараа нь тоотой дараагийн түвшин. Энгийн
- * холбоос тул script шаардахгүй, алхам бүр crawl хийгдэх хуудас.
+ * Sidebar дахь Amazon маягийн ангиллын цэс: дээш буцах холбоос, дараа нь барааны тоотой дараагийн түвшин.
+ * Энгийн холбоос тул script шаардахгүй, түвшин бүрийг хайлтын систем уншиж чадна.
  */
 export function CategoryTree({ trail }: { trail: CategoryTrail }) {
   const t = useTranslations("catalog");

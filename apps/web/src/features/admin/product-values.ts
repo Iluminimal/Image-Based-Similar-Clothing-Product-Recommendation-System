@@ -23,7 +23,8 @@ export function minorToTogrog(minor: number): string {
 }
 
 /**
- * Зургийг яагаад ашиглах боломжгүйг (`validation` орчуулгын түлхүүр) эсвэл боломжтой бол null буцаана. API-ийн шаардлагыг давтана.
+ * Зургийг ашиглах боломжгүй бол шалтгааныг (`validation` орчуулгын түлхүүр), боломжтой бол null буцаана.
+ * API-ийн шаардлагатай ижил шалгана.
  */
 export function imageProblem(file: File): string | null {
   if (!ACCEPTED_IMAGES.includes(file.type)) return "adminImageType";
@@ -91,7 +92,7 @@ export function toFormValues(product?: AdminProduct): ProductFormValues {
     usage: product?.usage ?? "",
     year: product?.year ? String(product.year) : "",
     price: product ? minorToTogrog(product.price_cents) : "",
-    // Засах үед энэ талбар нь агуулахад байгаа тоо; шинэ бараанд хоёр тоо ижил.
+    // Засах үед энэ талбар агуулахад байгаа тоо; шинэ бараанд агуулахын тоо, зарах тоо ижил.
     stock_quantity: product ? String(product.on_hand) : "0",
     is_active: product?.is_active ?? true,
   };
@@ -115,9 +116,8 @@ export function buildCreateForm(payload: ProductPayload, photo: File): FormData 
 }
 
 /**
- * PATCH body; цэвэрлэсэн optional талбарыг null-аар илгээж, үнэхээр цэвэрлэгдэнэ. Агуулахын тоог
- * зөвхөн хэрэглэгч өөрчилсөн үед илгээнэ: эс бөгөөс нэр засахад хуудас нээх үеийн хуучин тоо дарж
- * бичигдэнэ.
+ * PATCH body. Хоосолсон заавал биш талбарыг null-оор илгээдэг тул үнэхээр цэвэрлэгдэнэ. Агуулахын тоог зөвхөн
+ * хэрэглэгч өөрчилсөн үед илгээнэ: эс бөгөөс нэр засахад хуудас нээх үеийн хуучин тоо дарж бичигдэнэ.
  */
 export function toChanges(payload: ProductPayload, { stockChanged }: { stockChanged: boolean }): AdminProductChanges {
   return {

@@ -55,7 +55,7 @@ function setTheme(theme: Theme) {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch {
-    // Private горим: сонголт хуудсыг хаах хүртэл үргэлжилнэ.
+    // Private горимд сонголт зөвхөн хуудсыг хаах хүртэл хадгалагдана.
   }
   applyToDocument();
   listeners.forEach((listener) => listener());
@@ -72,10 +72,9 @@ type ThemeContext = {
 const Context = createContext<ThemeContext | null>(null);
 
 /**
- * Light, dark эсвэл системийнх, localStorage-д хадгалагдаж <html> дээр `dark` class-аар харагдана.
- * Анхны paint-ыг `ThemeScript` зохицуулах бөгөөд server үүнийг <head>-д тавьдаг: client
- * component-ээс render хийсэн script хэзээ ч ажиллахгүй (React анхааруулдаг), тиймээс next-themes
- * ашигладаггүй.
+ * Light, dark эсвэл системийн theme. localStorage-д хадгалж, <html> дээрх `dark` class-аар харуулна. Хуудас
+ * анх зурагдахаас өмнө `ThemeScript` theme-ийг тавина, server түүнийг <head>-д оруулдаг. next-themes
+ * ашиглаагүй шалтгаан: client component-ээс render хийсэн script хэзээ ч ажилладаггүй (React анхааруулдаг).
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const theme = useSyncExternalStore(subscribe, readStoredTheme, () => "light" as const);

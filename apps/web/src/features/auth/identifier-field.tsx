@@ -20,7 +20,7 @@ export function IdentifierField({
 }: {
   value: string;
   onChange: (value: string) => void;
-  /** Текст утасны дугаар: улс сонгогчийг харуулна. */
+  /** Бичсэн зүйл утасны дугаар бол улс сонгогчийг харуулна. */
   phone: boolean;
   region: CountryCode;
   onRegionChange: (region: CountryCode) => void;

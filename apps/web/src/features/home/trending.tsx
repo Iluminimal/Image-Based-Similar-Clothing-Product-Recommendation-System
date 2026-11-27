@@ -5,7 +5,7 @@ import { TrendingTabs } from "./trending-tabs";
 
 const DEPARTMENTS = ["women", "men", "kids"] as const;
 
-/** Department бүрийн хамгийн эрэлттэй бараа, tab-аар сэлгэнэ. Гурван жагсаалт сервер дээр нэг дор уншигдана. */
+/** Department бүрийн хамгийн эрэлттэй бараа, tab-аар солино. Гурван жагсаалтыг server дээр нэг дор уншина. */
 export async function Trending() {
   const [lists, t, d] = await Promise.all([
     Promise.all(DEPARTMENTS.map((department) => popular({ department }, 10))),

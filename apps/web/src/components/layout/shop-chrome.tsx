@@ -4,9 +4,9 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 /**
- * Admin хэсгээс бусад бүх хуудасны эргэн тойрох дэлгүүрийн хэлний banner, header, үндсэн хэсэг, footer. Admin нь
- * өөрийн shell-тэй (sidebar, дэлгүүрийн навигаци ба footer-гүй). Header ба footer нь server дээр
- * render хийгдсэн props-оор ирдэг тул энэ нь зөвхөн харуулах эсэхийг шийднэ.
+ * Админ хэсгээс бусад хуудсыг хүрээлсэн дэлгүүрийн хэсгүүд: хэлний banner, header, үндсэн агуулга, footer.
+ * Админ хэсэг өөрийн shell-тэй (sidebar-тай, дэлгүүрийн цэс, footer байхгүй). Header, footer-ийг server дээр
+ * render хийж props-оор дамжуулдаг тул энэ component зөвхөн тэднийг харуулах эсэхийг шийднэ.
  */
 export function ShopChrome({
   banner,

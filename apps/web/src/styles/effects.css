@@ -1,14 +1,14 @@
 /*
- * Шинэ үеийн нүүр, жагсаалт, барааны хуудасны эффектүүд. Бүгд цэвэр CSS (JavaScript, animation сан
- * байхгүй): зөвхөн `transform`, `opacity`, `translate`-ийг хөдөлгөнө, тиймээс compositor дээр
- * ажиллаж layout, paint-ыг хөдөлгөхгүй. Дүрэм:
- *   - hover эффект зөвхөн хулгана-тай төхөөрөмж дээр (`hover: hover`), утсан дээр хуурамч hover гацахгүй;
- *   - scroll-driven зөвхөн дэмждэг browser-т (`@supports (animation-timeline: ...)`);
- *   - бүх хөдөлгөөн `prefers-reduced-motion: no-preference` дотор: үгүй бол агуулга статик;
- *   - фон гэрэл статик (animate хийхгүй, filter: blur хэрэглэхгүй).
+ * Нүүр, жагсаалт, барааны хуудасны эффектүүд. Бүгд цэвэр CSS (JavaScript, animation сан байхгүй). Зөвхөн
+ * `transform`, `opacity`, `translate` хөдөлгөдөг тул compositor дээр ажиллаж, layout, paint-ыг хөдөлгөхгүй.
+ * Дүрэм:
+ * - hover эффект зөвхөн хулганатай төхөөрөмж дээр (`hover: hover`): утсан дээр hover гацахгүй;
+ * - scroll-оор удирдах эффект зөвхөн дэмждэг browser-т (`@supports (animation-timeline: ...)`);
+ * - бүх хөдөлгөөн `prefers-reduced-motion: no-preference` дотор, бусад үед агуулга хөдөлгөөнгүй;
+ * - дэвсгэрийн гэрэл хөдөлгөөнгүй (animation, filter: blur хэрэглэхгүй).
  *
- * Бүгд `@layer components` дотор: Tailwind-ийн utility (`absolute`, `overflow-*`) эдгээрийг дарж
- * чадна (layer-гүй CSS нь layer-тэй utility-ийг үргэлж дардаг).
+ * Бүгд `@layer components` дотор байгаа тул Tailwind-ийн utility (`absolute`, `overflow-*`) эдгээрийг дарж
+ * чадна (layer-гүй CSS layer-тэй utility-ийг үргэлж дардаг).
  */
 @layer components {
 
@@ -27,8 +27,8 @@
 }
 
 /*
- * Аврора: хэсгийн ард гурван зөөлөн радиаль градиент (нэг давхарга, статик). Агуулга дээр гарахын
- * тулд `isolation` нь stacking context үүсгэнэ.
+ * Аврора: хэсгийн ард гурван зөөлөн дугуй градиент (нэг давхарга, хөдөлгөөнгүй). `isolation` stacking context
+ * үүсгэдэг тул агуулга дээр нь гарна.
  */
 .aurora {
   position: relative;
@@ -102,7 +102,7 @@
   }
 }
 
-/* Scroll-driven эффектүүд (Chromium, Safari 26+): дэмжлэггүй бол статик. */
+/* Scroll-оор удирдах эффектүүд (Chromium, Safari 26+). Дэмждэггүй бол хөдөлгөөнгүй. */
 @keyframes step-on {
   from {
     opacity: 0.35;
@@ -139,9 +139,9 @@
 }
 
 /*
- * Hero-ийн нээлт. Гарчгийн үг бүр өөрийн mask (`overflow: clip`) дотроос дээшээ гарч ирнэ
- * (`SplitWords`), мөр, товч зөөлөн өргөгдөнө. Зөвхөн `translate`: `opacity`-гүй тул агуулга DOM-д,
- * a11y tree-д эхнээс бүрэн, reduced motion үед статик.
+ * Hero-ийн эхлэл. Гарчгийн үг бүр өөрийн mask (`overflow: clip`) дотроос дээш гарч ирнэ (`SplitWords`), мөр,
+ * товч зөөлөн дээшилнэ. Зөвхөн `translate` (`opacity`-гүй) тул агуулга DOM болон a11y tree-д эхнээсээ бүтэн,
+ * reduced motion үед хөдөлгөөнгүй.
  */
 @keyframes word-up {
   from {
@@ -175,7 +175,7 @@
   }
 }
 
-/* Bento tile: зураг tile-ийн дотор томоос тогтоно, мөр бүр (гарчиг, тайлбар, товч) дараалан орно. */
+/* Bento tile: зураг tile дотор томоос жижгэрч байрандаа тогтоно. Мөр бүр (гарчиг, тайлбар, товч) дараалан орно. */
 @keyframes scale-settle {
   from {
     scale: 1.22;
@@ -203,8 +203,8 @@
 }
 
 /*
- * Картын 3D хазайлт ба гялбаа, магнит товч (`components/motion/card-tilt.tsx` CSS хувьсагчийг
- * курсорын дагуу тавина). Зөвхөн жинхэнэ заагчтай, хөдөлгөөн хорьсонгүй үед.
+ * Картын 3D хазайлт, гялбаа, соронзон товч (`components/motion/card-tilt.tsx` курсорын дагуу CSS хувьсагч
+ * тавина). Зөвхөн жинхэнэ хулганатай, хөдөлгөөнийг хязгаарлаагүй үед.
  */
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   [data-tilt] {
@@ -237,7 +237,8 @@
   }
 }
 
-/* Жижиг хөдөлгөөнүүд: эхний мөрийн картууд дараалан суух, зүрх хадгалахад цэг тархах, үнэгүй хүргэлт нээгдэх. */
+/* Жижиг хөдөлгөөнүүд: эхний мөрийн картууд дараалан байрандаа орох, бараа хадгалахад цэгүүд тархах, үнэгүй
+   хүргэлтийн мөр нээгдэх. */
 @keyframes card-in {
   from {
     translate: 0 1.1rem;
@@ -308,8 +309,9 @@
 }
 
 /*
- * Нүүр хуудасны (`styles/home.css`) хөдөлгөөн: hero-ийн mesh аажуу хөвнө, live demo-ийн скан зурвас, дугаартай
- * хүрээнүүд, үр дүнгийн картууд нэг нэгээр гарна. Зөвхөн `transform`, `opacity`, `translate`, `scale`.
+ * Нүүр хуудасны (`styles/home.css`) хөдөлгөөн: hero-ийн mesh аажуу хөвнө, live demo дээр скан хийх гэрэл
+ * гүйж, дугаартай хүрээ, үр дүнгийн карт нэг нэгээр гарна. Зөвхөн `transform`, `opacity`, `translate`,
+ * `scale`.
  */
 @keyframes mesh-drift {
   to {

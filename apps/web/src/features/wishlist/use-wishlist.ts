@@ -9,7 +9,7 @@ import { useUserMessage } from "@/lib/api/use-user-message";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchWishlist, saveProduct, unsaveProduct, type Wishlist } from "./wishlist-api";
 
-/** Нэвтэрсэн худалдан авагч л wishlist-тэй: зочин хүсэлт үүсгэхгүй. */
+/** Зөвхөн нэвтэрсэн худалдан авагч wishlist-тэй: зочны хувьд хүсэлт явуулахгүй. */
 export function useWishlist() {
   const status = useAuth((state) => state.status);
   const userId = useAuth((state) => state.user?.id);

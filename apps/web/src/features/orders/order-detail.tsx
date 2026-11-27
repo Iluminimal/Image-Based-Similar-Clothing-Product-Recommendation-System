@@ -9,8 +9,8 @@ import type { Order } from "./orders-api";
 import Image from "next/image";
 
 /**
- * Мөр, нийт дүн, хүргэлтийн мэдээлэл яг төлсөн хэлбэрээрээ (үнэ нь snapshot). `reviewLinks` нь
- * ирсэн захиалгын мөр бүрд "Write a review" холбоос нэмнэ.
+ * Захиалгын бараа, нийт дүн, хүргэлтийн мэдээлэл яг төлсөн үеийнхээрээ (үнэ бол snapshot). `reviewLinks`
+ * асаалттай бол хүргэгдсэн захиалгын бараа бүрд "Write a review" холбоос нэмнэ.
  */
 export function OrderDetail({ order, reviewLinks = false }: { order: Order; reviewLinks?: boolean }) {
   const t = useTranslations("orders.detail");

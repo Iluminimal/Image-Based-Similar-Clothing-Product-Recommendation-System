@@ -14,7 +14,7 @@ import { createFormat } from "@/i18n/format";
 import { getVocab } from "@/i18n/server";
 import type { Vocab } from "@/i18n/vocab";
 
-// Department хэнд зориулагдсаныг аль хэдийн хэлдэг тул хүйсийн шүүлтүүр зөвхөн зөрчилдөнө.
+// Department өөрөө хэнд зориулагдсаныг тогтоодог тул хүйсийн шүүлтүүр зөвхөн зөрчил үүсгэнэ.
 const GROUPS: FilterGroup[] = ["stock", "color", "price", "season", "usage"];
 
 type T = (key: "categoryTitle", values: { category: string; department: string }) => string;

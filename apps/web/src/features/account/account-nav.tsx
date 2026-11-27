@@ -54,7 +54,7 @@ export function AccountNav() {
             className={cn(
               "focus-visible:ring-ring/50 relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 type-caption font-medium transition-colors outline-none focus-visible:ring-3",
               current
-                ? // Гулсах pill хэмжигдтэл холбоос өөрийн дэвсгэрээ зурна.
+                ? // Гулсдаг pill-ийг хэмжиж амжаагүй байхад холбоос өөрийн дэвсгэрээ зурна.
                   cn("text-background", !thumb && "bg-foreground")
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
@@ -77,10 +77,7 @@ export function AccountGreeting() {
   );
 }
 
-/**
- * Зөвхөн утсан дээр гарах товч: компьютер дээрх account dropdown утасны bar-д байхгүй (доод bar-ын
- * сүүлийн tab шууд профайл руу орно).
- */
+/** Зөвхөн утсан дээр харагдах "Гарах" товч: компьютер дээрх account dropdown утасны bar-д байхгүй. */
 export function AccountSignOut() {
   const t = useTranslations("auth.menu");
   const leave = useSignOut();

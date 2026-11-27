@@ -1,6 +1,6 @@
 /**
- * Вэб хуудасны аюулгүй байдлын header-ууд. Цэвэр функцүүд (env, header-т хүрэхгүй) тул тестлэхэд амар;
- * `proxy.ts` хүсэлт бүрт CSP-г, `next.config.ts` үлдсэн тогтмол header-ийг хэрэглэнэ.
+ * Вэб хуудасны аюулгүй байдлын header-ууд. Цэвэр функцүүд (env, header уншихгүй) тул тестлэхэд амар.
+ * `proxy.ts` хүсэлт бүрд CSP-г, `next.config.ts` бусад тогтмол header-ийг тавина.
  */
 
 export type CspMode = "enforce" | "report-only";
@@ -8,7 +8,7 @@ export type CspMode = "enforce" | "report-only";
 /** Browser CSP зөрчлийг энд илгээнэ (API руу rewrite хийгддэг, нэг origin). */
 export const CSP_REPORT_PATH = "/api/v1/security/csp-report";
 
-/** Prod-д зөрчлийг татгалзана; dev-д (HMR, eval) зөвхөн мэдээлнэ. `CSP_MODE`-оор дарж болно. */
+/** Prod-д CSP зөрчсөн зүйлийг хориглоно; dev-д (HMR, eval) зөвхөн мэдээлнэ. `CSP_MODE`-оор өөрчилж болно. */
 export function resolveCspMode(value: string | undefined, production: boolean): CspMode {
   if (value === "enforce" || value === "report-only") return value;
   return production ? "enforce" : "report-only";
@@ -23,12 +23,14 @@ export function newNonce(): string {
 }
 
 /**
- * Content-Security-Policy. Script нь зөвхөн nonce-той (`strict-dynamic` нь тэдгээрээс ачаалсан
- * script-д мөн итгэнэ); style нь inline зөвшөөрнө (Tailwind, Next, Radix inline style тавьдаг); зураг нь манай
- * origin, `data:` (blur placeholder), `blob:` (камер, upload урьдчилсан харагдац) ба https
- * (Google профайл зураг). Frame, object, `<base>` бүгд хаалттай. Хайлтын санал, ангиллын мод зэрэг
- * browser-ийн зарим дуудлага API-д шууд хүрдэг (`createApiClient`), тиймээс API-ийн origin
- * (`NEXT_PUBLIC_API_URL`) `connect-src`, `img-src`-д орно.
+ * Content-Security-Policy:
+ * - Script: зөвхөн nonce-той (`strict-dynamic` тул тэдгээрийн ачаалсан script-д ч итгэнэ).
+ * - Style: inline зөвшөөрнө (Tailwind, Next, Radix inline style тавьдаг).
+ * - Зураг: манай origin, `data:` (blur placeholder), `blob:` (камер, upload-ийн урьдчилсан харагдац), https
+ *   (Google-ийн профайл зураг).
+ * - Frame, object, `<base>`: бүгд хориотой.
+ * Хайлтын санал, ангиллын цэс зэрэг browser-ийн зарим дуудлага API руу шууд явдаг (`createApiClient`).
+ * Тиймээс API-ийн origin (`NEXT_PUBLIC_API_URL`) `connect-src`, `img-src`-д орно.
  */
 export function buildCsp({
   nonce,
@@ -60,14 +62,15 @@ export function buildCsp({
     "report-uri": [CSP_REPORT_PATH],
   };
   const parts = Object.entries(directives).map(([name, values]) => `${name} ${values.join(" ")}`);
-  // http дээр (локал production build) upgrade хийвэл бүх хүсэлт https://localhost руу явж унана.
+  // http дээр (локал production build) https болгож хөрвүүлбэл бүх хүсэлт https://localhost руу явж амжилтгүй
+  // болно.
   if (https) parts.push("upgrade-insecure-requests");
   return parts.join("; ");
 }
 
 /**
- * CSP-ээс бусад тогтмол толгойнууд. HSTS-ийг http дээр browser өөрөө үл тооно, тиймээс зөвхөн
- * production-д нэмнэ (dev-д localhost-д санагдахаас сэргийлнэ).
+ * CSP-ээс бусад тогтмол header-ууд. HSTS-ийг http дээр browser тооцохгүй тул зөвхөн production-д нэмнэ (dev-д
+ * localhost-ыг browser-т https гэж санагдуулахаас сэргийлнэ).
  */
 export function staticSecurityHeaders({ production }: { production: boolean }): { key: string; value: string }[] {
   return [

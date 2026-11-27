@@ -6,8 +6,8 @@ import { productPath, type Product } from "./product";
 const identity = (name: string) => name;
 
 /**
- * Meta болон JSON-LD тайлбар: "Нэр: өнгө · төрөл · хүйс · хэрэглээ". Үгсийг идэвхтэй хэл рүү
- * (`vocab`) хөрвүүлнэ, өгүүлбэр угсрахгүй тул хэл болгонд ижил бүтэцтэй.
+ * Meta болон JSON-LD тайлбар: "Нэр: өнгө · төрөл · хүйс · хэрэглээ". Үгсийг идэвхтэй хэл рүү (`vocab`)
+ * орчуулна. Өгүүлбэр угсардаггүй тул бүх хэлэнд бүтэц нь ижил.
  */
 export function productDescription(p: Product, vocab?: Vocab): string {
   const colour = vocab?.colour ?? identity;
@@ -26,9 +26,8 @@ export function productDescription(p: Product, vocab?: Vocab): string {
 const slugify = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 /**
- * Nav-аас department болон бүлэг, дэд ангилал, төрлийн node-уудыг олно. Node-ын нэр харуулах нэр
- * ("Clothing") тул бүтээгдэхүүний ангиллын нэрийн slug-аар ("Apparel" -> "apparel") тулгана. Олдохгүй
- * бол null.
+ * Nav-аас department болон бүлэг, дэд ангилал, төрлийг олно. Nav-ын нэр дэлгэцэнд харуулах нэр ("Clothing")
+ * тул барааны ангиллын нэрийг slug-аар тулгана ("Apparel" -> "apparel"). Олдохгүй бол null.
  */
 function categoryNodes(p: Product, nav: CatalogNav): { department: string; nodes: NavNode[] } | null {
   const slugs = [p.master_category, p.sub_category, p.article_type].map(slugify);
@@ -91,7 +90,7 @@ export function productJsonLd(p: Product, options: JsonLdOptions = {}) {
       category: [p.master_category, p.sub_category, p.article_type].join(" > "),
       ...(p.base_colour && p.base_colour !== "NA" ? { color: p.base_colour } : {}),
       audience: { "@type": "PeopleAudience", suggestedGender: p.gender },
-      // Нийтлэгдсэн сэтгэгдэл байгаа үед л: хоосон rating нь хүчинтэй structured data биш.
+      // Зөвхөн нийтлэгдсэн сэтгэгдэлтэй үед: хоосон rating хүчинтэй structured data биш.
       ...(p.rating_count > 0 && p.rating_average !== null
         ? {
             aggregateRating: {
@@ -118,10 +117,7 @@ export function productJsonLd(p: Product, options: JsonLdOptions = {}) {
   ];
 }
 
-/**
- * Сайттай харьцангуй холбоосуудад зориулсан schema.org BreadcrumbList-ийн бие (`@type`,
- * `itemListElement`).
- */
+/** Сайт доторх холбоосуудаас schema.org BreadcrumbList-ийн агуулга (`@type`, `itemListElement`) үүсгэнэ. */
 export function breadcrumbList(items: { label: string; href: string }[]) {
   return {
     "@type": "BreadcrumbList",

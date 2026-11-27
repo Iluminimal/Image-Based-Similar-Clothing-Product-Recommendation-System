@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Том тоотой үзүүлэлтийн самбар (KPI): гарчиг, утга, харьцуулалт (`footer`). `<dl>` дотор `<dt>`/`<dd>` болж, "Key figures" бүлгийг хэмжилтийн жагсаалт болгоно.
+ * Том тоотой үзүүлэлтийн самбар (KPI): гарчиг, утга, харьцуулалт (`footer`). `<dl>` дотор `<dt>`, `<dd>`
+ * ашигладаг тул "Key figures" бүлэг screen reader-т хэмжилтийн жагсаалт болж сонсогдоно.
  */
 export function Stat({
   label,

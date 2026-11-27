@@ -8,12 +8,12 @@ export function useIsStaff(): boolean {
   return useAuth((state) => isStaffRole(state.user?.role));
 }
 
-/** Хэрэглэгч, сэтгэгдэл, статистик, захиалгын цуцлалт/буцаалт хийх эрхтэй. */
+/** Админ эсэх (хэрэглэгч, сэтгэгдэл, статистик харах, захиалга цуцлах, төлбөр буцаах эрхтэй). */
 export function useIsAdmin(): boolean {
   return useAuth((state) => state.user?.role === "admin");
 }
 
-/** Бараа, нөөц, захиалгын ачилт (ship/deliver) хийх эрхтэй. */
+/** Агуулахын ажилтан эсэх (бараа, нөөц өөрчлөх, захиалга илгээх, хүргэх эрхтэй). */
 export function useIsWarehouse(): boolean {
   return useAuth((state) => state.user?.role === "warehouse");
 }

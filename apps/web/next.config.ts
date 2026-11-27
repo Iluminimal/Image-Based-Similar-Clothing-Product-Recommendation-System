@@ -2,11 +2,12 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { staticSecurityHeaders } from "./src/lib/security-headers";
 
-// URL-д хэлний угтвар байхгүй: хэлийг cookie (эхний удаа Accept-Language) шийднэ, `src/i18n/request.ts`.
+// URL-д хэлний угтвар (/mn, /en) байхгүй. Хэлийг cookie-гоор, эхний удаа Accept-Language-аар тогтооно
+// (`src/i18n/request.ts`).
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-// Browser API-г энэ сайтаар (нэг origin) дамжуулан дууддаг тул httpOnly refresh cookie нь сайтынх нь өөрийнх болно.
-// Server талын код API-д API_INTERNAL_URL-ээр шууд хүрнэ.
+// Browser API-г энэ сайтаар дамжуулан (нэг origin) дууддаг. Тиймээс httpOnly refresh cookie сайтын өөрийн
+// cookie болно. Server талын код API руу API_INTERNAL_URL-ээр шууд хандана.
 const apiOrigin =
   process.env.API_INTERNAL_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
@@ -14,10 +15,10 @@ const apiOrigin =
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  // Docker image (apps/web/Dockerfile) нь `NEXT_OUTPUT=standalone`-ээр өөрөө өөрийгөө агуулсан server (`server.js`) үүсгэнэ;
-  // `next start` ашигладаг локал build (e2e, Lighthouse) үүнийг хэрэглэхгүй.
+  // Docker image (apps/web/Dockerfile) `NEXT_OUTPUT=standalone`-ээр хэрэгтэй бүхнээ агуулсан server
+  // (`server.js`) үүсгэнэ. `next start` ашигладаг локал build (e2e, Lighthouse) үүнийг ашиглахгүй.
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
-  // `X-Powered-By: Next.js` нь халдагчид хэрэгтэй зүйлийг ил гаргахаас өөр юм хийдэггүй.
+  // `X-Powered-By: Next.js` header зөвхөн халдагчид мэдээлэл өгөх тул унтраана.
   poweredByHeader: false,
   images: {
     loader: "custom",
@@ -30,7 +31,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       { source: "/api/v1/:path*", destination: `${apiOrigin}/api/v1/:path*` },
-      // Барааны зургийг мөн энэ origin-оос үйлчилнэ: browser API руу хоёр дахь холболт нээхгүй, хуудас ирсэн холболтоо ашиглана.
+      // Барааны зургийг ч энэ origin-оос өгнө. Ингэснээр browser API руу хоёр дахь холболт нээхгүй, хуудас
+      // ирсэн холболтыг ашиглана.
       { source: "/media/:path*", destination: `${apiOrigin}/media/:path*` },
     ];
   },

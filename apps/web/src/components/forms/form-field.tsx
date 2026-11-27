@@ -11,12 +11,12 @@ type Props = {
   children: ReactNode;
 };
 
-/** Хяналтын элемент ба түүний hint, validation мессеж screen reader-д холбогдсон label-тай. */
+/** Label-тай талбар: input болон түүний зөвлөмж, алдааны мессежийг screen reader-т холбоно. */
 export function Field({ id, label, error, hint, className, children }: Props) {
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label htmlFor={id}>{label}</Label>
-      {/* Алдаа гарахад хяналтын элемент нэг удаа сэгсэрнэ (class нэмэгддэг тул нэг удаа тоглоно). */}
+      {/* Алдаа гарахад талбар нэг удаа сэгсэрнэ (class нэмэгддэг тул animation нэг л удаа ажиллана). */}
       <div className={error ? "animate-shake" : undefined}>{children}</div>
       {hint && !error && (
         <p id={`${id}-hint`} className="text-muted-foreground type-fine">

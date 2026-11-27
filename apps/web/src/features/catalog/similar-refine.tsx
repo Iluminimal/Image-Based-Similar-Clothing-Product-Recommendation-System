@@ -13,8 +13,8 @@ import { ProductRail, RailSkeleton } from "./product-rail";
 type Props = { productId: number; initial: Product[]; label: string };
 
 /**
- * "Танд таалагдаж магадгүй" мөр + "энэ шиг, гэхдээ цэнхэр" тодруулга. Анхны жагсаалт server-ээс
- * ирдэг (SSR); текст оруулмагц хадгалсан embedding-д текст нэмсэн хайлт хийнэ.
+ * "Танд таалагдаж магадгүй" мөр, "энэ шиг, гэхдээ цэнхэр" гэсэн нэмэлт хайлттай. Эхний жагсаалт server-ээс
+ * ирдэг (SSR). Текст бичмэгц барааны хадгалсан embedding-д текст нэмж хайна.
  */
 export function SimilarRefine({ productId, initial, label }: Props) {
   const t = useTranslations("catalog.similarRefine");

@@ -8,8 +8,8 @@ import { PendingWishlistReplay } from "@/features/wishlist/pending-wishlist-repl
 import { createQueryClient } from "@/lib/query-client";
 import { useState, type ReactNode } from "react";
 
-// Toast ховор бөгөөд үйлдлийн дараа гарна, анхны paint-д хэзээ ч байхгүй: renderer-ийг түүний дараа
-// ачаална.
+// Toast ховор, зөвхөн үйлдлийн дараа гардаг, анхны зурагдах үед хэзээ ч байхгүй. Тиймээс түүнийг зурдаг кодыг
+// дараа нь ачаална.
 const Toaster = dynamic(() => import("@/components/ui/sonner").then((m) => m.Toaster), { ssr: false });
 
 export function Providers({ children }: { children: ReactNode }) {

@@ -4,8 +4,9 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Нээгдэж хаагддаг гарчигтай хэсэг (барааны хуудасны "Details", "Delivery"). Энгийн `<details>` тул
- * script-гүй ажиллаж, keyboard-оор удирдаж, төлвөө мэдэгдэнэ; `globals.css` panel-ийг гулсуулдаг.
+ * Нээгдэж, хаагддаг гарчигтай хэсэг (барааны хуудасны "Details", "Delivery"). Энгийн `<details>` тул
+ * script-гүй ажиллана, keyboard-оор удирдаж болно, нээлттэй эсэхээ мэдэгддэг. `globals.css` panel-ийг
+ * гулсуулж нээнэ.
  */
 export function Disclosure({
   title,

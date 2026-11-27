@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils";
 import { announceFlyout, useCloseOnOtherFlyout } from "./bar-flyout";
 import { useBarPanel } from "./bar-panel";
 
-// apple.com-ийн global nav-ийн хугацаатай ойролцоо: flyout богино hover-ийн дараа нээгдэнэ, нэг
-// department-ээс нөгөө рүү шилжихэд шууд, курсор гарснаас хойш бага зэрэг хугацааны дараа хаагдана.
+// apple.com-ийн global nav-тай ойролцоо хугацаа: flyout богино hover-ийн дараа нээгдэнэ, нэг department-оос
+// нөгөө рүү шууд шилжинэ, курсор гарснаас хойш бага зэрэг хүлээгээд хаагдана.
 const OPEN_DELAY_MS = 120;
 const CLOSE_DELAY_MS = 200;
 const SUBCATEGORIES_SHOWN = 8;
@@ -34,26 +34,25 @@ const HEADING = "text-muted-foreground mb-[11px] block w-fit type-fine leading-4
  * Department цэс, apple.com-ийн global navigation шиг ажиллана.
  *
  * - Bar дахь элементүүд энгийн холбоос (script, өгөгдөл ирэхээс өмнө ч ажиллана).
- * - Нэг элемент дээр hover хийхэд bar-ын доор **нэг нийтлэг flyout** нээгдэнэ; өөр элемент рүү
- *   шилжихэд агуулга нь шууд солигдоно. Flyout нь агуулгынхаа өндөртэй panel (харуулж буй
- *   department-ийн өндрийг дагана), доорх хуудсыг curtain (`BarCurtain`) бүрхэж бүдгэрүүлнэ. Bar
- *   болон flyout-оос гарах эсвэл curtain дээр очвол бага хугацааны дараа хаагдана; flyout-гүй
- *   элемент ("New") дээр hover хийхэд хаагдана.
- * - Нээлттэй байхад bar flyout-ын өнгийг авч, bar ба flyout нэг гадаргуу шиг харагдана (globals.css
- *   дахь `.mega-*`-ыг үз). Холбоосууд нэг нэгээр нь гарна.
- * - Элементүүд logo, icon-уудтай хамт bar дээр apple.com шиг жигд тархана: энэ nav ба жагсаалт нь
- *   `display: contents` тул элемент бүр header-ийн мөрийн нэг item болно.
- * - Touch: элемент дээр эхний товшилт flyout-ыг нээж, хоёр дахь нь холбоосоор явна.
- * - Keyboard: ArrowLeft / ArrowRight / Home / End bar дахь элементүүдийн хооронд шилжинэ (flyout
- *   нээлттэй бол түүнийг дагуулна); элемент дээр ArrowDown flyout-ыг нээж дотор нь орно; Escape
- *   хааж элемент рүү буцаана; focus цэснээс гарвал хаагдана.
+ * - Элемент дээр hover хийхэд bar-ын доор **нэг нийтлэг flyout** нээгдэнэ. Өөр элемент рүү шилжихэд агуулга
+ *   нь шууд солигдоно. Flyout-ын өндөр харуулж буй department-ын агуулгыг дагана. Доорх хуудсыг curtain
+ *   (`BarCurtain`) бүрхэж бүдгэрүүлнэ. Bar болон flyout-оос гарах эсвэл curtain дээр очвол бага хугацааны
+ *   дараа хаагдана. Flyout-гүй элемент ("New") дээр hover хийхэд бас хаагдана.
+ * - Нээлттэй үед bar flyout-ын өнгийг авч, хоёулаа нэг гадаргуу шиг харагдана (globals.css дахь `.mega-*`-ийг
+ *   үзнэ үү). Холбоосууд нэг нэгээр гарч ирнэ.
+ * - Элементүүд logo, icon-уудтай хамт bar дээр apple.com шиг жигд тарна: энэ nav болон жагсаалт нь
+ *   `display: contents` тул элемент бүр header-ийн мөрийн нэг гишүүн болно.
+ * - Touch: элемент дээр эхний товшилт flyout-ыг нээж, хоёр дахь нь холбоос руу шилжинэ.
+ * - Keyboard: ArrowLeft / ArrowRight / Home / End дарж bar дахь элементүүдийн хооронд шилжинэ (flyout
+ *   нээлттэй бол дагаж солигдоно). Элемент дээр ArrowDown flyout-ыг нээж дотор нь орно. Escape хааж, элемент
+ *   рүү буцна. Focus цэснээс гарвал хаагдана.
  */
 export function MegaMenu() {
   const t = useTranslations("layout.header");
   const vocab = useVocab();
   const pathname = usePathname();
   const [wanted, setWanted] = useState(false);
-  // Flyout хаана нээгдсэнийг санана: навигацийн дараа effect-гүйгээр хаагдсан гэж тооцогдоно.
+  // Flyout-ыг аль хуудсан дээр нээснийг санана: өөр хуудас руу шилжвэл effect-гүйгээр хаагдсанд тооцно.
   const [opened, setOpened] = useState<{ slug: string; pathname: string } | null>(null);
   const openSlug = opened && opened.pathname === pathname ? opened.slug : null;
   const open = openSlug !== null;
@@ -62,8 +61,7 @@ export function MegaMenu() {
   const { data } = useCatalogNav(wanted);
   useBarPanel(open);
 
-  // Flyout нь харуулж буй department-ийнхээ өндөртэй: тэр агуулгын өндрийг дага (бусад нь flow-оос
-  // гадна).
+  // Flyout-ын өндөр харуулж буй department-ын агуулгыг дагана (бусад агуулга layout-д зай эзлэхгүй).
   const content = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
   useEffect(() => {
@@ -76,12 +74,12 @@ export function MegaMenu() {
 
   function setOpenSlug(slug: string | null) {
     setOpened(slug ? { slug, pathname } : null);
-    // Bar-ын доор нээлттэй байсан хайлт эсвэл Bag зай тавьж өгнө.
+    // Bar-ын доор нээлттэй байсан хайлт эсвэл Bag-д зай тавьж өгнө.
     if (slug) announceFlyout("menu");
   }
   useCloseOnOtherFlyout("menu", () => setOpened(null));
 
-  // Хуудас тогтсоны дараа өгөгдлийг түрүүлж ачаалж, эхний hover шууд болно.
+  // Хуудас ачаалж дуусмагц цэсний өгөгдлийг урьдчилан татна, ингэснээр эхний hover шууд нээгдэнэ.
   useEffect(() => {
     const id = window.setTimeout(() => setWanted(true), 2500);
     return () => window.clearTimeout(id);
@@ -114,7 +112,7 @@ export function MegaMenu() {
       if (!entry) return;
       event.preventDefault();
       entry.focus();
-      // Flyout нээлттэй үед шинэ элементийн flyout түүнийг орлоно (flyout-гүй элементэд байхгүй).
+      // Flyout нээлттэй үед шинэ элементийнх нь түүнийг орлоно (flyout-гүй элементэд очвол хаагдана).
       if (openSlug) setOpenSlug(entry.dataset.megaTrigger && data ? entry.dataset.megaTrigger : null);
     } else if (event.key === "ArrowDown" && event.target instanceof HTMLElement && "megaTrigger" in event.target.dataset) {
       const slug = event.target.dataset.megaTrigger!;
@@ -128,8 +126,8 @@ export function MegaMenu() {
   }
 
   function onTriggerClick(event: MouseEvent, slug: string) {
-    // Flyout хаалттай элемент дээр товшилт (mouse click, keyboard Enter биш) хуудаснаас гарахын
-    // оронд flyout-ыг нээнэ.
+    // Flyout хаалттай үед элементийг товшвол (хулганаар; keyboard-ын Enter биш) өөр хуудас руу шилжихгүй,
+    // flyout нээнэ.
     if (event.detail > 0 && lastPointer.current !== "mouse" && openSlug !== slug) {
       event.preventDefault();
       setWanted(true);

@@ -16,8 +16,8 @@ import { setLocale } from "@/i18n/actions";
 import { HTML_LANG, LOCALES, NATIVE_NAME, isLocale, type Locale } from "@/i18n/config";
 
 /**
- * Footer дээрх бөмбөрцөг, одоогийн хэл. Дарахад хэлний жагсаалт дээш нээгдэнэ. Сонголт cookie-д
- * хадгалагдаж, одоогийн route шинэ хэлээр дахин зурагдана: URL, scroll, сагс хэвээр.
+ * Footer дээрх бөмбөрцөг icon, одоогийн хэлтэй. Дарахад хэлний жагсаалт дээшээ нээгдэнэ. Сонголтыг cookie-д
+ * хадгалж, одоогийн хуудсыг шинэ хэлээр дахин зурна: URL, scroll, сагс хэвээр үлдэнэ.
  */
 export function LanguageSwitcher() {
   const t = useTranslations("layout");

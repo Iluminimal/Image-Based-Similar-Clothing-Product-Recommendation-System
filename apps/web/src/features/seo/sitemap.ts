@@ -3,7 +3,7 @@ import { categoryPaths, type CatalogNav } from "@/features/catalog/nav";
 import { productPath } from "@/features/catalog/product";
 import { absoluteUrl } from "@/lib/site";
 
-/** Нэг sitemap файл дахь бүтээгдэхүүн. Protocol 50,000 URL зөвшөөрдөг; жижиг файл хурдан бүтдэг. */
+/** Нэг sitemap файлд орох барааны тоо. Протокол 50,000 URL хүртэл зөвшөөрдөг ч жижиг файл хурдан үүснэ. */
 export const SITEMAP_CHUNK = 10_000;
 
 /** `total` бүтээгдэхүүнтэй catalogue-ийн sitemap файлын id-ууд (хамгийн багадаа нэг). */
@@ -12,7 +12,7 @@ export function sitemapIds(total: number): { id: number }[] {
   return Array.from({ length: files }, (_, id) => ({ id }));
 }
 
-/** Бүтээгдэхүүн, ангилал биш хуудсууд: нүүр, жагсаалт, хайлтын хэрэгсэл. */
+/** Бараа, ангиллаас бусад хуудсууд: нүүр, жагсаалт, зургаар хайх. */
 export function staticEntries(): MetadataRoute.Sitemap {
   return [
     { url: absoluteUrl("/"), changeFrequency: "daily", priority: 1 },
@@ -22,8 +22,8 @@ export function staticEntries(): MetadataRoute.Sitemap {
 }
 
 /**
- * Бүх department, ангиллын хуудас (/c/men, /c/men/apparel/topwear, ...). Гүехэн хуудас өндөр rank
- * авна.
+ * Бүх department, ангиллын хуудас (/c/men, /c/men/apparel/topwear, ...). Дээд түвшний хуудсанд өндөр rank
+ * өгнө.
  */
 export function categoryEntries(nav: CatalogNav): MetadataRoute.Sitemap {
   return categoryPaths(nav).map((path) => ({
@@ -46,8 +46,8 @@ export function productEntries(items: { id: number; slug: string; updated_at: st
 export const sitemapUrl = (id: number) => absoluteUrl(`/sitemap/${id}.xml`);
 
 /**
- * Crawl-ийн дүрэм. Account, cart, checkout, admin хуудас хувийн; чөлөөт текст хайлт ба гүн хуудас
- * `noindex` бөгөөд crawler-ийн цагийг үрэх хэрэггүй (бүтээгдэхүүн sitemap-д байна).
+ * Хайлтын системд зориулсан дүрэм. Account, cart, checkout, админ хуудсууд хувийн. Текстээр хайсан, цааш гүн
+ * орсон хуудсууд `noindex` бөгөөд crawler тэнд цаг зарцуулах хэрэггүй (бараанууд sitemap-д бий).
  */
 export function robotsFor(ids: number[]): MetadataRoute.Robots {
   return {

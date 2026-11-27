@@ -110,7 +110,7 @@ function StockRow({ product }: { product: FulfillmentBoard["stock_alerts"][numbe
     try {
       await setStock.mutateAsync({ id: product.id, onHand: quantity });
     } catch {
-      return; // шалтгааныг hook харуулсан; бичсэн тоо засахад үлдэнэ
+      return; // шалтгааныг hook харуулсан; засаж болохоор бичсэн тоо үлдэнэ
     }
     setValue("");
     toast.success(t("stockSaved"));

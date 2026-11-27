@@ -67,7 +67,7 @@ export type CustomerListParams = {
 export type ReviewListParams = {
   q: string;
   status: (typeof REVIEW_STATUSES)[number];
-  /** 0 бол од хязгаарлахгүй гэсэн үг. */
+  /** 0 бол одны тоогоор шүүхгүй. */
   rating: number;
   page: number;
 };

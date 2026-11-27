@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 import { useBagPanel } from "./cart-ui-store";
 import { useCart } from "./use-cart";
 
-// Эхний ачаалалд оруулахгүй: ихэнх зочин cart нээдэггүй, самбар dialog library-г дагуулна.
-// Хамгийн анх нээгдэх үед (энэ товч эсвэл "Add to cart") татагдана.
+// Эхний ачаалалд оруулахгүй: ихэнх зочин сагс нээдэггүй, харин самбар dialog library татдаг. Анх нээгдэх үед
+// л (энэ товч эсвэл "Add to cart") татна.
 const BagPanel = dynamic(
   () => import("./bag-panel").then((m) => m.BagPanel),
   { ssr: false },
@@ -24,7 +24,7 @@ export function CartButton() {
   const { open, setOpen } = useBagPanel();
   const { data } = useCart();
   const pathname = usePathname();
-  // Bar-ын доор өөр flyout (search, department цэс) нээгдэх, эсвэл хуудас солигдоход Bag хаагдана.
+  // Bar-ын доор өөр flyout (search, department цэс) нээгдэх эсвэл өөр хуудас руу шилжихэд Bag хаагдана.
   const closeBag = useCallback(() => setOpen(false), [setOpen]);
   useCloseOnOtherFlyout("bag", closeBag);
   useEffect(() => closeBag(), [pathname, closeBag]);
@@ -35,7 +35,7 @@ export function CartButton() {
   const label = count > 99 ? "99+" : String(count);
   const width = count > 0 ? Math.min(label.length, 3) : 0;
 
-  // Ажилтанд сагс байхгүй (API мөн хаасан): bar-ын нүд хоосон үлдэхгүй, admin цэс account дотор.
+  // Ажилтанд сагс байхгүй (API ч хаасан). Bar дээрх зай хоосон үлдэхгүй: админ цэс account дотор бий.
   if (isStaff) return null;
   return (
     <>
@@ -49,8 +49,8 @@ export function CartButton() {
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        {/* Badge-ийг энэ icon хайрцагт байрлуулдаг, apple.com шиг: бараатай үед bag зүүн тийш зай
-            гаргана, хоёр, гурван тэмдэгтэд цаашаа. */}
+        {/* apple.com шиг badge-ийг энэ icon-ы хайрцагт байрлуулна: бараатай бол bag зүүн тийш зай гаргана,
+            тоо хоёр, гурван тэмдэгттэй бол илүү гаргана. */}
         <span
           aria-hidden
           className={cn(

@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useUserMessage } from "@/lib/api/use-user-message";
 
 /**
- * Өгөгдөл ачаалж чадаагүй үеийн нэг хэлбэр: хэрэглэгчид ойлгомжтой алдаа, "Дахин оролдох" товч.
- * Admin болон storefront-ийн жагсаалт, дэлгэрэнгүй хуудас нийтлэг.
+ * Өгөгдөл ачаалж чадаагүй үед харуулах нийтлэг хэсэг: ойлгомжтой алдааны мессеж, "Дахин оролдох" товч. Админ
+ * болон дэлгүүрийн жагсаалт, дэлгэрэнгүй хуудсууд ашиглана.
  */
 export function QueryError({ error, onRetry, retryLabel }: { error: unknown; onRetry: () => unknown; retryLabel: string }) {
   const message = useUserMessage();

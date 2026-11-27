@@ -1,10 +1,9 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Bar дахь icon товч бүрийн нийтлэг хэсэг, ингэснээр хайлт, account, bag, цэс нэг хэмжээтэй: 44px
- * өргөн, bar-тай ижил өндөр (утсан дээр 48px, md-ээс 44px), дэвсгэргүй, apple.com шиг hover дээр
- * icon бага зэрэг бүдгэрнэ. Focus ring нь бүх cell биш, icon-ы эргэн тойрон жижиг дугуйрсан
- * хайрцаг.
+ * Bar дахь бүх icon товчны нийтлэг загвар, ингэснээр хайлт, account, bag, цэс ижил хэмжээтэй байна: 44px
+ * өргөн, bar-тай ижил өндөр (утсан дээр 48px, md-ээс 44px), дэвсгэргүй. apple.com шиг hover хийхэд icon бага
+ * зэрэг бүдгэрнэ. Focus ring бүхэл нүдийг биш, зөвхөн icon-ыг тойрсон жижиг дугуй булантай хайрцаг байна.
  */
 export const HEADER_CELL =
   "focus-visible:outline-ring relative grid h-12 w-11 shrink-0 place-items-center rounded-[5px] outline-none transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-[7px] md:h-11";

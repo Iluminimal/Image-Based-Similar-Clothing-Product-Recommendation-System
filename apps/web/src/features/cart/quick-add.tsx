@@ -14,10 +14,10 @@ import { useBagPanel } from "./cart-ui-store";
 import { useAddToCart } from "./use-cart";
 
 /**
- * Картаас шууд сагсанд нэмэх: хэмжээгүй бараа нэг товшилтоор, хэмжээтэй бол хэмжээний жижиг цонх
- * нээгдэж, хэмжээ сонгосон даруйд нэмэгдэнэ. Нэмсний дараа bag panel нээгдэж юу нэмэгдсэнийг
- * харуулна (барааны хуудастай адил). Ажилтанд (худалдан авалт хийхгүй) болон дууссан бараанд
- * харагдахгүй. Дэлгэц хулгана-гүй (утас) үед үргэлж харагдана; хулгана-тай үед карт дээр очиход.
+ * Картаас шууд сагсанд нэмэх: хэмжээгүй бараа нэг товшилтоор нэмэгдэнэ. Хэмжээтэй бол хэмжээний жижиг цонх
+ * нээгдэж, сонгомогц нэмэгдэнэ. Нэмсний дараа bag panel нээгдэж, юу нэмэгдсэнийг харуулна (барааны хуудастай
+ * адил). Ажилтанд (худалдан авалт хийдэггүй) болон дууссан бараанд харагдахгүй. Хулганагүй дэлгэц дээр (утас)
+ * үргэлж харагдана, хулганатай бол карт дээр очиход гарна.
  */
 export function QuickAdd({ product, className }: { product: Product; className?: string }) {
   const t = useTranslations("catalog.quickAdd");
@@ -53,7 +53,8 @@ export function QuickAdd({ product, className }: { product: Product; className?:
       onClick={sizes ? undefined : () => submit("")}
       className={cn(
         "bg-background/90 text-foreground hover:bg-background focus-visible:ring-ring/50 grid size-10 place-items-center rounded-full shadow-sm backdrop-blur outline-none transition-[opacity,background-color] focus-visible:ring-3 disabled:opacity-60",
-        // Hover-тэй төхөөрөмж дээр карт дээр очиход, эсвэл focus-д; утсан дээр үргэлж.
+        // Hover дэмждэг төхөөрөмж дээр карт дээр очих эсвэл focus авахад харагдана; утсан дээр үргэлж
+        // харагдана.
         "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100 data-[state=open]:opacity-100",
         className,
       )}

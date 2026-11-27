@@ -24,9 +24,9 @@ export function ProductGrid({
     <ul className={cn(GRID, columns === 4 && "lg:grid-cols-4", className)}>
       {products.map((product, i) => {
         const card = <ProductCard product={product} priority={i < priorityCount} headingLevel={headingLevel} />;
-        // Эхний мөр хуудасны хэмжигдэх хэсэг: анхны paint-аас эхлэн байна.
+        // Хуудасны хурдыг эхний мөрөөр хэмждэг тул тэр анхнаасаа харагдана.
         if (i < priorityCount) {
-          // `translate`/`scale` л (opacity-гүй): эхний мөр хэзээ ч нуугдахгүй, LCP-д саад болохгүй.
+          // Зөвхөн `translate`, `scale` (opacity-гүй): эхний мөр хэзээ ч нуугдахгүй, LCP удаашрахгүй.
           return (
             <li key={product.id} className="card-in" style={{ "--i": i } as CSSProperties}>
               {card}
@@ -34,8 +34,8 @@ export function ProductGrid({
           );
         }
         return (
-          // Эхний дэлгэцээс доорх мөрүүд хэрэгтэй болтол render хийгдэхгүй (зургийг нь ч татахгүй),
-          // орж ирэхдээ дээш гарна.
+          // Эхний дэлгэцээс доорх мөрүүдийг ойртох хүртэл зурахгүй (зургийг нь ч татахгүй). Орж ирэхдээ
+          // доороос дээш гарна.
           <Reveal
             key={product.id}
             as="li"

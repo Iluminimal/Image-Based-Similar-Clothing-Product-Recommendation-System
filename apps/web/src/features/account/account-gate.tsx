@@ -6,9 +6,9 @@ import { useAuth } from "@/features/auth/auth-store";
 import { useIsStaff } from "@/features/auth/use-role";
 
 /**
- * /account/* : `proxy.ts` зөвхөн session cookie байгаа эсэхийг шалгадаг. Cookie хуучирсан (refresh
- * татгалзсан) бол хуудас API-ийн алдааны текст харуулахын оронд нэвтрэх хуудас руу явуулж, нэвтэрсний
- * дараа энд буцаана.
+ * /account/* : `proxy.ts` зөвхөн session cookie байгаа эсэхийг шалгадаг. Cookie хүчингүй болсон (refresh
+ * татгалзсан) бол хуудас API-ийн алдааг харуулахгүй, нэвтрэх хуудас руу явуулаад нэвтэрсний дараа энд
+ * буцаана.
  */
 export function AccountGate({ children }: { children: ReactNode }) {
   const status = useAuth((state) => state.status);

@@ -23,10 +23,10 @@ function MenuIcon({ open }: { open: boolean }) {
 }
 
 /**
- * Утасны header-ийн цэсний товч, мөрийн сүүлд (logo, хайлт, bag, цэс), apple.com шиг. Дарахад
- * шугамууд X болж, bar-ын үлдсэн хэсэг бүдгэрч, доор нь холбоосын бүтэн хуудас нээгдэнэ; дахин
- * дарах (эсвэл Escape, холбоос дагах) хаана. Навигацийн дараа effect-гүйгээр хаагдсан гэж
- * тооцогдоно: нээсэн хуудсаа санадаг.
+ * Утасны header-ийн цэсний товч, мөрийн сүүлд (logo, хайлт, bag, цэс), apple.com шиг. Дарахад хоёр шугам X
+ * болж, bar-ын бусад хэсэг бүдгэрч, доор нь холбоосуудын бүтэн хуудас нээгдэнэ. Дахин дарах, Escape, эсвэл
+ * холбоос сонгоход хаагдана. Өөр хуудас руу шилжвэл effect-гүйгээр хаагдсанд тооцно: аль хуудсан дээр нээснээ
+ * санадаг.
  */
 export function MobileNav() {
   const t = useTranslations("layout.header");
@@ -35,7 +35,7 @@ export function MobileNav() {
   const [requested, setRequested] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const open = openedAt !== null && openedAt === pathname;
-  // Тогтвортой: panel-ийн effect үүнээс хамаарах тул render бүрт дахин ажиллах ёсгүй.
+  // Функцийг тогтвортой байлгана: panel-ийн effect үүнээс хамаардаг тул render бүрд дахин ажиллах ёсгүй.
   const close = useCallback(() => setOpenedAt(null), []);
   useBarPanel(open);
 

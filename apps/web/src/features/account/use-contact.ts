@@ -7,7 +7,7 @@ import { queryKeys } from "@/lib/query-keys";
 
 type Password = { current_password?: string; reauth_code?: string };
 
-/** Нууц үггүй бүртгэл: эмзэг үйлдлийг батлах кодыг илгээлгэнэ. */
+/** Нууц үггүй account: эмзэг үйлдлийг батлах код илгээхийг хүснэ. */
 export function useRequestReauth() {
   return useMutation({ mutationFn: () => call(browserApi().POST("/api/v1/auth/reauth/request")) });
 }
@@ -84,7 +84,7 @@ export function useSecurityEvents(enabled: boolean) {
     queryKey: queryKeys.securityEvents,
     queryFn: () => call(browserApi().GET("/api/v1/auth/security-events")),
     enabled,
-    // Профайл руу орох бүрд шинээр: хэн нэгэн нэвтэрсэн бол эзэн даруй харах ёстой.
+    // Профайл руу орох бүрд шинээр татна: хэн нэгэн нэвтэрсэн бол эзэн нь даруй харах ёстой.
     staleTime: 0,
   });
 }

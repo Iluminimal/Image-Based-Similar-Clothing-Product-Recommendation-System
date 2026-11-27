@@ -18,7 +18,7 @@ async function fetchPage(page: number, pageSize: number) {
   return result.data;
 }
 
-/** Идэвхтэй бүтээгдэхүүн хэд байгаа (нэг хямд хүсэлт: нэг бүтээгдэхүүний хуудас). */
+/** Идэвхтэй бараа хэд байгааг нэг хөнгөн хүсэлтээр мэднэ (нэг бараатай хуудас). */
 export async function countProducts(): Promise<number> {
   return (await fetchPage(1, 1)).total;
 }

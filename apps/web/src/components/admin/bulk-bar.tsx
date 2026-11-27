@@ -16,7 +16,7 @@ export function BulkBar({
   children,
 }: {
   count: number;
-  /** "3 сонгосон" мэт, дуудагч орчуулна. */
+  /** "3 сонгосон" гэх мэт; дуудсан код орчуулж өгнө. */
   label: string;
   clearLabel: string;
   onClear: () => void;

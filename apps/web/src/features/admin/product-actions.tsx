@@ -21,7 +21,7 @@ import { useProductStatus } from "./product-status";
 import { productSchema, toFormValues, togrogToMinor } from "./product-values";
 import { useDeleteProducts, useUpdateProduct } from "./use-admin";
 
-/** Цонх хаагдах animation-ы турш сүүлд харуулсан зүйлээ барина (`null` болмогц агуулга үсрэхгүй). */
+/** Цонх хаагдах animation-ы турш сүүлд харуулсан агуулгаа хадгална (утга `null` болмогц агуулга алга болж үсрэхгүй). */
 function useLastShown<T>(value: T | null): T | null {
   const [shown, setShown] = useState(value);
   if (value !== null && value !== shown) setShown(value);
@@ -68,7 +68,7 @@ function PriceStockForm({ product, onDone }: { product: AdminProduct; onDone: ()
   });
 
   const save = handleSubmit((values) => {
-    // Зөвхөн өөрчилсөн талбарыг илгээнэ: үнэ засахад цонх нээх үеийн хуучин тоо дарж бичигдэхгүй.
+    // Зөвхөн өөрчилсөн талбарыг илгээнэ: үнэ засахад цонх нээх үеийн хуучин тоо шинэ тоог дарж бичихгүй.
     const changes: AdminProductChanges = {
       ...(dirtyFields.price ? { price_cents: togrogToMinor(values.price) } : {}),
       ...(dirtyFields.stock_quantity ? { on_hand: Number(values.stock_quantity) } : {}),

@@ -1,9 +1,9 @@
 import { resolveTrail } from "@/features/catalog/category-trail";
 
 /**
- * Stream эхлэхээс өмнө ангиллыг шалгана. Хуудас өөрөө `loading.tsx`-ийн ард байдаг бөгөөд
- * `notFound()` дуудах үед хариу аль хэдийн 200 болсон байдаг; layout жинхэнэ 404 статус өгдөг,
- * хайлтын систем үхсэн URL-ыг хасахад яг үүнийг хүлээдэг.
+ * Ангиллыг хуудас stream хийж эхлэхээс өмнө энд шалгана. Хуудас `loading.tsx`-ийн ард ачаалагддаг тул тэнд
+ * `notFound()` дуудахад хариу аль хэдийн 200 статустай явсан байдаг. Харин layout жинхэнэ 404 өгнө. Хайлтын
+ * систем устсан URL-ыг хасахдаа яг үүнийг хүлээдэг.
  */
 export default async function CategoryLayout({ children, params }: LayoutProps<"/c/[department]/[[...path]]">) {
   await resolveTrail(params);

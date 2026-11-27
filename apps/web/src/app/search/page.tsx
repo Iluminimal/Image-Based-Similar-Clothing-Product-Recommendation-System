@@ -13,8 +13,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// Хүсэлт бүрт render хийнэ: хуудас каталогийн API-г уншдаг бөгөөд build үед (CI, Docker) API
-// байдаггүй. API client-ийн fetch cache (`revalidate`) эдгээрийг хямд байлгана.
+// Хүсэлт бүрд render хийнэ: хуудас каталогийн API-аас уншдаг, харин build хийх үед (CI, Docker) API байхгүй.
+// API client-ийн fetch cache (`revalidate`) ачааллыг багасгана.
 export const dynamic = "force-dynamic";
 
 export default async function SearchPage() {

@@ -4,9 +4,9 @@ import type { ShippingZone } from "./checkout-api";
 type Method = { id: string; label: string; description?: string; estimated_days: string };
 
 /**
- * Хүргэлтийн аргын нэр, тайлбар, хугацаа: API монголоор өгдөг тул танигдсан `id` (standard, express,
- * pickup) бүрийг идэвхтэй хэл рүү орчуулж, үл мэдэгдэх аргыг API-аас ирсэн хэвээрээ харуулна. Энгийн
- * хүргэлтийн тайлбар, хугацаа бүсээс (`ub`, `rural`) хамаарна. Авах цэгийн тайлбар нь хаяг тул API-аас.
+ * Хүргэлтийн аргын нэр, тайлбар, хугацаа. API монголоор өгдөг тул танигдах `id` (standard, express, pickup)
+ * бүрийг идэвхтэй хэл рүү орчуулна. Танихгүй аргыг API-аас ирсэн хэвээр нь харуулна. Энгийн хүргэлтийн
+ * тайлбар, хугацаа бүсээс (`ub`, `rural`) хамаарна. Дэлгүүрээс авах цэгийн тайлбар нь хаяг тул API-аас авна.
  */
 export function useShippingText(zone: ShippingZone = "ub") {
   const t = useTranslations("checkout.shipping") as unknown as ((key: string) => string) & {

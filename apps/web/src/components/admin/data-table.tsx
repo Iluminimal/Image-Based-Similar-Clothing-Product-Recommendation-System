@@ -44,7 +44,7 @@ type Selection<T, K extends Key> = {
   selectAllLabel: string;
 };
 
-/** Эрэмбийн дараагийн утга: одоогийнхоо эсрэг (өгсөх <-> буурах), үгүй бол эхний боломжит. */
+/** Эрэмбийн дараагийн утга: одоогийнхоо эсрэг (өгсөх <-> буурах); эрэмбэлээгүй бол эхний боломжит утга. */
 export function nextSort(current: string | undefined, sort: NonNullable<Column<unknown>["sort"]>): string | undefined {
   if (current !== undefined && current === sort.asc && sort.desc) return sort.desc;
   if (current !== undefined && current === sort.desc && sort.asc) return sort.asc;

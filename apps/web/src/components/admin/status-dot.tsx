@@ -11,7 +11,10 @@ const DOT: Record<Tone, string> = {
   warning: "bg-warning",
 };
 
-/** Төлөвийг өнгөт цэг + үгээр: өнгө ганцаараа утга зөөдөггүй (өнгө ялгаж чадахгүй хүнд ч ойлгомжтой). */
+/**
+ * Төлөвийг өнгөт цэг болон үгээр харуулна: зөвхөн өнгөөр утга илэрхийлэхгүй (өнгө ялгаж чаддаггүй хүнд ч
+ * ойлгомжтой).
+ */
 export function StatusDot({ tone, children, className }: { tone: Tone; children: ReactNode; className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-2 text-sm", className)}>

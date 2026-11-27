@@ -18,7 +18,10 @@ import { useAdminAudit } from "./use-admin";
 
 const DEFAULTS = { entity: "all", actor: 0, action: "", page: 1 };
 
-/** Ажилтны үйлдлийн журнал: шүүлтүүр URL-д (bookmark хийж болно), мөр нь объект руу холбоотой. */
+/**
+ * Ажилтны үйлдлийн журнал: шүүлтүүр URL-д хадгалагдана (bookmark хийж болно), мөр бүр холбогдох объект руу
+ * холбоостой.
+ */
 export function ActivityLog({ params }: { params: AuditListParams }) {
   const t = useTranslations("admin.audit");
   const dates = useDates();

@@ -10,7 +10,7 @@ import type { components } from "@/lib/api/client";
 export type SessionUser = components["schemas"]["UserOut"];
 type SessionResponse = components["schemas"]["SessionOut"];
 
-/** Эхний refresh оролдлого дуустал `unknown`; UI "нэвтрээгүй" гэж анивчихын оронд хүлээнэ. */
+/** Эхний refresh оролдлого дуустал `unknown` төлөвтэй: UI "нэвтрээгүй" гэж түр харуулалгүй хүлээнэ. */
 export type AuthStatus = "unknown" | "signedIn" | "signedOut";
 
 type AuthState = {

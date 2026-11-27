@@ -19,7 +19,7 @@ export function PendingWishlistReplay() {
   const isStaff = useIsStaff();
   useEffect(() => {
     if (status !== "signedIn") return;
-    // Ажилтан болж нэвтэрсэн бол хүлээгдэж байсан барааг зүгээр л орхино.
+    // Ажилтан болж нэвтэрсэн бол хүлээгдэж байсан барааг орхино.
     const product = takePendingWishlist();
     if (!product || isStaff) return;
     mutate({ product, saved: true }, { onSuccess: () => toast.success(t("savedAfterSignIn", { name: product.name })) });

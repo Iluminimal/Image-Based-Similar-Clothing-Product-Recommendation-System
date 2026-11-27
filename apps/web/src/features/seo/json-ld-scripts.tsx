@@ -1,12 +1,12 @@
 import { serializeJsonLd } from "@/features/catalog/json-ld";
 
 /**
- * Node бүрд нэг `<script type="application/ld+json">`. Дээд түвшний массив нь хүчинтэй JSON-LD
- * боловч олон consumer (crawler, browser extension) parse хийсэн script-ээс `["@context"]`-ийг шууд
- * уншдаг тул массивт алдаа гаргана.
+ * Node бүрд тусдаа `<script type="application/ld+json">`. Дээд түвшинд массив бичих нь хүчинтэй JSON-LD.
+ * Гэхдээ олон хэрэглэгч (crawler, browser extension) уншсан script-ээс `["@context"]`-ийг шууд авдаг тул
+ * массив дээр алдаа гаргадаг.
  *
- * Nonce тавихгүй: `application/ld+json` нь ажиллуулагддаггүй data block тул CSP хамаарахгүй, харин
- * nonce attribute-ыг browser нуудаг тул hydration-д "server, client таарахгүй" гэсэн алдаа гардаг.
+ * Nonce тавихгүй: `application/ld+json` ажиллуулдаг код биш тул CSP хамаарахгүй. Харин browser nonce
+ * attribute-ыг нуудаг тул hydration-д "server, client таарахгүй" алдаа гардаг.
  */
 export function JsonLdScripts({ nodes }: { nodes: readonly object[] }) {
   return nodes.map((node, i) => (

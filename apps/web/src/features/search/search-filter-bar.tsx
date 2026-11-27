@@ -44,7 +44,10 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
-/** Шуурхай шүүлтүүр chip (хүйс, нөөц), бусдад sheet, хэрэглэгдсэнд устгах боломжтой chip. */
+/**
+ * Шуурхай шүүлтүүрийн chip (хүйс, нөөц), бусад нь sheet дотор, сонгосон шүүлтүүрүүд хасаж болох chip болж
+ * харагдана.
+ */
 export function SearchFilterBar({ options, filters, onChange }: Props) {
   const t = useTranslations("search.filters");
   const format = useFormat();

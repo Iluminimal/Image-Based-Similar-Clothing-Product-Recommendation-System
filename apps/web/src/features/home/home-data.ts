@@ -4,8 +4,8 @@ import { emptyFilters, type ListingQuery } from "@/features/catalog/filters";
 import type { Product } from "@/features/catalog/product";
 
 /**
- * Нөөцөд байгаа бүтээгдэхүүн, шинэ нь түрүүнд, `patch`-аар нарийсгана. Амжилтгүй хүсэлт нь
- * "бүтээгдэхүүнгүй": хуудас рендерлэгдсээр байна.
+ * Нөөцтэй бараанууд, шинэ нь эхэнд; `patch`-аар нарийсгана. Хүсэлт амжилтгүй бол "бараа алга" гэж үзнэ:
+ * хуудас зурагдсаар байна.
  */
 async function stocked(sort: ListingQuery["sort"], patch: Partial<ListingQuery>, count: number): Promise<Product[]> {
   try {
@@ -20,15 +20,18 @@ export function newest(patch: Partial<ListingQuery>, count: number): Promise<Pro
   return stocked("newest", patch, count);
 }
 
-/** Хамгийн эрэлттэй нь түрүүнд (`sort=popular`), нөөцөд байгаа. */
+/** Нөөцтэй бараанууд, хамгийн эрэлттэй нь эхэнд (`sort=popular`). */
 export function popular(patch: Partial<ListingQuery>, count: number): Promise<Product[]> {
   return stocked("popular", patch, count);
 }
 
-/** Live demo-ийн жишээ зургууд: бодит каталогийн гурван хувцас (эмэгтэй, эрэгтэй, гутал). Бүтэлгүйтвэл жишээгүй. */
+/**
+ * Live demo-ийн жишээ зургууд: каталогийн жинхэнэ гурван бараа (эмэгтэй, эрэгтэй, гутал). Татаж чадаагүй бол
+ * жишээгүй.
+ */
 export async function sampleProducts(): Promise<Product[]> {
-  // Жагсаалт бүрээс гурвыг авна: Unisex бараа эмэгтэй, эрэгтэй хоёрт зэрэг тэргүүлж болдог тул
-  // дараагийнх нь хэрэгтэй. Нэг зураг хоёр удаа гарах ёсгүй.
+  // Жагсаалт бүрээс гурван бараа авна: Unisex бараа эмэгтэй, эрэгтэй хоёр жагсаалтад хоёуланд нь эхэнд орж
+  // болдог тул дараагийнх нь хэрэгтэй. Нэг зураг хоёр удаа гарах ёсгүй.
   const found = await Promise.all([
     popular({ department: "women", category: "apparel" }, 3),
     popular({ department: "men", category: "apparel" }, 3),

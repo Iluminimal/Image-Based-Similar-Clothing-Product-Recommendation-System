@@ -24,7 +24,7 @@ import { useSearchStore } from "./search-store";
 import { SimilarityBadge } from "./similarity-badge";
 import { firstImage, useImageInput, usePasteImage } from "./use-image-input";
 
-// Шүүлтүүрийн сонголтуудыг багцалдаг тул хурдан хэдэн товшилт нэг хүсэлт болно (зургийн хайлт rate
+// Шүүлтүүрийн сонголтуудыг багцалдаг тул хурдан дараалсан хэдэн товшилт нэг хүсэлт болно (зургаар хайлт rate
 // limit-тэй).
 const FILTER_DEBOUNCE_MS = 400;
 
@@ -54,10 +54,10 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
 
   const debouncedFilters = useDebounced(filters, FILTER_DEBOUNCE_MS);
   const imageId = image?.id;
-  // Хэрэглэгч нэг хувцас сонгоогүй, ангилал, үгээр нарийсгаагүй бол зурагт олдсон бүх хувцсыг нэг дор
-  // хайна; үгүй бол (нэг хувцас, ангилал, hybrid) нэг-хувцасны хайлт.
+  // Хэрэглэгч нэг хувцас сонгоогүй, ангилал, үгээр нарийсгаагүй бол зураг дээрх бүх хувцсаар нэг дор хайна.
+  // Эс бөгөөс (нэг хувцас, ангилал, hybrid) нэг хувцасны хайлт хийнэ.
   const grouped = !focused && !refinement && articleType === null;
-  // Шүүлтүүр солигдох үед өмнөх үр дүнг харуулсаар байна, гэхдээ өөр зургийнхыг хэзээ ч биш.
+  // Шүүлтүүр солигдох үед өмнөх үр дүнг харуулсаар байна, харин өөр зургийн үр дүнг хэзээ ч харуулахгүй.
   const keepWithinImage = <T,>(previous: T | undefined, previousQuery?: { queryKey: readonly unknown[] }) =>
     previousQuery?.queryKey[1] === imageId ? keepPreviousData(previous) : undefined;
   const garmentSearch = useQuery({
@@ -88,7 +88,7 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
         ? garmentAsSearchResponse(garmentSearch.data)
         : undefined
       : singleSearch.data;
-  // Хайрцгууд: нэг-хувцасны хариу ирэхээс өмнө (шилжих үед) нэгдсэн хариунаас авна.
+  // Хайрцгууд: нэг хувцасны хариу ирэхээс өмнө (шилжих үед) нэгдсэн хариунаас авна.
   const regions = data?.regions ?? garmentSearch.data?.garments.map((g) => g.region) ?? [];
 
   function onDrop(event: DragEvent) {
@@ -126,7 +126,7 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
                   {/* eslint-disable-next-line @next/next/no-img-element -- локал blob URL, optimize хийх боломжгүй */}
                   <img src={image.previewUrl} alt={t("yourPhoto")} className="block max-h-[26rem] w-auto max-w-full" />
                   {search.isFetching && (
-                    // Хайлт явагдах үед зураг дээгүүр зөөлөн зурвас доош сэлгэнэ.
+                    // Хайлт явагдах үед зургийн дээгүүр зөөлөн гэрэл дээрээс доош гүйнэ.
                     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
                       <div className="animate-scan from-brand/0 via-brand/45 to-brand/0 absolute inset-x-0 top-0 h-1/3 bg-linear-to-b" />
                     </div>
@@ -215,7 +215,7 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
                   {data.results.map((hit, i) => (
                     <li
                       key={hit.product.id}
-                      // Үр дүн нэг нэгээр дээшилж гарна; саатал есөн мөр тутамд давтагдана.
+                      // Үр дүн нэг нэгээр доороос дээш гарна; хоцрох хугацаа есөн мөр тутамд дахин эхэлнэ.
                       className="animate-in fade-in slide-in-from-bottom-3 fill-mode-backwards duration-500"
                       style={{ animationDelay: `${(i % 9) * 45}ms` }}
                     >

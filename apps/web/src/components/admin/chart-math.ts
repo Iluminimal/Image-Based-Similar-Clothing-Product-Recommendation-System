@@ -1,8 +1,8 @@
 export type Point = readonly [number, number];
 
 /**
- * Цэгүүдийг дайрсан monotone (Fritsch-Carlson) муруй: энгийн spline шиг тэг өдрүүдийн хоорондох
- * хотгор "0"-ээс доош унаж хуурамч сөрөг орлого зурахгүй.
+ * Цэгүүдийг дайрсан monotone (Fritsch-Carlson) муруй. Энгийн spline тэг орлоготой өдрүүдийн хооронд 0-ээс
+ * доош хотойж, байхгүй сөрөг орлого зурдаг бол энэ муруй тэгдэггүй.
  */
 export function monotonePath(points: readonly Point[]): string {
   const n = points.length;

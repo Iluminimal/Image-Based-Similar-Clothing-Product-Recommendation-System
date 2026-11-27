@@ -8,9 +8,8 @@ type Props = ComponentProps<"select"> & {
 };
 
 /**
- * Apple хэвийн native `<select>` (chevron-той). Native хэвээр үлдсэн тул гар утсан дээр системийн
- * сонгогч нээгдэж, keyboard болон screen reader өөрөө ажиллана; `react-hook-form`-ын `register`
- * шууд ажиллана. Хуучин `selectClass`, admin `NativeSelect`-ийг орлоно.
+ * Apple маягийн харагдацтай ч browser-ийн өөрийн `<select>` (chevron-той). Тиймээс утсан дээр системийн
+ * сонгогч нээгдэж, keyboard, screen reader өөрөө ажиллана. `react-hook-form`-ын `register` шууд тохирно.
  */
 export function NativeSelect({ className, children, variant = "field", ...props }: Props) {
   return (

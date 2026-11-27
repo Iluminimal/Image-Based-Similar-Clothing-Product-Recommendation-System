@@ -129,7 +129,7 @@ export function ContactDialog({
       if (kind === "phone") await requestPhone.mutateAsync({ phone: destination!, ...body });
       else await requestEmail.mutateAsync({ email: destination!, ...body });
       countdown.start(60);
-      setReauth(""); // нэг удаагийн код зарцуулагдсан
+      setReauth(""); // нэг удаагийн кодыг ашиглачихсан
       setCode("");
       setStep("code");
     } catch (error) {
@@ -242,7 +242,7 @@ export function ContactDialog({
                 disabled={countdown.remaining > 0 || busy}
                 onClick={() => {
                   if (verifying) requestVerification.mutate(undefined, { onSuccess: () => countdown.start(60) });
-                  // Нууц үггүй бол дахин илгээхэд шинэ баталгаажуулах код хэрэгтэй тул эхний алхам руу.
+                  // Нууц үггүй бол дахин илгээхэд шинэ баталгаажуулах код хэрэгтэй тул эхний алхам руу буцна.
                   else if (!user.has_password) setStep("enter");
                   else void send();
                 }}
@@ -266,7 +266,7 @@ export function ContactDialog({
   );
 }
 
-/** Утасны дугаар эсвэл имэйлийг устгана. Нэвтрэх цорын ганц арга бол API татгалзана. */
+/** Утасны дугаар эсвэл имэйлийг устгана. Энэ нь нэвтрэх цорын ганц арга бол API зөвшөөрөхгүй. */
 export function RemoveContactDialog({
   kind,
   user,

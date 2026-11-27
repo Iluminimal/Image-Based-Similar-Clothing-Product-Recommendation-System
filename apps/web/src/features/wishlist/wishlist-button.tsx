@@ -51,7 +51,7 @@ export function WishlistButton({ product, variant = "card", className }: Props) 
   if (isStaff) return null;
 
   const label = saved ? t("remove", { name: product.name }) : t("save", { name: product.name });
-  // `key` зүрх дүүрэх бүрд pop animation-ыг дахин эхлүүлнэ.
+  // `key` өөрчлөгддөг тул зүрх дүүрэх бүрд pop animation дахин эхэлнэ.
   const icon = (
     <span className="relative grid place-items-center">
       <Heart key={String(saved)} className={cn("size-[1.15rem]", saved && "animate-pop fill-current")} />

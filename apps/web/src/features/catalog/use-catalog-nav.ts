@@ -16,9 +16,9 @@ async function fetchCatalogNav(signal?: AbortSignal) {
 }
 
 /**
- * Header цэсүүдийн ард байх ангиллын мод. Layout биш browser дээр татдаг тул хуудас бүр API-аас
- * хамааралгүй (боломжтой бол static) байна; API таван минут cache хийхийг зөвшөөрдөг тул нааш цааш
- * явахад зардалгүй.
+ * Header-ийн цэсний ангиллын мод. Layout дээр биш, browser дээр татдаг тул хуудас бүр API-аас хамааралгүй
+ * (боломжтой бол static) байна. API үүнийг таван минут cache хийхийг зөвшөөрдөг тул хуудас хооронд явахад
+ * дахин ачаалах зардалгүй.
  */
 export function useCatalogNav(enabled = true) {
   return useQuery({

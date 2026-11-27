@@ -16,7 +16,7 @@ export type Sort = (typeof SORTS)[number];
 export const MAX_VALUES_PER_KEY = 12;
 export const MAX_PRICE_CENTS = 1_000_000_000; // 10 сая ₮ (төгрөг x 100)
 
-/** Жагсаалт, төстэй бүтээгдэхүүн, бүх хайлтын endpoint-ын хуваалцдаг шүүлтүүр. Үнэ бүхэл бага нэгжээр. */
+/** Жагсаалт, төстэй бараа, бүх хайлтын endpoint ижил ашигладаг шүүлтүүрүүд. Үнэ бүхэл бага нэгжээр. */
 export type CatalogFilters = Record<MultiKey, string[]> & {
   min_price?: number;
   max_price?: number;
@@ -25,7 +25,7 @@ export type CatalogFilters = Record<MultiKey, string[]> & {
 
 export type ListingQuery = CatalogFilters & {
   q?: string;
-  /** /c/... хуудас URL зам-аас тохируулна (query string-д хэзээ ч serialize хийхгүй). */
+  /** /c/... хуудас үүнийг URL-ын замаас тогтоодог (query string-д хэзээ ч бичихгүй). */
   department?: string;
   category?: string;
   sort?: Sort;
@@ -47,10 +47,7 @@ export function emptyFilters(): CatalogFilters {
   };
 }
 
-/**
- * Хамгийн богино URL болгон serialize хийнэ: default утгууд (1-р хуудас, эрэмбэгүй, хоосон
- * жагсаалт) орхигдоно.
- */
+/** Хамгийн богино URL болгон бичнэ: анхдагч утгуудыг (1-р хуудас, эрэмбэгүй, хоосон жагсаалт) орхино. */
 export function toSearchParams(query: Partial<ListingQuery>): URLSearchParams {
   const out = new URLSearchParams();
   for (const key of MULTI_KEYS) {
@@ -88,7 +85,7 @@ export function toggleValue<T extends CatalogFilters>(filters: T, key: MultiKey,
   return { ...filters, [key]: next };
 }
 
-/** `CatalogFilters`-ийн талбарууд API-ийн авдаг хавтгай form/query бүтэцтэй. */
+/** `CatalogFilters`-ийн талбаруудыг API-ийн хүлээдэг хавтгай form/query бүтцэд оруулна. */
 export function toApiFilters(f: CatalogFilters) {
   return {
     gender: f.gender,

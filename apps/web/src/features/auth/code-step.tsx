@@ -8,7 +8,7 @@ import { useUserMessage } from "@/lib/api/use-user-message";
 import { OtpInput } from "./otp-input";
 import { useAuthActions } from "./use-auth-actions";
 
-/** Утас эсвэл имэйлээр ирсэн зургаан орон. Үүгээр нэвтрэхэд шинэ бүртгэл бас үүснэ. */
+/** Утас эсвэл имэйлээр ирсэн 6 оронтой кодыг оруулах алхам. Account байхгүй бол кодоор нэвтрэхэд шинээр үүснэ. */
 export function CodeStep({
   destination,
   resendIn,

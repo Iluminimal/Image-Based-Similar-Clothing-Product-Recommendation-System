@@ -3,8 +3,8 @@ import { cache } from "react";
 import { createApiClient } from "@/lib/api/client";
 
 /**
- * API нэвтрэх ямар нэмэлт арга санал болгодог вэ. Алдаа бүрийг "байхгүй" гэж үзнэ: API-аас асууж
- * чадахгүй login хуудас ч нууц үгийн form-ыг заавал харуулах ёстой.
+ * API нэвтрэх ямар нэмэлт арга санал болгодгийг асууна. Алдаа гарвал тийм арга "байхгүй" гэж үзнэ: API-аас
+ * асууж чадаагүй ч login хуудас нууц үгийн form-ыг харуулах ёстой.
  */
 export const getAuthProviders = cache(async (): Promise<{ google: boolean }> => {
   try {

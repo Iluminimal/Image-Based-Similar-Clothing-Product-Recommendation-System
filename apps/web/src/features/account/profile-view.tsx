@@ -60,7 +60,7 @@ export function ProfileView() {
       {isStaffRole(user.role) && <TwoFactorCard user={user} />}
       <DevicesCard />
       <SecurityActivityCard />
-      {/* Ажилтан өөрийн бүртгэлийг устгахгүй (API 403): эхлээд эрхийг нь command-оор хасна. */}
+      {/* Ажилтан өөрийн account-ыг устгаж чадахгүй (API 403): эхлээд ажилтны эрхийг нь command-оор хасна. */}
       {!isStaffRole(user.role) && <DeleteAccount user={user} />}
     </div>
   );

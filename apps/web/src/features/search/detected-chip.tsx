@@ -34,7 +34,7 @@ function Option({ selected, onClick, children }: { selected: boolean; onClick: (
   );
 }
 
-/** "Detected: Shirts" chip. Таамаг нь зөвхөн санал: ангилал сонговол шүүлтүүр болж хэрэгжинэ. */
+/** "Detected: Shirts" chip. Таамаг зөвхөн санал: хэрэглэгч ангилал сонговол л шүүлтүүр болно. */
 export function DetectedChip({ detected, value, allTypes, onChange }: Props) {
   const t = useTranslations("search.detected");
   const vocab = useVocab();

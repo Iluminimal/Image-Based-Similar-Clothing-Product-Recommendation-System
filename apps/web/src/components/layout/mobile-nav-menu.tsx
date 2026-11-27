@@ -17,7 +17,7 @@ import type { Vocab } from "@/i18n/vocab";
 import { useVocab } from "@/i18n/use-vocab";
 import { cn } from "@/lib/utils";
 
-/** Drill-down-ы нэг алхам: "Shop all" хаашаа хөтлөх, доор нь юу байгаа. */
+/** Доод түвшин рүү орох нэг алхам: "Shop all" хаашаа хөтлөх, доор нь юу байх. */
 type Step = { name: string; href: string; children: Step[] };
 
 function fromNode(department: string, node: NavNode, vocab: Vocab): Step {
@@ -42,13 +42,13 @@ function departments(nav: CatalogNav | undefined, vocab: Vocab): Step[] {
 const row = (i: number) => ({ "--i": i }) as CSSProperties;
 
 /**
- * Цэсний товч дарахад утасны header-ийн доор нээгддэг хуудас, apple.com шиг: дэлгүүр том үсгээр,
- * мөр бүр дээрхийнхээ дараа бүдэг байдлаас гарч, өөр юу ч үгүй (хайлт ба account нь томруулагч,
- * Bag-ийн хуудсанд байдаг). Department-үүд түвшин түвшнээр доош орно (Men > Clothing > Topwear).
- * Bar-ын доорх хуудсыг бүрхэнэ (bar үлдэх боловч зөвхөн X болсон товч нь үлдэж, бусад нь бүдгэрнэ),
- * ард нь хуудас scroll хийгдэхгүй, хүрэх боломжгүй; Escape хааж focus-ыг товч руу буцаана.
- * Header-ийн backdrop blur нь доторх `fixed` бүх зүйлийн containing block болох тул <body> руу
- * portal хийнэ.
+ * Утасны header-ийн цэсний товч дарахад доор нь нээгдэх хуудас, apple.com шиг: дэлгүүрийн холбоосууд том
+ * үсгээр, мөр бүр дээрхийнхээ дараа аажим тодорч гарна. Өөр зүйл байхгүй (хайлт, account нь томруулагч болон
+ * Bag хуудсанд байдаг). Department-ууд дотогшоо түвшин түвшнээр нээгдэнэ (Men > Clothing > Topwear).
+ * Bar-ын доорх хуудсыг бүрхэнэ. Bar үлдэх ч зөвхөн X болсон товч харагдана. Цаад хуудас scroll болохгүй, дарж
+ * ч болохгүй. Escape цэсийг хааж, focus-ыг товч руу буцаана.
+ * Header-ийн backdrop blur доторх `fixed` бүх элементийг өөртөө уяж орхидог тул цэсийг <body> руу portal
+ * хийнэ.
  */
 export function MobileMenuPanel({
   open,
@@ -71,7 +71,7 @@ export function MobileMenuPanel({
 
   useEffect(() => {
     if (!open) return;
-    // Цэс нээлттэй байхад ард байгаа хуудас хүрэх боломжгүй (scroll, tab-аар орох).
+    // Цэс нээлттэй үед цаад хуудсыг ашиглах боломжгүй болгоно (scroll хийх, tab-аар орох).
     const behind = document.querySelectorAll("#main, footer");
     behind.forEach((element) => element.setAttribute("inert", ""));
     const root = document.documentElement;

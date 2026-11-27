@@ -73,7 +73,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
     getFormat(),
     getTranslations("layout.ui"),
     getVocab(),
-    // Ангиллын мод унасан ч хуудас унахгүй: breadcrumb шүүлтүүртэй жагсаалт руу буцна.
+    // Ангиллын мод ачаалагдахгүй байсан ч хуудас унахгүй: breadcrumb шүүлтүүртэй жагсаалт руу заана.
     getCatalogNav().catch(() => null),
   ]);
   const sizes = sizesFor(product);

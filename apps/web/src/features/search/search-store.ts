@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { emptyFilters, type CatalogFilters } from "@/features/catalog/filters";
 
 export type PickedImage = {
-  /** Шинэ зураг бүрт өөрчлөгдөнө; query key-ийн хэсэг тул үр дүн зургуудын хооронд хольцохгүй. */
+  /** Шинэ зураг бүрд өөрчлөгдөнө. Query key-д ордог тул өөр зургуудын үр дүн холилдохгүй. */
   id: number;
   file: File;
   /** Preview-ийн Object URL. Зургийг солих, устгах үед revoke хийнэ. */
@@ -33,8 +33,8 @@ type SearchState = {
 let nextId = 1;
 
 /**
- * Visual search flow-ийн жижиг client state. Зураг зөвхөн энд, санах ойд байна (localStorage эсвэл
- * server-т хэзээ ч биш); нүүр хуудас зургийг /search-д ингэж дамжуулдаг.
+ * Зургаар хайлтын жижиг client state. Зургийг зөвхөн энд, санах ойд хадгална (localStorage, server-т хэзээ ч
+ * хадгалахгүй). Нүүр хуудас зургаа /search руу үүгээр дамжуулна.
  */
 export const useSearchStore = create<SearchState>((set, get) => ({
   image: null,

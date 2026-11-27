@@ -15,8 +15,8 @@ export function change(current: number, previous: number): Change {
 }
 
 /**
- * `max`-аас багагүй дараагийн "тэгш" тоо (10-ын зэргийн 1, 2 эсвэл 5 дахин): тэнхлэгийн цэвэр дээд
- * хязгаар.
+ * `max`-аас багагүй дараагийн "бүхэл" тоо (10-ын зэргийг 1, 2 эсвэл 5-аар үржүүлсэн): тэнхлэгийн дээд
+ * хязгаарт тохиромжтой.
  */
 export function niceCeiling(max: number): number {
   if (max <= 0) return 1;

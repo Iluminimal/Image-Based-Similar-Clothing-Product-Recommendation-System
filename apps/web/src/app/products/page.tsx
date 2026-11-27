@@ -19,7 +19,7 @@ export async function generateMetadata({ searchParams }: PageProps<"/products">)
     description: t("listingDescription", { title: title.toLowerCase() }),
     alternates: { canonical },
     openGraph: { title, url: canonical },
-    // Чөлөөт текстийн хайлт болон гүн хуудсууд хайлтын индексэд ямар ч үнэ цэнэ нэмэхгүй.
+    // Текстээр хайсан болон цааш гүн орсон хуудсуудыг хайлтын системд индекслүүлэх хэрэггүй.
     robots: query.q || query.page > 1 ? { index: false, follow: true } : undefined,
   };
 }

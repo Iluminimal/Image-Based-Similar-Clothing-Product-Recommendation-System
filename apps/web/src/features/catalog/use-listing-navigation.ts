@@ -5,7 +5,7 @@ import { useEffect, useTransition } from "react";
 import { toHref, type ListingQuery } from "./filters";
 import { useListingPending } from "./listing-pending";
 
-/** URL бол цорын ганц үнэний эх: өөрчлөлт бүр хуудас дахин тохируулсан `replace` navigation. */
+/** Жагсаалтын төлөвийг зөвхөн URL тодорхойлно: өөрчлөлт бүр хуудсыг эхний хуудас болгож `replace` хийнэ. */
 export function useListingNavigation(query: ListingQuery) {
   const router = useRouter();
   const pathname = usePathname();

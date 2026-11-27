@@ -17,7 +17,7 @@ const MobileFiltersSheet = dynamic(() => import("./mobile-filters-sheet").then((
   ssr: false,
 });
 
-// Утас sidebar харуулдаггүй тул хэзээ ч татахгүй.
+// Утсан дээр sidebar харагддаггүй тул түүнийг хэзээ ч татахгүй.
 const WideSidebar = dynamic(() => import("./sidebar-filters").then((m) => m.SidebarFilters), { ssr: false });
 
 const DESKTOP = "(min-width: 64rem)";

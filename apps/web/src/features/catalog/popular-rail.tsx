@@ -4,8 +4,8 @@ import { emptyFilters } from "./filters";
 import { ProductRail } from "./product-rail";
 
 /**
- * "Хамгийн их зарагдсан": хоосон үр дүн, хоосон сагсанд зам тасрахгүйн тулд харуулна. API унасан бол
- * юу ч харуулахгүй (энэ нь зөвхөн нэмэлт санал).
+ * "Хамгийн их зарагдсан": хоосон үр дүн, хоосон сагсны үед үргэлжлүүлэн үзэх боломж өгөхөөр харуулна. API
+ * унасан бол юу ч харуулахгүй (зөвхөн нэмэлт санал).
  */
 export async function PopularRail({ count = 8 }: { count?: number }) {
   const [page, t] = await Promise.all([

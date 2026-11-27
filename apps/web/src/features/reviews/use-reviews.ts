@@ -17,9 +17,8 @@ import {
 } from "./reviews-api";
 
 /**
- * Бүтээгдэхүүний сэтгэгдэл. Server-ээс render хийснийг эхний хуудсыг харж буй зочинд тэр хэвээр нь
- * ашиглана; нэвтэрсэн хэрэглэгч өөрийн хуулбарыг татах бөгөөд тэр нь сэтгэгдэл бичиж болох
- * эсэхийг хэлнэ.
+ * Барааны сэтгэгдэл. Зочин эхний хуудсыг үзэх үед server-ээс render хийснийг шууд ашиглана. Нэвтэрсэн
+ * хэрэглэгч өөрийн хариуг татна: тэр нь сэтгэгдэл бичиж болох эсэхийг хэлнэ.
  */
 export function useReviews(productId: number, sort: ReviewSort, page: number, initial: ReviewPage | null) {
   const status = useAuth((state) => state.status);
@@ -28,21 +27,18 @@ export function useReviews(productId: number, sort: ReviewSort, page: number, in
   return useQuery({
     queryKey: [...queryKeys.reviews(productId), { sort, page, signedIn }],
     queryFn: () => fetchReviews(productId, sort, page),
-    // Session мэдэгдэхийг хүлээнэ: нэвтэрсэн хэрэглэгчийн хариу зочнийхоос өөр.
+    // Session тодортол хүлээнэ: нэвтэрсэн хэрэглэгчийн хариу зочныхоос өөр.
     enabled: status !== "unknown",
     initialData: !signedIn && isFirstPage && initial ? initial : undefined,
-    // Server-ийн хуулбар нь эхний paint болон crawler-д зориулагдсан (хуудасны бусад хэсэг шиг нэг
-    // минут хүртэл хуучин байж болно): browser шууд шинийг татна.
+    // Server-ийн хуулбар нь анхны зурагдалт болон хайлтын системд зориулагдсан (хуудасны бусад хэсэг шиг нэг
+    // минут хүртэл хуучин байж болно). Browser тэр даруй шинийг татна.
     initialDataUpdatedAt: 0,
     staleTime: 30_000,
     placeholderData: (previous) => previous,
   });
 }
 
-/**
- * Сэтгэгдлийн өөрчлөлт бүтээгдэхүүний дундажийг бас өөрчилдөг тул cache-д байгаа бүх харагдацыг
- * дахин татна.
- */
+/** Сэтгэгдэл өөрчлөгдөхөд барааны дундаж үнэлгээ ч өөрчлөгддөг тул cache дахь бүх харагдацыг дахин татна. */
 function useReviewMutation<V, R>(productId: number, mutationFn: (variables: V) => Promise<R>) {
   const queryClient = useQueryClient();
   const userMessage = useUserMessage();

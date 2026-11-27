@@ -13,8 +13,8 @@ import { isStaffRole, staffHome, type Role } from "@/features/auth/roles";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
- * Admin дэлгэцийг ажилтнаас (админ, агуулахын ажилтан) бусдад хаана. Энэ нь зочинд ойлгомжтой
- * мессеж үзүүлэхийн тулд (хүсэлт алдаа өгөхийн оронд); бодитоор татгалздаг нь API.
+ * Админ дэлгэцийг ажилтнаас (админ, агуулахын ажилтан) бусдад хаана. Энэ нь зочинд алдааны оронд ойлгомжтой
+ * мессеж харуулах зорилготой. Бодит хамгаалалтыг API хийдэг.
  */
 export function AdminGate({ children }: { children: ReactNode }) {
   const t = useTranslations("admin.gate");
@@ -45,8 +45,8 @@ export function AdminGate({ children }: { children: ReactNode }) {
 }
 
 /**
- * Сервер хоёр шатлалт нэвтрэлт шаарддаг бөгөөд ажилтан тохируулаагүй бол back-office-ийн оронд
- * тохируулах дэлгэц (API ч мөн 403 өгнө).
+ * Сервер 2FA шаарддаг ч ажилтан тохируулаагүй бол back-office-ийн оронд тохируулах дэлгэц гарна (API ч 403
+ * өгнө).
  */
 function TwoFactorRequirement({ children }: { children: ReactNode }) {
   const t = useTranslations("account.twoFactor");

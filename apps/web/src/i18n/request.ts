@@ -8,8 +8,8 @@ async function resolveLocale(): Promise<Locale> {
   return isLocale(saved) ? saved : DEFAULT_LOCALE;
 }
 
-// `getTranslations({ locale })` шиг тодорхой хэл дамжуулсан бол (жишээ нь хэл санал болгох banner
-// санал болгож буй хэлээр ярина) тэр хэлийг ашиглана.
+// `getTranslations({ locale })` шиг хэл тодорхой заасан бол (жишээ нь санал болгож буй хэлээр бичсэн хэл
+// солих banner) тэр хэлийг ашиглана.
 export default getRequestConfig(async ({ locale: requested }) => {
   const locale = isLocale(requested) ? requested : await resolveLocale();
   const messages = await import(`../../messages/${locale}`).then((module) => module.default);

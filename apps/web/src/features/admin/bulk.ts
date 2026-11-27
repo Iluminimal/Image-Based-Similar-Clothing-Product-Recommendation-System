@@ -1,6 +1,6 @@
 /**
- * `items` бүрт `fn`-ийг нэгэн зэрэг хамгийн ихдээ `limit` ширхгээр ажиллуулна (олон бараа нэг дор
- * хасахад API-г хэт ачаалахгүйн тулд). Нэг нь унасан ч бусад үргэлжилнэ: үр дүн бүрийг дарааллаар нь
+ * `items` бүр дээр `fn`-ийг ажиллуулна, нэг зэрэг хамгийн ихдээ `limit` ширхэг (олон барааг нэг дор хасахад
+ * API-г хэт ачаалахгүйн тулд). Нэг нь амжилтгүй болсон ч бусад үргэлжилнэ. Бүх үр дүнг анхны дарааллаар нь
  * буцаана.
  */
 export async function runLimited<T, R>(
@@ -24,7 +24,7 @@ export async function runLimited<T, R>(
   return results;
 }
 
-/** `runLimited`-ийн үр дүнгээс амжилттай, амжилтгүй тоо. */
+/** `runLimited`-ийн үр дүнгээс амжилттай болон амжилтгүй болсны тоог гаргана. */
 export function tally(results: readonly PromiseSettledResult<unknown>[]) {
   const done = results.filter((result) => result.status === "fulfilled").length;
   return { done, failed: results.length - done };

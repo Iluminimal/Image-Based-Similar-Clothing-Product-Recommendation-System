@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { firstImage, useImageInput, usePasteImage } from "./use-image-input";
 
-// Камерын dialog (мөн ард нь байх dialog library) хүн хүсэх үед л хэрэгтэй.
+// Камерын dialog (болон түүний ашигладаг dialog library) хэрэглэгч хүсэх үед л хэрэгтэй.
 const CameraDialog = dynamic(() => import("./camera-dialog").then((module) => module.CameraDialog));
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif";
@@ -16,13 +16,13 @@ const ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.hei
 type Props = {
   /** Зураг хүлээн зөвшөөрөгдсөний дараа дуудна (нүүр хуудас үүгээр /search руу шилжинэ). */
   onPicked?: () => void;
-  /** Mount хийгдсэн үед paste-ыг бас авна (өөр listener байхгүй газар хэрэглэнэ). */
+  /** Mount хийгдсэн үедээ paste-ийг ч хүлээн авна (өөр listener байхгүй газарт хэрэглэнэ). */
   listenForPaste?: boolean;
   className?: string;
   size?: "default" | "hero" | "compact";
 };
 
-/** Утас, tablet дээр true: OS-ийн камерын sheet (`capture`) нь хуудас доторх видеооноос дээр. */
+/** Утас, tablet дээр true: хуудас доторх видеоноос үйлдлийн системийн камер (`capture`) дээр. */
 function prefersNativeCamera(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 }

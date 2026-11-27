@@ -1,4 +1,4 @@
-/** Dataset-ийн `base_colour` утгуудын өнгөний жишээ. Үл мэдэгдэх нэр саарал өнгө рүү шилжинэ. */
+/** Dataset-ийн `base_colour` утга бүрийн харуулах өнгө. Танихгүй нэрийг саарлаар харуулна. */
 const SWATCHES: Record<string, string> = {
   Beige: "#e0cda9",
   Black: "#111111",

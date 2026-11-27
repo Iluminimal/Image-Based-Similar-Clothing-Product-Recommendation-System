@@ -11,8 +11,8 @@ export function useTwoFactorStatus(userId: number | undefined) {
     queryKey: [...twoFactorKey, userId],
     queryFn: () => call(browserApi().GET("/api/v1/auth/2fa")),
     enabled: userId !== undefined,
-    // Зөвхөн `TwoFactorSetup` "Хадгаллаа" дээр шинэчилнэ. Цонх руу буцах, сүлжээ сэргэх үед өөрөө
-    // дахин ачаалбал "идэвхтэй" болж, хараахан хуулж амжаагүй нөөц кодууд дэлгэцээс алга болно.
+    // Үүнийг зөвхөн `TwoFactorSetup` дээр "Хадгаллаа" дарахад шинэчилнэ. Цонх руу буцах эсвэл сүлжээ сэргэхэд
+    // өөрөө дахин ачаалбал төлөв "идэвхтэй" болж, хуулж амжаагүй нөөц кодууд дэлгэцээс алга болно.
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

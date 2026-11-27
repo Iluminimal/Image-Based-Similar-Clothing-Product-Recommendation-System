@@ -1,2 +1,2 @@
-// Тусдаа module, ингэснээр `LazyMotion` зөвхөн ямар нэг зүйл animation хийх үед л татна.
+// Тусдаа module болгосон тул `LazyMotion` үүнийг зөвхөн animation хийх үед татна.
 export { domAnimation as default } from "motion/react";

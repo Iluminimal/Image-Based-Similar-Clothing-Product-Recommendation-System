@@ -26,7 +26,7 @@ export function QuantityStepper({ value, max, name, onChange, className }: Props
         <Minus className="size-4" />
       </button>
       <span className="min-w-6 overflow-hidden text-center type-caption font-medium tabular-nums" aria-live="polite">
-        {/* Шинэ key нь орох animation-ыг дахин тоглуулна: шинэ тоо байраа олж дээшилнэ. */}
+        {/* Шинэ key өгснөөр орох animation дахин ажиллана: шинэ тоо доороос байрандаа орно. */}
         <span key={value} className="animate-in fade-in slide-in-from-bottom-1 block duration-300">
           {value}
         </span>

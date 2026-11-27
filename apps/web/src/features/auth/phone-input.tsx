@@ -6,7 +6,7 @@ import type { ComponentProps } from "react";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 
-/** Утасны талбар бүр эхэлдэг улс. */
+/** Утасны талбарт анхнаасаа сонгогдсон улс. */
 export const DEFAULT_REGION: CountryCode = "MN";
 
 /**
@@ -32,7 +32,7 @@ export function toE164(text: string, region: CountryCode): string | null {
 
 export type PhoneValue = { text: string; region: CountryCode };
 
-/** Улс сонгогч (сонголт бүрд тугны, кодын, утасны код). */
+/** Улс сонгогч: сонголт бүрд туг, улсын код, утасны код харагдана. */
 export function CountrySelect({
   value,
   onChange,
@@ -57,9 +57,7 @@ export function CountrySelect({
   );
 }
 
-/**
- * Утасны талбарт бичсэн текстээс юу гарах: бичихийн хэрээр форматлагдаж, "+" дугаар улсаа сонгоно.
- */
+/** Утасны талбарт бичсэнийг боловсруулна: бичих тусам форматлаж, "+"-аар эхэлсэн дугаараас улсыг сонгоно. */
 export function typePhone(raw: string, region: CountryCode): PhoneValue {
   const typed = new AsYouType(region);
   const text = typed.input(raw);

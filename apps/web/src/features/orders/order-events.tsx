@@ -8,7 +8,7 @@ import type { OrdersTranslator } from "./orders-translator";
 export type TimelineEvent = { type: string; at: string; data: Record<string, unknown> };
 
 const CANCEL_REASONS = ["expired", "admin", "customer", "amount_mismatch", "payment_canceled", "replaced", "payment_setup_failed"] as const;
-/** Системийн бичсэн буцаалтын шалтгааны кодууд (админ гараар бичсэн нь тэр чигээрээ). */
+/** Системийн бичсэн буцаалтын шалтгааны кодууд (админы гараар бичсэн шалтгааныг хэвээр нь харуулна). */
 const REFUND_CODES = ["order_cancelled", "amount_mismatch", "cancel_request"] as const;
 const REQUEST_REASONS = [
   "changed_mind",
@@ -33,7 +33,7 @@ function oneOf<T extends string>(list: readonly T[], value: string): value is T 
 const text = (value: unknown) => (typeof value === "string" && value ? value : undefined);
 const cents = (value: unknown) => (typeof value === "number" ? value : undefined);
 
-/** Үйл явдал юу гэж хэлэх вэ, үгээр. Өгөгдөлд байхгүйг (хэрэглэгчид цөөн мэдээлэл ирдэг) орхино. */
+/** Үйл явдлыг үгээр тайлбарлана. Өгөгдөлд байхгүй зүйлийг (хэрэглэгчид цөөн мэдээлэл ирдэг) орхино. */
 export function describeEvent(
   event: TimelineEvent,
   currency: string,
@@ -82,7 +82,7 @@ export function describeEvent(
     case "cancel_requested":
     case "return_requested": {
       title = t(event.type === "cancel_requested" ? "events.cancelRequested" : "events.returnRequested");
-      // Шалтгаан админы түүхэнд л ирнэ.
+      // Шалтгаан зөвхөн админы харах түүхэнд ирдэг.
       const reason = text(data.reason);
       if (reason && oneOf(REQUEST_REASONS, reason)) lines.push(t("events.requestReason", { reason: t(`requests.reasons.${reason}`) }));
       break;

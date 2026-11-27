@@ -15,7 +15,7 @@ const VOCAB_KIND = {
   usage: "usage",
 } as const satisfies Record<MultiKey, string>;
 
-/** Устгах боломжтой chip-үүд энгийн холбоос: client JS хэрэггүй, chip бүр тэр утгагүй URL. */
+/** Хасаж болох chip-үүд энгийн холбоос (client JS хэрэггүй): chip бүр тэр шүүлтүүргүй URL руу заана. */
 export function ActiveFilters({ query, path = "/products" }: { query: ListingQuery; path?: string }) {
   const t = useTranslations("catalog");
   const format = useFormat();

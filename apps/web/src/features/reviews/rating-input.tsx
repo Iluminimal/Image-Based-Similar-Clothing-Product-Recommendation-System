@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 const STARS = [1, 2, 3, 4, 5] as const;
 
 /**
- * 1-5 од сонгоно. Radio button-уудын бүлэг тул сумны товч, label, screen reader бусад сонголттой
- * адил ажиллана; од бол radio-ны харагдах байдал.
+ * 1-5 од сонгоно. Radio button-уудын бүлэг тул сумны товч, label, screen reader бусад radio-той адил
+ * ажиллана. Од зөвхөн radio-ны харагдац.
  */
 export function RatingInput({
   value,

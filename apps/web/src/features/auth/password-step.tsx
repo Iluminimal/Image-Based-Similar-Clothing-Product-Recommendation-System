@@ -30,7 +30,7 @@ export function PasswordStep({
   onUseCode: () => void;
   codeBusy: boolean;
   codeProblem: string | null;
-  /** Нэвтэрсний дараа очих газар: нууц үг сэргээх хуудсаар дамжиж мөн хадгалагдана. */
+  /** Нэвтэрсний дараа очих хуудас: нууц үг сэргээх хуудсаар дамжсан ч хадгалагдана. */
   next?: string;
 }) {
   const t = useTranslations("auth.password");
@@ -58,8 +58,8 @@ export function PasswordStep({
       }
       setProblem(
         error instanceof ApiError && error.is("invalidCredentials")
-          ? // Имэйл бүрт ижил үг тул хэнд бүртгэл байгааг ил болгохгүй. Мөн Google эсвэл
-            // кодоор бүртгүүлсэн, нууц үггүй хүмүүст гарах замыг өгнө.
+          ? // Бүх имэйлд ижил бичвэр тул хэн бүртгэлтэйг илчлэхгүй. Google эсвэл
+            // кодоор бүртгүүлсэн, нууц үггүй хүмүүст ч гарц өгнө.
             t("noPassword", { error: userMessage(error) })
           : userMessage(error),
       );

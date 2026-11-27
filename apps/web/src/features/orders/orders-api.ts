@@ -35,6 +35,6 @@ export const cancelOrder = (number: string) =>
 export const fetchOrder = (number: string) =>
   call(browserApi().GET("/api/v1/orders/{number}", { params: { path: { number } } }));
 
-/** Өмнөх захиалгын бараануудыг сагсанд буцаана (нөөцөөр хязгаарлагдсан): нэмэгдээгүйг шалтгаантай нь буцаана. */
+/** Өмнөх захиалгын бараануудыг сагсанд нэмнэ (нөөцөөс хэтрэхгүй). Нэмэгдээгүйг шалтгаантай нь буцаана. */
 export const reorderOrder = (number: string) =>
   call(browserApi().POST("/api/v1/orders/{number}/reorder", { params: { path: { number } } }));

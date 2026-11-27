@@ -8,14 +8,13 @@ import { buildCsp, cspHeaderName, newNonce, resolveCspMode } from "@/lib/securit
 const PROTECTED = /^\/(account|checkout|admin)(\/|$)/;
 
 /**
- * Хоёр ажил:
+ * Хоёр ажил хийнэ:
  *
- * 1. Нэвтэрсэн байхыг шаарддаг хуудсуудад найдвартай бус хаалт: session marker байхгүй бол хуудас
- *    байхгүй. Энэ нь тав тухын зүйл (хоосон account хуудас анивчихгүй), аюулгүй байдал биш: API
+ * 1. Нэвтрэх шаардлагатай хуудсанд урьдчилсан хаалт: session тэмдэг байхгүй бол хуудсыг харуулахгүй. Энэ нь
+ *    зөвхөн ая тухтай байлгах (хоосон account хуудас түр харагдахгүй), аюулгүй байдлын хамгаалалт биш: API
  *    дуудлага бүрийг өөрөө шалгадаг.
- * 2. Хуудас бүрт nonce-той Content-Security-Policy. Nonce-ийг request header-ээр (`x-nonce`, мөн
- *    CSP header өөрөө) дамжуулж, Next өөрийн script-үүдэд, layout өөрийн inline script-үүдэд
- *    хэрэглэнэ.
+ * 2. Хуудас бүрд nonce-той Content-Security-Policy тавина. Nonce-ийг request header-ээр (`x-nonce` болон CSP
+ *    header өөрөө) дамжуулж, Next өөрийн script-д, layout өөрийн inline script-д хэрэглэнэ.
  */
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

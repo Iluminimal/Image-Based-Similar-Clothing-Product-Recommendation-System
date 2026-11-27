@@ -9,8 +9,8 @@ import { useFormat } from "@/i18n/use-format";
 import { queryKeys } from "@/lib/query-keys";
 
 /**
- * Үнийн доорх нэг мөр: "Энгийн хүргэлт · 2-3 хоног, 50,000₮-өөс дээш үнэгүй". `DeliveryInfo`-тай ижил
- * endpoint (cache хуваалцдаг); ачаалагдтал эсвэл унавал юу ч харуулахгүй.
+ * Үнийн доорх нэг мөр: "Энгийн хүргэлт · 2-3 хоног, 50,000₮-өөс дээш үнэгүй". `DeliveryInfo`-той ижил
+ * endpoint ашиглана (cache хуваалцана). Ачаалж дуустал эсвэл алдаа гарвал юу ч харуулахгүй.
  */
 export function DeliveryEstimate() {
   const t = useTranslations("catalog.delivery");

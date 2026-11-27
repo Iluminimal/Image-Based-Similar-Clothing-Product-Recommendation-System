@@ -55,15 +55,15 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
           as="p"
           title={t("empty")}
           description={t("emptyWait")}
-          // apple.com-ын flyout-ын доорх хоосон Bag нь төвлөрсөн зураг биш, зүүн тийш эгнээтэй
-          // гарчиг ба нэг мөр.
+          // apple.com-ийн flyout шиг хоосон Bag голд нь зурагтай биш: зүүн тийш эгнүүлсэн гарчиг, нэг мөр
+          // бичвэр.
           className="flex-1 pb-16 md:flex-none md:items-start md:px-0 md:py-0 md:pb-0 md:text-left md:[&>div:last-child]:justify-start md:[&>span]:hidden md:[&_.type-body]:type-fine"
         >
           <Button asChild variant="bordered" onClick={onNavigate}>
             <Link href="/products">{t("continueShopping")}</Link>
           </Button>
         </EmptyState>
-        {/* Сүүлийн мөрийг хасахад cart хоосон болно: буцах зам энд байна. */}
+        {/* Сүүлийн мөрийг хасахад сагс хоосорно: буцаах зам энд байна. */}
         <div className="pb-4 empty:hidden">
           <UndoBar />
         </div>

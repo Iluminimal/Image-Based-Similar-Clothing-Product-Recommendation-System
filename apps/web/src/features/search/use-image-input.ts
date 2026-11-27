@@ -5,10 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ImageInputError, normalizeImage } from "./normalize-image";
 import { useSearchStore } from "./search-store";
 
-/**
- * Ямар ч эх сурвалжаас (сонгогч, drop, paste, камер) зураг хүлээн авч, normalize хийгээд store-д
- * өгнө.
- */
+/** Ямар ч аргаар (сонгогч, drop, paste, камер) ирсэн зургийг normalize хийгээд store-д өгнө. */
 export function useImageInput() {
   const t = useTranslations("search.imageErrors");
   const setImage = useSearchStore((s) => s.setImage);
@@ -44,7 +41,7 @@ export function firstImage(files: FileList | File[] | null | undefined): File | 
   return null;
 }
 
-/** Хуудасны хаана ч зураг (screenshot, хуулсан зураг) paste хийнэ. Текст paste-д хүрэхгүй. */
+/** Хуудсан дээр хаана ч зураг (screenshot, хуулсан зураг) paste хийвэл авна. Бичвэр paste хийхэд саад болохгүй. */
 export function usePasteImage(onImage: (file: File) => void, enabled = true) {
   useEffect(() => {
     if (!enabled) return;

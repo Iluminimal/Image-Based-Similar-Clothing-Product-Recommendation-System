@@ -1,8 +1,8 @@
 /**
- * Сагсанд нэмэх үед барааны зураг bag товч руу нисэж жижгэрнэ. Web Animations API (`transform`,
- * `opacity`: compositor), нэг түр `<img>` хуулбар, дуусмагц устна. Bag товч (`[data-cart-target]`),
- * эх зураг, animation байхгүй, эсвэл хөдөлгөөн хорьсон үед юу ч хийхгүй: үйлдэл өөрөө
- * (сагсанд нэмэгдэх) хэзээ ч үүнээс хамаарахгүй.
+ * Сагсанд нэмэхэд барааны зураг жижгэрсээр bag товч руу нисэж очно. Зургийн түр `<img>` хуулбарыг Web
+ * Animations API-аар (`transform`, `opacity`: compositor) хөдөлгөөд, дуусмагц устгана. Bag товч
+ * (`[data-cart-target]`), эх зураг эсвэл animation дэмжлэг байхгүй, эсвэл хөдөлгөөнийг хязгаарласан үед юу ч
+ * хийхгүй: сагсанд нэмэх үйлдэл үүнээс хэзээ ч хамаарахгүй.
  */
 export function flyToBag(source: Element | null | undefined): void {
   if (typeof window === "undefined" || !(source instanceof HTMLImageElement)) return;

@@ -35,8 +35,7 @@ export function CartView() {
   }
   if (cart.lines.length === 0) {
     return (
-      // Ачаалах skeleton-той ижил өндөр (8rem-ийн 3 мөр ба зайнууд), ингэснээр доорх хуудас
-      // үсрэхгүй.
+      // Ачаалах skeleton-той ижил өндөртэй (8rem-ийн 3 мөр, зайны хамт): ингэснээр доорх хуудас үсрэхгүй.
       <div>
         <EmptyState
           icon={ShoppingBag}

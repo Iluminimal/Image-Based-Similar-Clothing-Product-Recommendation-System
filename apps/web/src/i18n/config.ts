@@ -1,7 +1,8 @@
 export const LOCALES = ["en", "mn"] as const;
 export type Locale = (typeof LOCALES)[number];
 
-// Монгол эхэнд: cookie-гүй бүх зочин монголоор харна (хөтчийн хэлийг тоохгүй); англи хэл нь сольсоор.
+// Монгол эхэнд: cookie-гүй бүх зочин сайтыг монголоор харна (browser-ийн хэлийг тооцохгүй). Англи руу сольж
+// болно.
 export const DEFAULT_LOCALE: Locale = "mn";
 export const LOCALE_COOKIE = "NEXT_LOCALE";
 export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
@@ -19,12 +20,12 @@ export const INTL_LOCALE: Record<Locale, string> = { en: "en-US", mn: "mn-MN" };
 /** Open Graph-ийн `og:locale` (`language_TERRITORY`). */
 export const OG_LOCALE: Record<Locale, string> = { en: "en_US", mn: "mn_MN" };
 
-/** Хэл бүр өөрийн хэлээрээ нэрлэгдэнэ: хүн ойлгохгүй хэл дээрээс өөрийнхөө хэлийг олж чадах ёстой. */
+/** Хэл бүрийг өөрийнх нь хэлээр нэрлэнэ: ойлгохгүй хэл дээр байсан ч хүн өөрийн хэлийг олж чадах ёстой. */
 export const NATIVE_NAME: Record<Locale, string> = { en: "English", mn: "Монгол" };
 
 /**
- * `Accept-Language` толгойгоос манай дэмждэг хэлнүүдийг q-ийн дарааллаар (тэнцүү бол толгой дахь
- * дарааллаар), давхардалгүй буцаана. `mn`, `mn-MN`, `mn-Cyrl` бүгд `mn`; q=0 нь татгалзсан хэл.
+ * `Accept-Language` header-ээс манай дэмждэг хэлүүдийг q-ийн дарааллаар (тэнцүү бол header дэх дарааллаар),
+ * давхардалгүй буцаана. `mn`, `mn-MN`, `mn-Cyrl` бүгд `mn`. q=0 бол тэр хэлээс татгалзсан гэсэн үг.
  */
 export function rankLocales(header: string | null | undefined): Locale[] {
   if (!header) return [];
@@ -50,9 +51,9 @@ export function rankLocales(header: string | null | undefined): Locale[] {
 const COUNTRY_LOCALE: Partial<Record<string, Locale>> = { MN: "mn" };
 
 /**
- * Apple-ийн "өөр хэл/бүс сонгох уу?" banner-ийн шийдвэр. Зочин хэл сонгоогүй (cookie байхгүй) үед л
- * дуудагдана. Эхлээд байршил (CDN-ийн улсын толгой), дараа нь хөтчийн хэлний жагсаалтаас одоогийнхоос
- * өөр дэмждэг хэлийг санал болгоно. Санал болгох зүйлгүй бол `null`.
+ * Apple-ийн "өөр хэл/бүс сонгох уу?" banner харуулах эсэхийг шийднэ. Зөвхөн хэлээ сонгоогүй (cookie байхгүй)
+ * зочинд дуудна. Эхлээд байршил (CDN-ийн улсын header), дараа нь browser-ийн хэлний жагсаалтаас одоогийнхоос
+ * өөр, дэмждэг хэлийг санал болгоно. Санал болгох хэл байхгүй бол `null`.
  */
 export function suggestLocale({
   current,

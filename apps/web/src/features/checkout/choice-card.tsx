@@ -11,8 +11,8 @@ type Props = {
 };
 
 /**
- * Сонгох боломжтой карт хэлбэртэй radio (хаяг, хүргэлтийн төрөл). Native radio keyboard-ийн
- * ажиллагааг хадгална.
+ * Сонгож болох карт хэлбэртэй radio (хаяг, хүргэлтийн төрөл). Browser-ийн өөрийн radio тул keyboard-оор
+ * ажиллах боломж хэвээр.
  */
 export function ChoiceCard({ name, value, checked, onChange, children, aside }: Props) {
   return (

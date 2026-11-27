@@ -9,8 +9,8 @@ const key = (action: string) => action.replace(".", "_");
 const str = (value: unknown) => (typeof value === "string" ? value : "");
 
 /**
- * Журналын мөрийг хүнд уншигдах текст, объект руу очих холбоос болгоно. Dashboard, агуулахын
- * самбар, журналын хуудас гурвуулаа адил хэлээр бичнэ.
+ * Журналын мөрийг уншихад ойлгомжтой бичвэр, объект руу очих холбоос болгоно. Dashboard, агуулахын самбар,
+ * журналын хуудас гурав ижил хэлбэрээр бичнэ.
  */
 export function useAuditText() {
   const t = useTranslations("admin.audit");

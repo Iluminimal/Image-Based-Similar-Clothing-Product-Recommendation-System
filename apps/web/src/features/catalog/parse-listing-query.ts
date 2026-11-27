@@ -7,9 +7,8 @@ import {
   type RawParams,
 } from "./filters";
 
-// `filters.ts`-ээс тусгаарласан: тэр module-ийг browser код (search, filter chip) import хийдэг тул
-// schema library-г хуудас бүрд татуулах ёсгүй. URL-ийг зөвхөн server-т render хийдэг жагсаалт parse
-// хийнэ.
+// `filters.ts`-ээс тусгаарласан: тэр модулийг browser-ийн код (хайлт, шүүлтүүрийн chip) import хийдэг тул
+// schema library хуудас бүрд татагдах ёсгүй. URL-ийг зөвхөн server дээр render хийдэг жагсаалт уншина.
 
 const multi = z
   .union([z.string(), z.array(z.string())])
@@ -48,8 +47,8 @@ const schema = z.object({
 });
 
 /**
- * Итгэмжгүй URL param-ыг хүчинтэй жагсаалтын query болгон parse хийнэ. Буруу зүйлийг хасна (хэзээ ч
- * throw хийхгүй), ингэснээр гараар зассан URL хуудсыг эвдэхгүй, API 422 үүсгэхгүй.
+ * Итгэж болохгүй URL параметрүүдийг хүчинтэй жагсаалтын query болгоно. Буруу утгыг хасна (хэзээ ч алдаа
+ * шидэхгүй). Ингэснээр гараар зассан URL хуудсыг эвдэхгүй, API 422 өгөхгүй.
  */
 export function parseListingQuery(params: RawParams): ListingQuery {
   const parsed = schema.parse(params);

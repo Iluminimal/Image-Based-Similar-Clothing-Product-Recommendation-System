@@ -25,7 +25,7 @@ function saveLivePreference(on: boolean) {
   try {
     window.localStorage.setItem(LIVE_KEY, on ? "on" : "off");
   } catch {
-    // Хадгалагдахгүй байж болно (private window): зүгээр.
+    // Хадгалж чадахгүй байж болно (private window): асуудалгүй.
   }
 }
 
@@ -53,7 +53,7 @@ function CameraPanel({ onCapture, onClose }: { onCapture: (file: File) => void; 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Видеоны жинхэнэ харьцаа: preview-ийг тайрахгүй байхад л хайрцгууд видео дээр яг давхцана.
+  // Видеоны жинхэнэ харьцаа: preview-ийг тайрахгүй үед л хайрцгууд видеотой яг давхцана.
   const [aspect, setAspect] = useState(4 / 3);
   const [highlight, setHighlight] = useState(readLivePreference);
   const live = useLiveDetection(videoRef, { enabled: ready && highlight });
@@ -114,11 +114,11 @@ function CameraPanel({ onCapture, onClose }: { onCapture: (file: File) => void; 
     <>
       <div
         className="bg-muted relative mx-auto overflow-hidden rounded-2xl"
-        // Босоо кадр (утас) дэлгэцээс хэтрэхгүй: өндөр нь 70vh-аас хэтрэхгүйгээр өргөнийг багасгана.
+        // Босоо кадр (утас) дэлгэцээс хэтрэхгүй: өндөр 70vh-аас хэтрэхгүй байхаар өргөнийг багасгана.
         style={{ aspectRatio: String(aspect), width: `min(100%, ${70 * aspect}vh)` }}
       >
         <video ref={videoRef} playsInline muted className="size-full object-cover" aria-label={t("preview")} />
-        {/* Хувцас бүрийн цэгэн хүрээ: зөвхөн заагч (дарагдахгүй), "Зураг авах" бүтэн кадрыг авна. */}
+        {/* Хувцас бүрийн цэгэн хүрээ: зөвхөн заана (дарж болохгүй). "Зураг авах" бүтэн кадрыг авна. */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
           {live.regions.map(({ id, box }) => (
             <div
@@ -179,7 +179,7 @@ function CameraPanel({ onCapture, onClose }: { onCapture: (file: File) => void; 
   );
 }
 
-/** getUserMedia-аар desktop камераар зураг авна. Dialog хаагдах бүрд stream зогсоно. */
+/** getUserMedia-аар компьютерын камераас зураг авна. Dialog хаагдах бүрд камерын stream зогсоно. */
 export function CameraDialog({ open, onOpenChange, onCapture }: Props) {
   const t = useTranslations("search.camera");
   return (

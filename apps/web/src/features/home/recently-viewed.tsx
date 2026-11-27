@@ -11,7 +11,7 @@ import {
 import { ProductRail } from "@/features/catalog/product-rail";
 import { SectionHeading } from "./section-heading";
 
-/** Зочны сүүлд үзсэн зүйл, түүний төхөөрөмжид хадгалагдсан. Анх удаа ирсэн үед юу ч байхгүй. */
+/** Зочны сүүлд үзсэн бараанууд, зочны төхөөрөмжид хадгалагдсан. Анх орсон хүнд юу ч байхгүй. */
 export function RecentlyViewed() {
   const t = useTranslations("home");
   const items = useSyncExternalStore(subscribeToRecentlyViewed, readRecentlyViewed, recentlyViewedOnServer);

@@ -55,7 +55,7 @@ export function ReviewForm({
       onDone?.();
     };
     if (review) {
-      // `null` нь хэрэглэгчийн устгасан гарчиг эсвэл текстийг цэвэрлэнэ.
+      // `null` илгээвэл хэрэглэгчийн устгасан гарчиг эсвэл бичвэр цэвэрлэгдэнэ.
       update.mutate(
         { id: review.id, changes: { rating: values.rating, title: values.title || null, body: values.body || null } },
         { onSuccess: done },

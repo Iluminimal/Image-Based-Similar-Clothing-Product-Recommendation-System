@@ -18,7 +18,10 @@ import { cn } from "@/lib/utils";
 type Key = "dashboard" | "orders" | "products" | "customers" | "reviews" | "activity";
 type StaffRole = "admin" | "warehouse";
 
-/** `roles`: хэсгийг аль role харах вэ. Админ бараагаа зөвхөн харна, агуулахын ажилтан хэрэглэгч, статистик харахгүй. */
+/**
+ * `roles`: энэ хэсгийг аль role харах вэ. Админ бараагаа зөвхөн харна, агуулахын ажилтан хэрэглэгч,
+ * статистикийг харахгүй.
+ */
 export const ADMIN_LINKS: readonly {
   href: string;
   key: Key;

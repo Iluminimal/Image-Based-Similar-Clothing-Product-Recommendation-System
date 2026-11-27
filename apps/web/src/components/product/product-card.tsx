@@ -38,8 +38,8 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
         data-tilt
         className="tile press-card focus-visible:ring-ring/50 relative flex h-full flex-col outline-none focus-visible:ring-3"
       >
-        {/* Каталогийн зургууд цагаан дэвсгэртэй: саарал tile дээр үржүүлбэл tile-тэй нийлнэ,
-           Apple-ийн барааны зураг tile дээр байдагтай адил. Харанхуй горимд tile нь цагаан. */}
+        {/* Каталогийн зургийн дэвсгэр цагаан. Саарал tile дээр multiply горимоор тавихад дэвсгэр нь tile-тэй
+            нийлж, Apple-ийн барааны зураг шиг харагдана. Харанхуй горимд tile нь цагаан. */}
         <div data-card-photo className="relative aspect-3/4 overflow-hidden dark:bg-white">
           <ProductImage
             product={product}
@@ -77,7 +77,8 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
       </Link>
       {badge && <div className="pointer-events-none absolute top-3 left-3">{badge}</div>}
       <WishlistButton product={product} className="absolute top-2 right-2" />
-      {/* Зургийн хэмжээтэй (3:4) тунгалаг давхарга: товч зургийн баруун доод буланд, холбоосын гадна. */}
+      {/* Зургийн хэмжээтэй (3:4) тунгалаг давхарга: товчийг зургийн баруун доод буланд, холбоосоос гадуур
+          байрлуулна. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 aspect-3/4">
         <QuickAdd product={product} className="pointer-events-auto absolute right-3 bottom-3" />
       </div>

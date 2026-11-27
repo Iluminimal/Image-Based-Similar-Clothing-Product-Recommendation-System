@@ -8,8 +8,8 @@ import "./globals.css";
 
 const COPY = { en: en.error, mn: mn.error } as const;
 
-// Layout (тэгэхлээр provider ч) унасан тул хэлийг cookie-оос шууд уншина (үгүй бол монгол). Server дээр мөн монгол:
-// hydration-д `useSyncExternalStore` хоёр хувилбарыг зөв тааруулна.
+// Layout унасан тул provider ч байхгүй: хэлийг cookie-оос шууд уншина (байхгүй бол монгол). Server дээр ч
+// монгол гэж үзнэ. `useSyncExternalStore` hydration үед энэ хоёр утгыг зөв зохицуулна.
 function readLocale(): Locale {
   const saved = document.cookie
     .split("; ")

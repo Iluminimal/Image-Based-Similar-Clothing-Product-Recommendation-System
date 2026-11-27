@@ -7,10 +7,9 @@ import { AccountMenu } from "@/features/auth/account-menu";
 import { CartButton } from "@/features/cart/cart-button";
 
 /**
- * Apple-ийн global bar: нарийн, тунгалаг, 44px өндөр, 1024px өргөн; logo, жижиг холбоосууд, хайлт,
- * bag, account жигд тархсан (`justify-content: space-between`, apple.com шиг). Хуудас scroll хийхэд
- * доор нь hairline гарна. Утсан дээр apple.com-ийнхтэй ижил дөрвөн зүйл: logo, хайлт, bag, цэсний
- * товч.
+ * Apple-ийн маягийн global bar: нарийн, тунгалаг, 44px өндөр, 1024px өргөн. Logo, жижиг холбоосууд, хайлт,
+ * bag, account жигд тарсан (`justify-content: space-between`). Хуудсыг scroll хийхэд доор нь нарийн зураас
+ * гарна. Утсан дээр apple.com-ийн адил дөрвөн зүйл: logo, хайлт, bag, цэсний товч.
  */
 export function SiteHeader() {
   return (
@@ -24,9 +23,8 @@ export function SiteHeader() {
           <AngelLogo showName={false} markClassName="size-7" />
         </Link>
         <MegaMenu />
-        {/* Logo, хайлт, bag, цэс: apple.com-ийн утасны bar. Утсан дээр account нь Bag хуудсанд,
-           md-ээс дээш bar-д байна. Md-ээс дээш icon-ууд холбоостой адил мөрийн item тул бүгд
-           жигд тархана, apple.com-ийн bar шиг. */}
+        {/* Logo, хайлт, bag, цэс: apple.com-ийн утасны bar шиг. Утсан дээр account Bag хуудсанд, md-ээс дээш
+            bar дээр байна. md-ээс дээш icon-ууд холбоосуудтай адил мөрийн гишүүн тул бүгд жигд тарна. */}
         <div className="flex items-center md:contents">
           <HeaderSearch />
           <CartButton />

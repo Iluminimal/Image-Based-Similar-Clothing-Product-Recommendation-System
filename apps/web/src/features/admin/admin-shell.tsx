@@ -44,7 +44,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
           collapsed ? "md:w-[4.5rem]" : "md:w-64",
         )}
       >
-        {/* Зүүн захыг nav-ын иконтой нэг шугамд (24px), бүгдийг босоо төвд (baseline биш) тавина. */}
+        {/* Зүүн захыг nav-ын icon-уудтай нэг шугамд (24px) тааруулж, бүгдийг босоо чиглэлд голлуулна
+            (baseline-аар биш). */}
         <div className={cn("flex h-14 items-center px-[1.625rem]", collapsed ? "md:justify-center md:px-0" : "md:pr-3 md:pl-6")}>
           <Link
             href={home}
@@ -59,7 +60,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
               {t(role === "warehouse" ? "brandWarehouse" : "brand")}
             </span>
           </Link>
-          {/* Хоёр төлөвт нэг л товч (keyboard focus хэвээр үлдэнэ): хумигдсан үед лого нуугдаж, байрыг нь авна. */}
+          {/* Хоёр төлөвт нэг ижил товч (keyboard focus алдагдахгүй): хумигдсан үед лого нуугдаж, товч байрыг
+              нь эзэлнэ. */}
           <button
             type="button"
             onClick={toggleCollapsed}

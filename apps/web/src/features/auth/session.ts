@@ -25,8 +25,8 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 let inflight: Promise<boolean> | null = null;
 
 /**
- * Refresh cookie-г шинэ access token-оор солино. Зэрэг дуудагчид нэг хүсэлтийг хуваалцана: refresh
- * token эргэлддэг тул зэрэгцээ хоёр refresh нь хоёр дахийг давтагдсан token мэт харагдуулна.
+ * Refresh cookie-гоор шинэ access token авна. Нэг зэрэг дуудвал бүгд нэг хүсэлтийг хуваалцана. Refresh token
+ * хэрэглэх бүрд солигддог тул хоёр refresh зэрэг явбал хоёр дахь нь ашигласан token-ыг давтсан мэт харагдана.
  */
 export function refreshSession(): Promise<boolean> {
   inflight ??= attemptRefresh().finally(() => {
@@ -52,7 +52,7 @@ async function attemptRefresh(): Promise<boolean> {
     } catch {
       break; // офлайн эсвэл API унасан: "гарсан" гэсэнтэй ижил биш
     }
-    // Өөр tab cookie-г дөнгөж сая эргүүлсэн байж болно; нэг дахин оролдоход шинийг нь авна.
+    // Өөр tab cookie-г дөнгөж сая сольсон байж болно; дахин нэг оролдоход шинийг нь авна.
     if (attempt === 0) await sleep(150);
   }
   useAuth.getState().clear();

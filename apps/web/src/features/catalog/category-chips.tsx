@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export type Chip = { label: string; href: string; count?: number };
 
-/** Шудрах боломжтой холбоосын мөр: /products дээр department, /c/... хуудсанд дараагийн түвшин. */
+/** Хөндлөн гүйлгэдэг холбоосуудын мөр: /products дээр department-ууд, /c/... хуудсанд дараагийн түвшин. */
 export function CategoryChips({ label, items, className }: { label: string; items: Chip[]; className?: string }) {
   const format = useFormat();
   if (items.length === 0) return null;

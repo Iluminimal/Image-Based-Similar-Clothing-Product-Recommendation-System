@@ -12,8 +12,8 @@ export function hasOpenInvoice(order: Order): order is Order & { qpay: NonNullab
 }
 
 /**
- * Хуудас шинэчлэгдсэн ч, банкны апп-аас буцаж ирсэн ч төлбөр хүлээж буй захиалгын QR, тоолуур, цуцлах
- * товч хэвээр байна: төлбөр "алга болохгүй".
+ * Хуудас дахин ачаалсан эсвэл банкны апп-аас буцаж ирсэн ч төлбөр хүлээж буй захиалгын QR, үлдсэн хугацаа,
+ * цуцлах товч хэвээр харагдана: төлбөр "алга болохгүй".
  */
 export function PendingOrderPanel({ order }: { order: Order & { qpay: NonNullable<Order["qpay"]>; charge: NonNullable<Order["charge"]> } }) {
   const queryClient = useQueryClient();

@@ -236,7 +236,7 @@ function DeclineDialog({ number, request, open, onClose }: DialogProps) {
 function ReceiveDialog({ number, request, open, onClose }: DialogProps) {
   const t = useTranslations("admin.requests");
   const receive = useReceiveReturn();
-  // Гэмтэлтэй гэж буцаасан барааг санамсаргүй дахин зарахгүй: өгөгдмөлөөр үлдэгдэлд нэмэхгүй.
+  // Гэмтэлтэй гэж буцаасан барааг андуурч дахин зарахаас сэргийлж, анхдагчаар үлдэгдэлд нэмэхгүй.
   const [restock, setRestock] = useState(request.reason !== "defective");
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>

@@ -5,8 +5,8 @@ export type NavDepartment = components["schemas"]["NavDepartment"];
 export type NavNode = components["schemas"]["NavNode"];
 
 /**
- * Header дахь department-ууд. Хүсэлтгүйгээр мэдэгдэх тул холбоосууд хуудастайгаа хамт render (мөн
- * crawl) хийгдэнэ; ард нь байх ангиллын самбар `GET /catalog/nav`-аас ирнэ.
+ * Header дээрх department-ууд. Хүсэлт явуулалгүй мэддэг тул холбоосууд хуудастайгаа хамт зурагдана (хайлтын
+ * систем ч уншина). Тэдгээрийн доорх ангиллын цэсний өгөгдөл `GET /catalog/nav`-аас ирнэ.
  */
 export const DEPARTMENT_LINKS = [
   { slug: "women", label: "Women" },
@@ -14,9 +14,7 @@ export const DEPARTMENT_LINKS = [
   { slug: "kids", label: "Kids" },
 ] as const;
 
-/**
- * `/c/men`, `/c/men/apparel/topwear/tshirts`. Node-ын `path` нь department-ийн дараах хэсэг яг тэр.
- */
+/** `/c/men`, `/c/men/apparel/topwear/tshirts`. Node-ын `path` бол department-ийн дараах хэсэг. */
 export function categoryHref(department: string, path?: string): string {
   return path ? `/c/${department}/${path}` : `/c/${department}`;
 }
@@ -28,8 +26,8 @@ export type CategoryTrail = {
 };
 
 /**
- * URL segment-үүдийг nav-тай тулгана. Nav-д байхгүй (бүтээгдэхүүнгүй ангиллыг оруулаад) бол `null`,
- * ингэснээр хуучирсан холбоос 404 болно, хоосон хуудас биш.
+ * URL-ын хэсгүүдийг nav-тай тулгана. Nav-д байхгүй бол (бараагүй ангилал ч мөн) `null` буцаана: хуучирсан
+ * холбоос хоосон хуудас биш, 404 болно.
  */
 export function findTrail(nav: CatalogNav, departmentSlug: string, segments: string[] = []): CategoryTrail | null {
   const department = nav.departments.find((d) => d.slug === departmentSlug);
@@ -61,7 +59,7 @@ export function categoryPaths(nav: CatalogNav): string[] {
   return out;
 }
 
-/** Department-ийн бүлгүүдийн хамгийн алдартай article type-ууд, цэсний шуурхай холбоосод. */
+/** Цэсний шуурхай холбоост зориулж department-ийн бүлгүүдийн хамгийн алдартай article type-ууд. */
 export function popularTypes(department: NavDepartment, limit = 8): NavNode[] {
   return department.groups
     .flatMap((group) => group.children.flatMap((sub) => sub.children))
@@ -70,8 +68,8 @@ export function popularTypes(department: NavDepartment, limit = 8): NavNode[] {
 }
 
 /**
- * Ангиллын хуудаснаас дараа нь хаашаа орж болох вэ. Навч (leaf) дээр доор нь юу ч байхгүй тул ах
- * дүү ангиллыг санал болгоно (навч өөрөө `ancestors`-оос хасагдана).
+ * Ангиллын хуудаснаас дараа нь хаашаа орж болох вэ. Хамгийн доод ангиллын (leaf) доор юу ч байхгүй тул
+ * зэрэгцээ ангиллуудыг санал болгоно (энэ leaf өөрөө `ancestors`-оос хасагдана).
  */
 export function drilldown(department: NavDepartment, nodes: NavNode[]) {
   const current = nodes.at(-1);

@@ -71,7 +71,7 @@ export function parseReviewParams(raw: Raw): ReviewListParams {
   };
 }
 
-/** Үлдэгдлийн жагсаалт нь зарагдаж буй бүтээгдэхүүнийг дуусах дарааллаар нь эрэмбэлсэн жагсаалт. */
+/** Үлдэгдлийн жагсаалт: зарагдаж буй барааг дуусахад хамгийн дөхсөнөөс нь эхэлж эрэмбэлнэ. */
 export function parseInventoryParams(raw: Raw): ProductListParams {
   return {
     q: text(first(raw.q)),
@@ -93,8 +93,8 @@ function dayStart(value: string | undefined): number | undefined {
 }
 
 /**
- * Dashboard-ын хугацаа. `?start=&end=` хүчинтэй тусгай хугацаа (эхлэл ≤ төгсгөл, ирээдүй биш, 366
- * хоногоос ихгүй) бол түүнийг, үгүй бол `?days=` (7/30/90/365), гэнэтийн утгад default-ыг өгнө.
+ * Dashboard-ын хугацаа. `?start=&end=` хүчинтэй бол (эхлэл ≤ төгсгөл, ирээдүй биш, 366 хоногоос ихгүй) тэр
+ * хугацаа. Үгүй бол `?days=` (7/30/90/365), буруу утга бол анхдагч хугацаа.
  */
 export function parsePeriod(raw: Raw, now: Date = new Date()): StatsPeriod {
   const start = first(raw.start);

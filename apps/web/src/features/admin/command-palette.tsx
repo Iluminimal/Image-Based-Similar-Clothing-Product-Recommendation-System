@@ -15,7 +15,7 @@ import { ADMIN_LINKS } from "./admin-nav";
 const MIN_QUERY = 2;
 const PER_GROUP = 5;
 
-/** ⌘K / Ctrl+K хаанаас ч, `/` бичих талбарт биш үед: хайлтыг нээнэ. */
+/** ⌘K / Ctrl+K-г хаанаас ч дарахад хайлт нээгдэнэ. `/`-ийг бичих талбараас гадуур дарахад бас нээгдэнэ. */
 export function useCommandPaletteHotkeys(toggle: () => void, open: () => void) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -41,9 +41,9 @@ const ITEM =
 const HEADING = "[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium";
 
 /**
- * Admin-ы глобал хайлт (⌘K): хэсэг рүү шилжих, захиалгын дугаар, барааны нэр, хэрэглэгчийн
- * нэр/имэйлээр шууд очих. Үр дүн нь одоо байгаа admin жагсаалтуудын `q` хайлтаас ирнэ (шинэ endpoint
- * байхгүй), 250 мс хүлээж, 2-оос дээш тэмдэгттэй үед л.
+ * Админ хэсгийн нийтлэг хайлт (⌘K): хэсэг рүү шилжих, захиалгын дугаар, барааны нэр, хэрэглэгчийн нэр эсвэл
+ * имэйлээр шууд очих. Шинэ endpoint байхгүй, одоо байгаа админ жагсаалтуудын `q` хайлтыг ашиглана. 2 ба
+ * түүнээс олон тэмдэгт бичээд 250 мс хүлээсний дараа хайна.
  */
 export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useTranslations("admin.palette");
@@ -82,7 +82,8 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
     router.push(href);
   };
   const pending = searching && (orders.isFetching || products.isFetching || customers.isFetching);
-  // cmdk `forceMount`-тай (сервер талын) үр дүнг "олдсонгүй"-д тооцдоггүй: өөрсдөө шийднэ.
+  // cmdk `forceMount`-той (server-ээс ирсэн) үр дүнг тооцдоггүй тул "олдсонгүй" гэж харуулах эсэхийг өөрсдөө
+  // шийднэ.
   const found = searching && (orders.data?.items.length || products.data?.items.length || customers.data?.items.length);
 
   return (

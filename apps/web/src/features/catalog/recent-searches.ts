@@ -1,10 +1,7 @@
 const KEY = "angel:recent-searches";
 const MAX = 5;
 
-/**
- * Энэ төхөөрөмж дээрх сүүлийн хэдэн текст хайлт. Storage хаалттай эсвэл дүүрэн байж болно: тэгвэл
- * хоосон гэсэн үг.
- */
+/** Энэ төхөөрөмж дээрх сүүлийн хэдэн текст хайлт. Storage хаалттай эсвэл дүүрэн байвал хоосон гэж үзнэ. */
 export function readRecentSearches(): string[] {
   try {
     const parsed: unknown = JSON.parse(window.localStorage.getItem(KEY) ?? "[]");
@@ -22,7 +19,7 @@ export function rememberSearch(query: string): string[] {
   try {
     window.localStorage.setItem(KEY, JSON.stringify(next));
   } catch {
-    // Санахгүй байсан ч зүгээр.
+    // Санаж чадаагүй ч асуудалгүй.
   }
   return next;
 }

@@ -11,9 +11,9 @@ type Props = {
 };
 
 /**
- * Хайлтын мөрийн камерын товчны ард байх сонгогч. Зураг авах бүх урсгалыг (upload, drop, paste,
- * камер, HEIC) дахин ашиглана; амжилттай бол зураг search store-д хүлээж, /search хайлтыг
- * ажиллуулна. Эхний товшилтоор ачаална: dialog library-г дагуулна.
+ * Хайлтын талбарын камерын товчоор нээгдэх зураг сонгогч. Зураг авах бүх аргыг (upload, drop, paste, камер,
+ * HEIC) дахин ашиглана. Зураг сонговол search store-д хадгалагдаж, /search хуудас хайлтыг ажиллуулна. Dialog
+ * library татдаг тул анх товшиход л ачаална.
  */
 export function PhotoSearchDialog({ open, onOpenChange }: Props) {
   const t = useTranslations("search.dialog");

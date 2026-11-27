@@ -1,9 +1,8 @@
-// Lighthouse (mobile preset, simulated slow 4G, default) нь ажиллаж буй production build-ийг
-// шалгана.
+// Ажиллаж буй production build-ийг Lighthouse-оор шалгана (mobile preset, simulated slow 4G, default).
 //   node scripts/lighthouse.mjs [--runs 3] [--out ../../docs/perf/lighthouse.json] [--pages home,listing]
-// Хуудас бүрийн дунд зэргийн ажиллуулалтыг тайлагнана, ингэснээр нэг удаагийн гажиг шийдэхгүй. Web
-// app-ыг `make web-prod`-оор ажиллуулсан байх ёстой (dev server хамаагүй удаан, production-ийн
-// талаар юу ч хэлэхгүй), API мөн ажиллаж байх ёстой.
+// Хуудас бүрийг хэд хэдэн удаа шалгаж, голч (median) дүнг тайлагнана. Ингэснээр нэг удаагийн санамсаргүй
+// гажиг дүнд нөлөөлөхгүй. Web-ийг `make web-prod`-оор асаасан байх ёстой (dev server хамаагүй удаан тул
+// production-ийн хурдыг харуулахгүй). API ч ажиллаж байх ёстой.
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { launch } from "chrome-launcher";
@@ -24,7 +23,7 @@ const ONLY = arg("pages", "")
 
 const listing = await (await fetch(`${API}/api/v1/products?in_stock=true&master_category=Apparel&page_size=1`)).json();
 const product = listing.items[0];
-// Хамгийн том department-ийн эхний бүлэг, каталогт юу байгаагаас үл хамаарна.
+// Хамгийн том department-ийн эхний бүлгийг авна, тиймээс каталогт юу байгаагаас үл хамаарна.
 const nav = await (await fetch(`${API}/api/v1/catalog/nav`)).json();
 const department = [...nav.departments].sort((a, b) => b.product_count - a.product_count)[0];
 const PAGES = {

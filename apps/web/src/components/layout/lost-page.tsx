@@ -7,8 +7,8 @@ import { DEPARTMENT_LINKS, categoryHref } from "@/features/catalog/nav";
 import { useVocab } from "@/i18n/use-vocab";
 
 /**
- * Ямар нэг зүйл алга эсвэл эвдэрсэн үеийн хуудсуудын нийтлэг дүр: хөвөх том зөөлөн тэмдэг, гарчиг,
- * хайлтын хайрцаг, дэлгүүр рүү буцах зам. Server дээр render хийж болно (script-гүй).
+ * Олдоогүй эсвэл алдаа гарсан хуудсуудын нийтлэг харагдац: хөвөх том зөөлөн тэмдэг, гарчиг, хайлтын талбар,
+ * дэлгүүр рүү буцах холбоос. Server дээр render хийж болно (script шаардахгүй).
  */
 export function LostPage({
   mark,

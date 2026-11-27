@@ -18,9 +18,9 @@ export type DemoAction =
 export const IDLE: DemoState = { phase: "idle" };
 
 /**
- * Нүүр хуудасны live photo search-ийн төлөв: idle -> scanning -> done | error. Хувцас бүрийн үр дүн
- * (`garments`) ирсний дараа хэрэглэгч аль хайрцгийг сонгосноор `focus` солигдоно. Хуучин хүсэлтийн
- * хариу (хэрэглэгч өөр зураг сонгосон) энд хэзээ ч ирэхгүй: component өмнөхийг abort хийдэг.
+ * Нүүр хуудсан дээрх зургаар хайлтын төлөв: idle -> scanning -> done | error. Хувцас бүрийн үр дүн
+ * (`garments`) ирсний дараа хэрэглэгчийн сонгосон хайрцгаар `focus` солигдоно. Хэрэглэгч өөр зураг сонговол
+ * component өмнөх хүсэлтийг abort хийдэг тул хуучин хариу энд хэзээ ч ирэхгүй.
  */
 export function demoReducer(state: DemoState, action: DemoAction): DemoState {
   switch (action.type) {
@@ -42,7 +42,7 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
   }
 }
 
-/** 429 (хэт олон хайлт) ба сүлжээний алдааг хэрэглэгчид ойлгомжтой гурван төрөлд ангилна. */
+/** 429 (хэт олон хайлт) болон сүлжээний алдааг хэрэглэгчид ойлгомжтой гурван төрөлд хуваана. */
 export function classifyError(error: unknown): DemoError {
   const status = (error as { status?: number } | null)?.status;
   if (status === 429) return "rate";

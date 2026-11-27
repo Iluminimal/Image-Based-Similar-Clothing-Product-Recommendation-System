@@ -47,10 +47,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { FormAlert } from "@/components/ui/form-alert";
 
-/**
- * Checkout-ийн нэг алхам: дууссаны дараа дугаар нь check mark болж, дараагийн алхам руу шугам
- * дүүрнэ.
- */
+/** Checkout-ын нэг алхам: дуусмагц дугаарын оронд тэмдэг (✓) гарч, дараагийн алхам руу шугам дүүрнэ. */
 function Section({
   step,
   title,
@@ -122,7 +119,8 @@ export function CheckoutView() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const status = useAuth((state) => state.status);
-  // Session дууссан (cookie-тэй ч refresh татгалзсан): нэвтрэх хуудас руу, буцаж ирэхэд checkout.
+  // Session дууссан (cookie байсан ч refresh татгалзсан): нэвтрэх хуудас руу явуулна, нэвтэрсний дараа
+  // checkout руу буцна.
   useEffect(() => {
     if (status === "signedOut") router.replace("/login?next=%2Fcheckout");
   }, [status, router]);
@@ -140,8 +138,8 @@ export function CheckoutView() {
   const [pickedAddress, setPickedAddress] = useState<number | null>(null);
   const [pickedMethod, setPickedMethod] = useState<ShippingMethodId>("standard");
   const [addingAddress, setAddingAddress] = useState(false);
-  // Оролдлого бүрд нэг key: холболт тасарсны дараа хүсэлтийг давтахад хоёр дахь захиалга үүсгэхгүй,
-  // ижил захиалгыг буцаана. Тодорхой хариу (амжилт эсвэл татгалзал) шинэ оролдлого эхлүүлнэ.
+  // Оролдлого бүрд нэг key: холболт тасарсны дараа хүсэлт давтахад хоёр дахь захиалга үүсэхгүй, ижил захиалга
+  // буцна. Тодорхой хариу (амжилт эсвэл татгалзал) ирвэл дараагийнх нь шинэ оролдлого.
   const attemptKey = useRef(crypto.randomUUID());
 
   const addresses = addressesQuery.data ?? [];
@@ -156,7 +154,8 @@ export function CheckoutView() {
     staleTime: 600_000,
     placeholderData: keepPreviousData,
   });
-  // Хаяг солигдож сонгосон төрөл тэр бүсэд байхгүй болбол (орон нутагт шуурхай) энгийн рүү.
+  // Хаяг солигдоод сонгосон хүргэлтийн төрөл тэр бүсэд байхгүй болбол (орон нутагт шуурхай) энгийн хүргэлт
+  // сонгоно.
   const method: ShippingMethodId = methodsQuery.data?.items.some((option) => option.id === pickedMethod) ? pickedMethod : "standard";
 
   type PayResult = { kind: "paid"; order: Order } | { kind: "qpay"; number: string; charge: Charge; qpay: QPayCheckout; expiresAt: string | null };
@@ -167,14 +166,14 @@ export function CheckoutView() {
     router.push(`/checkout/confirmation/${order.number}`);
   }
 
-  // Нэг key нь нэг л хүсэлт: хаяг, хүргэлт, имэйл өөрчлөгдвөл шинэ key (API ижил key-г өөр
-  // агуулгатай хүлээн авахгүй).
+  // Нэг key нэг хүсэлтэд: хаяг, хүргэлт, имэйл өөрчлөгдвөл шинэ key авна (API ижил key-тэй өөр агуулгыг
+  // хүлээн авдаггүй).
   useEffect(() => {
     attemptKey.current = crypto.randomUUID();
   }, [addressId, method, contactEmail]);
 
   const pay = useMutation({
-    // `shownTotal`: товч дарах үед дэлгэц дээр байсан дүн. Сервер өөр дүн гаргавал захиалахгүй.
+    // `shownTotal`: товч дарах үед дэлгэцэн дээр байсан дүн. Сервер өөр дүн гаргавал захиалга үүсгэхгүй.
     mutationFn: async (shownTotal: number): Promise<PayResult> => {
       if (addressId === null) throw new Error("no address");
       const { order, payment } = await createCheckout(

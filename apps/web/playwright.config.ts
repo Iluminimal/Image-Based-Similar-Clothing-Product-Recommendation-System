@@ -2,8 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 import { ENGLISH } from "./e2e/support/locale";
 
 /**
- * End-to-end тестүүд ажиллаж буй stack (API, web, Postgres/Redis)-ийг удирдана (docs/e2e.md).
- * Тест өөрөө server асаадаггүй тул нэг тест локал `make api` + `make web-prod` дээр ч, CI stack дээр ч ажиллана.
+ * End-to-end тестүүд ажиллаж буй stack (API, web, Postgres/Redis) дээр ажиллана (docs/e2e.md). Тест өөрөө
+ * server асаадаггүй тул нэг тест локал `make api` + `make web-prod` дээр ч, CI дээр ч ажиллана.
  *
  *   E2E_BASE_URL   web ажиллаж буй хаяг (анхдагч http://localhost:3000)
  *   E2E_API_URL    API ажиллаж буй хаяг (анхдагч http://localhost:8000)

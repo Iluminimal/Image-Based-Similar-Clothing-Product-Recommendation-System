@@ -42,3 +42,7 @@ docs/perf/embeddings/
 
 # local, non-repository material
 docs/thesis/
+
+# AI туслахын дотоод заавар: зөвхөн энэ компьютерт үлдэнэ (`next dev` AGENTS.md-г өөрөө үүсгэдэг).
+CLAUDE.md
+apps/web/AGENTS.md
